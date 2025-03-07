@@ -1,0 +1,55 @@
+{
+  "app": {
+    "signingConfigs": [
+      {
+        "name": "default",
+        "type": "HarmonyOS",
+        "material": {
+          "storePassword": "0000001687AD5519A845CFA447704595E9791C043813E6E46EDF0B05B0E953EAE9368E8CE270",
+          "certpath": "OpenHarmonyApplication.cer",
+          "keyAlias": "openharmony application release",
+          "keyPassword": "00000016AC98E743F674727B3AE688679F2E71685EE2EF69F604646FF4A256DAAFD3574F9237",
+          "profile": "helloxcomponent.p7b",
+          "signAlg": "SHA256withECDSA",
+          "storeFile": "OpenHarmony.p12"
+        }
+      }
+    ],
+    "products": [
+      {
+        "name": "default",
+        "signingConfig": "default",
+        "compatibleSdkVersion": "5.0.2(14)",
+        "runtimeOS": "HarmonyOS",
+        "buildOption": {
+          "strictMode": {
+            "caseSensitiveCheck": true,
+            "useNormalizedOHMUrl": true
+          }
+        }
+      }
+    ],
+    "buildModeSet": [
+      {
+        "name": "debug",
+      },
+      {
+        "name": "release"
+      }
+    ]
+  },
+  "modules": [
+    {
+      "name": "entry",
+      "srcPath": "./entry",
+      "targets": [
+        {
+          "name": "default",
+          "applyToProducts": [
+            "default"
+          ]
+        }
+      ]
+    }
+  ]
+}
