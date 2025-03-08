@@ -1,9 +1,3 @@
-//
-// Created on 2025-03-06.
-//
-// Node APIs are not fully supported. To solve the compilation error of the interface cannot be found,
-// please include "napi/native_api.h".
-
 #ifndef HELLOXCOMPONENT_XCOMPONENTNODE_H
 #define HELLOXCOMPONENT_XCOMPONENTNODE_H
 

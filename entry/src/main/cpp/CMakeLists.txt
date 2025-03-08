@@ -22,52 +22,52 @@ add_library(helloxcomponent SHARED
     )
 
 find_library(
-    EGL-lib
+    libEGL
     EGL
 )
 
 find_library(
-    GLES-lib
+    libGLES
     GLESv3
 )
 
 find_library(
-    hilog-lib
+    libhilog
     hilog_ndk.z
 )
 
 find_library(
-    libace-lib
+    libace_ndk
     ace_ndk.z
 )
 
 find_library(
-    libnapi-lib
+    libace_napi
     ace_napi.z
 )
 
 find_library(
-    libnative_buffer-lib
+    libnative_buffer
     native_buffer
 )
 
 find_library(
-    libnative_window-lib
+    libnative_window
     native_window
 )
 
 find_library(
-    libuv-lib
+    libuv
     uv
 )
 
 target_link_libraries(helloxcomponent PUBLIC
-    ${EGL-lib}
-    ${GLES-lib}
-    ${hilog-lib}
-    ${libace-lib}
-    ${libnapi-lib}
-    ${libnative_buffer-lib}
-    ${libnative_window-lib}
-    ${libuv-lib}
+    ${libEGL}
+    ${libGLES}
+    ${libhilog}
+    ${libace_ndk}
+    ${libace_napi}
+    ${libnative_buffer}
+    ${libnative_window}
+    ${libuv}
 )
