@@ -16,7 +16,7 @@
 namespace helloxcomponent {
 namespace {
 
-Napi::Value SetController(const Napi::CallbackInfo& info) {
+Napi::Value SetController(const Napi::CallbackInfo &info) {
   Napi::Env env = info.Env();
 
   if (info.Length() != 1) {
@@ -28,16 +28,15 @@ Napi::Value SetController(const Napi::CallbackInfo& info) {
   }
 
   Napi::Object obj = info[0].As<Napi::Object>();
-  NapiManager::GetInstance()->set_controller(
-      Napi::Reference<Napi::Object>::New(obj));
+  NapiManager::GetInstance()->set_controller(Napi::Reference<Napi::Object>::New(obj));
 
   return Napi::Boolean::New(env, true);
 }
 
-}  // namespace
+} // namespace
 
 Napi::Object Init(Napi::Env env, Napi::Object exports) {
-    
+
   exports.Set("setController", Napi::Function::New<SetController>(env));
   exports.Set("createNativeNode", Napi::Function::New<NapiManager::NapiCreateNativeNode>(env));
   exports.Set("getContext", Napi::Function::New<NapiManager::GetContext>(env));
@@ -46,7 +45,7 @@ Napi::Object Init(Napi::Env env, Napi::Object exports) {
   return exports;
 }
 
-}  // namespace content::ohos
+} // namespace helloxcomponent
 
 using helloxcomponent::Init;
 
