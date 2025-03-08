@@ -1,6 +1,7 @@
 #ifndef HELLOXCOMPONENT_XCOMPONENTNODE_H
 #define HELLOXCOMPONENT_XCOMPONENTNODE_H
 
+#include "hello/BitmapRenderer.h"
 #include <ace/xcomponent/native_interface_xcomponent.h>
 #include <arkui/native_node.h>
 #include <native_window/external_window.h>
@@ -11,7 +12,7 @@
 namespace hello {
 
 class XComponentNode {
-  public:
+public:
   enum Type { kSurface, kTexture };
 
   static std::unique_ptr<XComponentNode> Create(std::string id, Type type);
@@ -27,17 +28,19 @@ class XComponentNode {
   void SetFocusable(bool focusable) { SetAttribute(NODE_FOCUSABLE, focusable ? 1 : 0); }
   void SetSurfaceSize(uint32_t width, uint32_t height) { SetAttribute(NODE_XCOMPONENT_SURFACE_SIZE, width, height); }
 
+  void AddChild(XComponentNode *child);
+
   ArkUI_NodeHandle handle() const { return handle_; }
   static ArkUI_NativeNodeAPI_1 *api();
 
-  protected:
+protected:
   virtual void OnSurfaceCreated(void *window);
   virtual void OnSurfaceChanged(void *window);
   virtual void OnSurfaceDestroyed(void *window);
   virtual void DispatchTouchEvent(void *window);
   virtual void OnFrame(uint64_t timestamp, uint64_t target_timestamp);
 
-  private:
+private:
   explicit XComponentNode(ArkUI_NodeHandle handle);
 
   static XComponentNode *GetInstance(OH_NativeXComponent *component);
@@ -83,6 +86,8 @@ class XComponentNode {
   OHNativeWindow *window_ = nullptr;
   uint64_t surface_width_ = 0;
   uint64_t surface_height_ = 0;
+  
+  std::unique_ptr<BitmapRenderer> bitmap_renderer_;
 };
 
 } // namespace hello

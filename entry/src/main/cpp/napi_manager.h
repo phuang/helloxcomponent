@@ -15,11 +15,11 @@ class XComponentNode;
 namespace helloxcomponent {
 
 class NapiManager {
-  public:
+public:
   static NapiManager *GetInstance();
   static Napi::Value NapiCreateNativeNode(const Napi::CallbackInfo &info);
 
-  private:
+private:
   NapiManager();
   ~NapiManager();
 
@@ -28,6 +28,7 @@ class NapiManager {
   Napi::Env env_{nullptr};
 
   std::unique_ptr<hello::XComponentNode> root_node_;
+  std::unique_ptr<hello::XComponentNode> child_node_;
 
   std::string id_;
 

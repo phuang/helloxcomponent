@@ -1,14 +1,16 @@
-#include "XComponentNode.h"
+#include "hello/XComponentNode.h"
 
 #include <arkui/native_interface.h>
 #include <native_buffer/native_buffer.h>
 #include <native_window/external_window.h>
+#include <unistd.h>
 
 #include <cassert>
 #include <map>
 #include <mutex>
 
 #include "common/log.h"
+#include "hello/BitmapRenderer.h"
 
 namespace hello {
 namespace {
@@ -32,7 +34,8 @@ std::unique_ptr<XComponentNode> XComponentNode::Create(std::string id, Type type
 }
 
 XComponentNode::XComponentNode(ArkUI_NodeHandle handle)
-    : handle_(handle), component_(OH_NativeXComponent_GetNativeXComponent(handle_)) {
+    : handle_(handle), component_(OH_NativeXComponent_GetNativeXComponent(handle_)),
+      bitmap_renderer_(std::make_unique<BitmapRenderer>()) {
   assert(component_);
   xcomponent_nodes_[component_] = this;
   static OH_NativeXComponent_Callback callbacks = {
@@ -61,12 +64,15 @@ ArkUI_NativeNodeAPI_1 *XComponentNode::api() {
   return api;
 }
 
+void XComponentNode::AddChild(XComponentNode *child) { api()->addChild(handle(), child->handle()); }
+
+
 void XComponentNode::OnSurfaceCreated(void *window) {
   LOGE("XComponentNode::%{public}s()", __func__);
   window_ = reinterpret_cast<OHNativeWindow *>(window);
 
   int32_t retval = OH_NativeXComponent_GetXComponentSize(component_, window_, &surface_width_, &surface_height_);
-  LOGE("EEEE OH_NativeXComponent_GetXComponentSize() return %{public}d %{public}dx%{public}d", retval, surface_width_,
+  LOGE("EEEE OH_NativeXComponent_GetXComponentSize() return %{public}d %{public}lux%{public}lu", retval, surface_width_,
        surface_height_);
 
   // OH_NativeXComponent_ExpectedRateRange range;
@@ -93,7 +99,10 @@ void XComponentNode::OnFrame(uint64_t timestamp, uint64_t target_timestamp) {
   OHNativeWindowBuffer *window_buffer = nullptr;
   int fenceFd = -1;
   int32_t retval = OH_NativeWindow_NativeWindowRequestBuffer(window_, &window_buffer, &fenceFd);
-  LOGE("EEEE OH_NativeWindow_NativeWindowRequestBuffer() return %{public}d fenceFd=%{public}d", retval, fenceFd);
+  if (fenceFd != -1) {
+    close(fenceFd);
+  }
+//  LOGE("EEEE OH_NativeWindow_NativeWindowRequestBuffer() return %{public}d fenceFd=%{public}d", retval, fenceFd);
 
   OH_NativeBuffer *buffer = nullptr;
   retval = OH_NativeBuffer_FromNativeWindowBuffer(window_buffer, &buffer);
@@ -101,24 +110,32 @@ void XComponentNode::OnFrame(uint64_t timestamp, uint64_t target_timestamp) {
   OH_NativeBuffer_Config config;
   OH_NativeBuffer_GetConfig(buffer, &config);
 
+//  LOGE("EEEE NativeBuffer: size=%{public}dx%{public}d stride=%{public}d format=%{public}d", config.width,
+  //  config.height,
+//       config.stride, config.format);
+
+
   void *addr = nullptr;
   retval = OH_NativeBuffer_Map(buffer, &addr);
-  LOGE("EEEE OH_NativeBuffer_Map() target_timestamp=%{public}llu", target_timestamp);
 
-  LOGE("EEEE OnFrame() return %{public}d", retval);
+  bitmap_renderer_->Render(addr, config.width, config.height, config.stride, target_timestamp);
 
-  static uint32_t frame = 0;
-  frame = (++frame % 256);
+  //  LOGE("EEEE OH_NativeBuffer_Map() target_timestamp=%{public}lu", target_timestamp);
+//
+//  LOGE("EEEE OnFrame() return %{public}d", retval);
 
-  uint32_t *line = reinterpret_cast<uint32_t *>(addr);
-  for (uint64_t y = 0; y < config.height; ++y) {
-    auto *pixel = line;
-    for (uint64_t x = 0; x < config.width; ++x) {
-      *pixel = (((x * 256 / config.width) + frame) & 0xff) | ((((y * 256 / config.height) + frame) & 0xff) << 8);
-      pixel++;
-    }
-    line += config.stride / 4;
-  }
+//  static uint32_t frame = 0;
+//  frame = (++frame % 256);
+//
+//  uint32_t *line = reinterpret_cast<uint32_t *>(addr);
+//  for (uint64_t y = 0; y < config.height; ++y) {
+//    auto *pixel = line;
+//    for (uint64_t x = 0; x < config.width; ++x) {
+//      *pixel = (((x * 256 / config.width) + frame) & 0xff) | ((((y * 256 / config.height) + frame) & 0xff) << 8);
+//      pixel++;
+//    }
+//    line += config.stride / 4;
+//  }
 
   OH_NativeBuffer_Unmap(buffer);
   retval = OH_NativeWindow_NativeWindowFlushBuffer(window_, window_buffer, -1, {});

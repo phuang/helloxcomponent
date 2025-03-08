@@ -71,8 +71,16 @@ void NapiManager::CreateNativeNode(ArkUI_NodeContentHandle content_handle) {
       auto root_node = hello::XComponentNode::Create("root_view", hello::XComponentNode::kSurface);
       root_node->SetWidthPercent(1);
       root_node->SetHeightPercent(1);
+
+      auto child_node = hello::XComponentNode::Create("child_view", hello::XComponentNode::kSurface);
+      root_node->AddChild(child_node.get());
+      child_node->SetPosition(40, 200);
+      child_node->SetWidth(512);
+      child_node->SetHeight(512);
+//      
       OH_ArkUI_NodeContent_AddNode(content_handle, root_node->handle());
       self->root_node_ = std::move(root_node);
+      self->child_node_ = std::move(child_node);
     }
   };
 
