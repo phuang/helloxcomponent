@@ -17,12 +17,10 @@
 #define HELLOXCOMPONENT_NAPI_MANAGER_H_
 
 #include "hello/XComponentNode.h"
-#define NODE_ADDON_API_DISABLE_DEPRECATED
-#include <napi/native_api.h>
 
 #include <string>
-#include <unordered_map>
 
+#define NODE_ADDON_API_DISABLE_DEPRECATED
 #include "napi.h"
 
 namespace hello {

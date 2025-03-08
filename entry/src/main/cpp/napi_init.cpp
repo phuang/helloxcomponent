@@ -2,7 +2,6 @@
 #include "napi.h"
 #include "napi_manager.h"
 
-
 namespace helloxcomponent {
 
 Napi::Object Init(Napi::Env env, Napi::Object exports) {
