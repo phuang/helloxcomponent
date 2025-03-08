@@ -39,9 +39,10 @@ Napi::Value SetController(const Napi::CallbackInfo& info) {
 Napi::Object Init(Napi::Env env, Napi::Object exports) {
     
   exports.Set("setController", Napi::Function::New<SetController>(env));
+  exports.Set("createNativeNode", Napi::Function::New<NapiManager::NapiCreateNativeNode>(env));
   exports.Set("getContext", Napi::Function::New<NapiManager::GetContext>(env));
 
-  NapiManager::GetInstance()->Export(env, exports);
+//  NapiManager::GetInstance()->Export(env, exports);
   return exports;
 }
 
@@ -49,4 +50,4 @@ Napi::Object Init(Napi::Env env, Napi::Object exports) {
 
 using helloxcomponent::Init;
 
-NODE_API_MODULE(entry, Init)
+NODE_API_MODULE(helloxcomponent, Init)

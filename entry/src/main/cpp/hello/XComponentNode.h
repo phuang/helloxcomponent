@@ -9,9 +9,12 @@
 
 #include <ace/xcomponent/native_interface_xcomponent.h>
 #include <arkui/native_node.h>
+#include <native_window/external_window.h>
 
 #include <memory>
 #include <string>
+
+namespace hello {
 
 class XComponentNode {
 public:
@@ -34,13 +37,27 @@ public:
 
   void SetSurfaceSize(uint32_t width, uint32_t height);
   
+  ArkUI_NodeHandle handle() const { return handle_; }
+  static ArkUI_NativeNodeAPI_1* api();
+protected:
+  virtual void OnSurfaceCreated(void* window);
+  virtual void OnSurfaceChanged(void* window);
+  virtual void OnSurfaceDestroyed(void* window);
+  virtual void DispatchTouchEvent(void* window);
+  
 private:
   explicit XComponentNode(ArkUI_NodeHandle handle);
   
-  static ArkUI_NativeNodeAPI_1* api();
+  static XComponentNode* GetInstance(OH_NativeXComponent* component);
   
   const ArkUI_NodeHandle handle_;
-  const OH_NativeXComponent* x_component_;
+  OH_NativeXComponent* const component_;
+  
+  OHNativeWindow* window_ = nullptr;
+  uint64_t surface_width_ = 0;
+  uint64_t surface_height_ = 0;
 };
+
+}  // namespace hello
 
 #endif //HELLOXCOMPONENT_XCOMPONENTNODE_H

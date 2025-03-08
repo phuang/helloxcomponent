@@ -16,6 +16,7 @@
 #ifndef HELLOXCOMPONENT_NAPI_MANAGER_H_
 #define HELLOXCOMPONENT_NAPI_MANAGER_H_
 
+#include "hello/XComponentNode.h"
 #define NODE_ADDON_API_DISABLE_DEPRECATED
 #include <napi/native_api.h>
 
@@ -25,6 +26,10 @@
 #include "napi.h"
 
 struct OH_NativeXComponent;
+
+namespace hello {
+class XComponentNode;
+}
 
 namespace helloxcomponent {
 
@@ -36,6 +41,7 @@ class NapiManager {
   bool Export(Napi::Env env, Napi::Object exports);
 
   static Napi::Value GetContext(const Napi::CallbackInfo& info);
+  static Napi::Value NapiCreateNativeNode(const Napi::CallbackInfo& info);
 
   void set_controller(Napi::Reference<Napi::Object> controller) {
     controller_ = std::move(controller);
@@ -66,12 +72,17 @@ class NapiManager {
 
   void OnPageShowNative();
   void OnPageHideNative();
+  
+  void CreateNativeNode(ArkUI_NodeContentHandle content_handle);
 
   void SetRootViewXComp(OH_NativeXComponent* root_view) {
     root_view_ = root_view;
   }
 
   Napi::Env env_{nullptr};
+  
+  std::unique_ptr<hello::XComponentNode> root_node_;
+  
   std::string id_;
   
   OH_NativeXComponent* root_view_ = nullptr;
