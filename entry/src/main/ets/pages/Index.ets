@@ -14,11 +14,14 @@ struct Index {
 
   build() {
     Row() {
+      Tabs() {
+        TabContent() {
+          ContentSlot(this.nodeContent)
+        }.tabBar("Delegated Compositing")
+        TabContent() {
+        }.tabBar("Self Composting")
+      }
       Column() {
-        Text("Hello XComponent")
-          .fontSize('24fp')
-          .fontWeight(500);
-        ContentSlot(this.nodeContent)
       }
       .width('100%')
     }

@@ -35,7 +35,8 @@ std::unique_ptr<XComponentNode> XComponentNode::Create(std::string id, Type type
 
 XComponentNode::XComponentNode(ArkUI_NodeHandle handle)
     : handle_(handle), component_(OH_NativeXComponent_GetNativeXComponent(handle_)),
-      bitmap_renderer_(std::make_unique<BitmapRenderer>()) {
+      bitmap_renderer_(std::make_unique<BitmapRenderer>(
+          "/data/storage/el1/bundle/entry/resources/resfile/pexels-janik-butz-5366526.jpg")) {
   assert(component_);
   xcomponent_nodes_[component_] = this;
   static OH_NativeXComponent_Callback callbacks = {
@@ -45,7 +46,7 @@ XComponentNode::XComponentNode(ArkUI_NodeHandle handle)
       [](OH_NativeXComponent *component, void *window) { GetInstance(component)->DispatchTouchEvent(window); },
   };
   int32_t retval = OH_NativeXComponent_RegisterCallback(component_, &callbacks);
-  LOGE("EEEE OH_NativeXComponent_RegisterCallback() return %{public}d", retval);
+//  LOGE("EEEE OH_NativeXComponent_RegisterCallback() return %{public}d", retval);
 }
 
 XComponentNode::~XComponentNode() {
@@ -95,7 +96,7 @@ void XComponentNode::OnSurfaceDestroyed(void *window) {
 void XComponentNode::DispatchTouchEvent(void *window) { LOGE("XComponentNode::%{public}s()", __func__); }
 
 void XComponentNode::OnFrame(uint64_t timestamp, uint64_t target_timestamp) {
-//  LOGE("XComponentNode::%{public}s()", __func__);
+  LOGE("XComponentNode::%{public}s()", __func__);
   OHNativeWindowBuffer *window_buffer = nullptr;
   int fenceFd = -1;
   int32_t retval = OH_NativeWindow_NativeWindowRequestBuffer(window_, &window_buffer, &fenceFd);
