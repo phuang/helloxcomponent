@@ -1,0 +1,1 @@
+~/sources/command-line-tools/bin/hvigorw assembleHap && hdc install ./entry/build/default/outputs/default/entry-default-signed.hap && hdc shell aa start -a EntryAbility -b com.example.helloxcomponent
