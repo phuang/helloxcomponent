@@ -14,6 +14,10 @@ struct Index {
     helloxcomponent.createNativeNode(this.nodeContentNonDelegated, false);
   }
 
+  onDidBuild(): void {
+    helloxcomponent.setDelegatedCompositing(true);
+  }
+
   build() {
     Row() {
       Tabs() {

@@ -34,13 +34,13 @@ Napi::Value NapiManager::NapiCreateNativeNode(const Napi::CallbackInfo& info) {
   int32_t retval =
       OH_ArkUI_GetNodeContentFromNapiValue(env, info[0], &content_handle);
   if (retval != ARKUI_ERROR_CODE_NO_ERROR) {
-    Napi::Error::New(env, "Arg 0 is not NodeContent")
+    Napi::Error::New(env, "Arg 0 is not a NodeContent")
         .ThrowAsJavaScriptException();
     return env.Null();
   }
 
   if (!info[1].IsBoolean()) {
-    Napi::Error::New(env, "Arg is not boolean").ThrowAsJavaScriptException();
+    Napi::Error::New(env, "Arg 1 is not a boolean").ThrowAsJavaScriptException();
     return env.Null();
   }
   bool delegated = info[1].As<Napi::Boolean>().Value();
@@ -62,7 +62,7 @@ Napi::Value NapiManager::NapiSetDelegatedCompositing(
   }
 
   if (!info[0].IsBoolean()) {
-    Napi::Error::New(env, "Arg 0 is not boolean").ThrowAsJavaScriptException();
+    Napi::Error::New(env, "Arg 0 is not a boolean").ThrowAsJavaScriptException();
     return env.Null();
   }
 
@@ -82,6 +82,12 @@ void NapiManager::CreateNativeNode(ArkUI_NodeContentHandle content_handle,
   }
 }
 
-void NapiManager::SetDelegatedCompositing(bool enable) {}
+void NapiManager::SetDelegatedCompositing(bool enable) {
+  if (enable) {
+    delegated_node_content_->SetVisible(true);
+  } else {
+    delegated_node_content_->SetVisible(false);
+  }
+}
 
 }  // namespace helloxcomponent

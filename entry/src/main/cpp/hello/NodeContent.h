@@ -18,6 +18,8 @@ class NodeContent {
   explicit NodeContent(ArkUI_NodeContentHandle content_handle);
   virtual ~NodeContent();
 
+  virtual void SetVisible(bool visible) = 0;
+
  protected:
   void DetachRootNode();
 
@@ -30,6 +32,7 @@ class NodeContent {
   void OnDetachToWindow();
 
   const ArkUI_NodeContentHandle content_handle_;
+  bool visible_ = false;
   XComponentNode* root_node_ = nullptr;
 };
 

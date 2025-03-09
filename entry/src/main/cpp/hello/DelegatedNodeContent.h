@@ -18,11 +18,14 @@ class DelegatedNodeContent : public NodeContent {
   DelegatedNodeContent(ArkUI_NodeContentHandle content_handle);
   ~DelegatedNodeContent() override;
 
+  void SetVisible(bool visible) override;
+
  private:
   XComponentNode* GetRootNode() override;
   void OnRootNodeAttached() override;
   void OnRootNodeDetached() override;
 
+  bool visible_ = false;
   std::unique_ptr<hello::XComponentNode> root_node_;
   std::unique_ptr<hello::XComponentNode> child_node_;
 };
