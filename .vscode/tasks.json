@@ -10,7 +10,11 @@
       "args": [
         "assembleHap"
       ],
-      "detail": "Assembling HAP"
+      "detail": "Assembling HAP",
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      }
     },
     {
       "label": "install hap",

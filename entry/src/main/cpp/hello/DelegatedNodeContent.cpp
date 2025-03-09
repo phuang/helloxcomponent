@@ -45,7 +45,11 @@ void DelegatedNodeContent::SetVisible(bool visible) {
 
   visible_ = visible;
   if (visible_) {
+    root_node_->StartDrawFrame();
+    child_node_->StartDrawFrame();
   } else {
+    root_node_->StopDrawFrame();
+    child_node_->StopDrawFrame();
   }
 }
 

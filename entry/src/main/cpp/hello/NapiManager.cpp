@@ -1,4 +1,4 @@
-#include "napi_manager.h"
+#include "hello/NapiManager.h"
 
 #include <arkui/native_node.h>
 #include <arkui/native_node_napi.h>
@@ -7,17 +7,30 @@
 #include <cstdint>
 #include <string>
 
+#include "common/log.h"
 #include "hello/DelegatedNodeContent.h"
 
-namespace helloxcomponent {
+namespace hello {
+namespace {
+NapiManager* napi_manager_ = nullptr;
+}
+
+// static
+void NapiManager::Init(const Napi::Env& env) {
+  CHECK(!napi_manager_);
+  napi_manager_ = new NapiManager(env);
+}
 
 // static
 NapiManager* NapiManager::GetInstance() {
-  static NapiManager manager;
-  return &manager;
+  CHECK(napi_manager_);
+  return napi_manager_;
 }
 
-NapiManager::NapiManager() = default;
+NapiManager::NapiManager(const Napi::Env& env) : env_(env) {
+  std::srand(std::time({}));
+}
+
 NapiManager::~NapiManager() = default;
 
 // static
@@ -40,11 +53,11 @@ Napi::Value NapiManager::NapiCreateNativeNode(const Napi::CallbackInfo& info) {
   }
 
   if (!info[1].IsBoolean()) {
-    Napi::Error::New(env, "Arg 1 is not a boolean").ThrowAsJavaScriptException();
+    Napi::Error::New(env, "Arg 1 is not a boolean")
+        .ThrowAsJavaScriptException();
     return env.Null();
   }
   bool delegated = info[1].As<Napi::Boolean>().Value();
-
   GetInstance()->CreateNativeNode(content_handle, delegated);
 
   return env.Null();
@@ -62,7 +75,8 @@ Napi::Value NapiManager::NapiSetDelegatedCompositing(
   }
 
   if (!info[0].IsBoolean()) {
-    Napi::Error::New(env, "Arg 0 is not a boolean").ThrowAsJavaScriptException();
+    Napi::Error::New(env, "Arg 0 is not a boolean")
+        .ThrowAsJavaScriptException();
     return env.Null();
   }
 
@@ -90,4 +104,4 @@ void NapiManager::SetDelegatedCompositing(bool enable) {
   }
 }
 
-}  // namespace helloxcomponent
+}  // namespace hello

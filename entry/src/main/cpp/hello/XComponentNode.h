@@ -4,11 +4,15 @@
 #include <ace/xcomponent/native_interface_xcomponent.h>
 #include <arkui/native_node.h>
 #include <native_window/external_window.h>
+#include <uv.h>
 
+#include <deque>
 #include <memory>
 #include <string>
 
 namespace hello {
+
+class Thread;
 
 class XComponentNode {
  public:
@@ -29,6 +33,10 @@ class XComponentNode {
 
   ~XComponentNode();
 
+  void AddChild(XComponentNode* child);
+  void StartDrawFrame();
+  void StopDrawFrame();
+
   void SetPosition(float x, float y) { SetAttribute(NODE_POSITION, x, y); }
   void SetWidth(float width) { SetAttribute(NODE_WIDTH, width); }
   void SetHeight(float height) { SetAttribute(NODE_HEIGHT, height); }
@@ -47,8 +55,6 @@ class XComponentNode {
     SetAttribute(NODE_XCOMPONENT_SURFACE_SIZE, width, height);
   }
 
-  void AddChild(XComponentNode* child);
-
   ArkUI_NodeHandle handle() const { return handle_; }
   static ArkUI_NativeNodeAPI_1* api();
 
@@ -57,12 +63,13 @@ class XComponentNode {
   virtual void OnSurfaceChanged(void* window);
   virtual void OnSurfaceDestroyed(void* window);
   virtual void DispatchTouchEvent(void* window);
-  virtual void OnFrame(uint64_t timestamp, uint64_t target_timestamp);
 
  private:
   XComponentNode(Delegate* delegate, ArkUI_NodeHandle handle);
 
   static XComponentNode* GetInstance(OH_NativeXComponent* component);
+
+  void DrawFrame();
 
   void SetAttribute(ArkUI_NodeAttributeType attribute, uint32_t u32) {
     ArkUI_NumberValue value = {.u32 = u32};
@@ -105,9 +112,14 @@ class XComponentNode {
   const ArkUI_NodeHandle handle_;
   OH_NativeXComponent* const component_;
 
+  std::unique_ptr<Thread> renderer_thread_;
+
   OHNativeWindow* window_ = nullptr;
   uint64_t surface_width_ = 0;
   uint64_t surface_height_ = 0;
+
+  int pending_render_pixels_count_ = 0;
+  bool draw_frame_ = false;
 };
 
 }  // namespace hello

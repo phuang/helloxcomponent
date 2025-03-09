@@ -4,13 +4,17 @@
 #include <native_buffer/native_buffer.h>
 #include <native_window/external_window.h>
 #include <unistd.h>
+#include <uv.h>
 
 #include <cassert>
+#include <functional>
 #include <map>
 #include <mutex>
 
 #include "common/log.h"
 #include "hello/BitmapRenderer.h"
+#include "hello/NapiManager.h"
+#include "hello/Thread.h"
 
 namespace hello {
 namespace {
@@ -63,6 +67,15 @@ XComponentNode::XComponentNode(Delegate* delegate, ArkUI_NodeHandle handle)
   FATAL_IF(retval != 0,
            "OH_NativeXComponent_RegisterCallback() failed retval=%{public}d",
            retval);
+
+  const auto& env = NapiManager::GetInstance()->env();
+  uv_loop_t* loop = nullptr;
+  napi_status status = napi_get_uv_event_loop(env, &loop);
+  FATAL_IF(status != napi_ok,
+           "napi_get_uv_event_loop() failed status=%{public}d", status);
+
+  renderer_thread_ = std::make_unique<Thread>(loop);
+  renderer_thread_->Start();
 }
 
 XComponentNode::~XComponentNode() {
@@ -86,6 +99,20 @@ void XComponentNode::AddChild(XComponentNode* child) {
   api()->addChild(handle(), child->handle());
 }
 
+void XComponentNode::StartDrawFrame() {
+  if (draw_frame_) {
+    return;
+  }
+  draw_frame_ = true;
+  if (pending_render_pixels_count_ == 0 && window_) {
+    DrawFrame();
+  }
+}
+
+void XComponentNode::StopDrawFrame() {
+  draw_frame_ = false;
+}
+
 void XComponentNode::OnSurfaceCreated(void* window) {
   LOGE("XComponentNode::%{public}s()", __func__);
   window_ = reinterpret_cast<OHNativeWindow*>(window);
@@ -95,37 +122,52 @@ void XComponentNode::OnSurfaceCreated(void* window) {
   FATAL_IF(retval != 0,
            "OH_NativeXComponent_GetXComponentSize() failed retval=%{public}d",
            retval);
-  LOGE(
-      "EEEE OH_NativeXComponent_GetXComponentSize() return %{public}d "
-      "%{public}lux%{public}lu",
-      retval, surface_width_, surface_height_);
 
+  if (draw_frame_) {
+    DrawFrame();
+  }
+  // LOGE(
+  //     "EEEE OH_NativeXComponent_GetXComponentSize() return %{public}d "
+  //     "%{public}lux%{public}lu",
+  //     retval, surface_width_, surface_height_);
+  //
   // OH_NativeXComponent_ExpectedRateRange range;
   // retval = OH_NativeXComponent_SetExpectedFrameRateRange(component_,
   // nullptr); FATAL_IF(retval != 0,
   //          "OH_NativeXComponent_SetExpectedFrameRateRange() failed
   //          retval=%{public}d", retval);
-
-  retval = OH_NativeXComponent_RegisterOnFrameCallback(
-      component_, [](OH_NativeXComponent* component, uint64_t timestamp,
-                     uint64_t target_timestamp) {
-        GetInstance(component)->OnFrame(timestamp, target_timestamp);
-      });
-  FATAL_IF(
-      retval != 0,
-      "OH_NativeXComponent_RegisterOnFrameCallback() failed retval=%{public}d",
-      retval);
+  //
+  // retval = OH_NativeXComponent_RegisterOnFrameCallback(
+  //     component_, [](OH_NativeXComponent* component, uint64_t timestamp,
+  //                    uint64_t target_timestamp) {
+  //       GetInstance(component)->OnFrame(timestamp, target_timestamp);
+  //     });
+  // FATAL_IF(
+  //     retval != 0,
+  //     "OH_NativeXComponent_RegisterOnFrameCallback() failed
+  //     retval=%{public}d", retval);
 }
 
 void XComponentNode::OnSurfaceChanged(void* window) {}
 
 void XComponentNode::OnSurfaceDestroyed(void* window) {
-  OH_NativeXComponent_UnregisterOnFrameCallback(component_);
+  // OH_NativeXComponent_UnregisterOnFrameCallback(component_);
 }
 
 void XComponentNode::DispatchTouchEvent(void* window) {}
 
-void XComponentNode::OnFrame(uint64_t timestamp, uint64_t target_timestamp) {
+struct RenderPixelsData {
+  XComponentNode* self;
+  void* pixels;
+  int32_t width;
+  int32_t height;
+  int32_t stride;
+  uint64_t timestamp;
+  OHNativeWindowBuffer* window_buffer;
+  OH_NativeBuffer* buffer;
+};
+
+void XComponentNode::DrawFrame() {
   OHNativeWindowBuffer* window_buffer = nullptr;
   int fenceFd = -1;
   int32_t retval = OH_NativeWindow_NativeWindowRequestBuffer(
@@ -153,16 +195,25 @@ void XComponentNode::OnFrame(uint64_t timestamp, uint64_t target_timestamp) {
   FATAL_IF(retval != 0, "OH_NativeBuffer_Map() failed retval=%{public}d",
            retval);
 
-  delegate_->RenderPixels(addr, config.width, config.height, config.stride,
-                          target_timestamp);
-
-  OH_NativeBuffer_Unmap(buffer);
-
-  retval =
-      OH_NativeWindow_NativeWindowFlushBuffer(window_, window_buffer, -1, {});
-  FATAL_IF(retval != 0,
-           "OH_NativeWindow_NativeWindowFlushBuffer() failed retval=%{public}d",
-           retval);
+  ++pending_render_pixels_count_;
+  renderer_thread_->PostTask(
+      [this, addr, config, window_buffer] {
+        delegate_->RenderPixels(addr, config.width, config.height,
+                                config.stride, 0);
+      },
+      [this, window_buffer, buffer] {
+        OH_NativeBuffer_Unmap(buffer);
+        int32_t retval = OH_NativeWindow_NativeWindowFlushBuffer(
+            window_, window_buffer, -1, {});
+        FATAL_IF(retval != 0,
+                 "OH_NativeWindow_NativeWindowFlushBuffer() failed "
+                 "retval=%{public}d",
+                 retval);
+        if (draw_frame_) {
+          DrawFrame();
+        }
+        --pending_render_pixels_count_;
+      });
 }
 
 // static

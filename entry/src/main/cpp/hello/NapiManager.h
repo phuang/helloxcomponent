@@ -6,17 +6,20 @@
 #define NODE_ADDON_API_DISABLE_DEPRECATED
 #include "napi.h"
 
-namespace helloxcomponent {
+namespace hello {
 
 class NapiManager {
  public:
+  static void Init(const Napi::Env& env);
   static NapiManager* GetInstance();
   static Napi::Value NapiCreateNativeNode(const Napi::CallbackInfo& info);
   static Napi::Value NapiSetDelegatedCompositing(
       const Napi::CallbackInfo& info);
 
+  const Napi::Env& env() const { return env_; }
+
  private:
-  NapiManager();
+  NapiManager(const Napi::Env& env);
   ~NapiManager();
 
   void CreateNativeNode(ArkUI_NodeContentHandle content_handle, bool delegated);
@@ -30,6 +33,6 @@ class NapiManager {
   Napi::Reference<Napi::Object> controller_;
 };
 
-}  // namespace helloxcomponent
+}  // namespace hello
 
 #endif  // HELLOXCOMPONENT_NAPI_MANAGER_H_

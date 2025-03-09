@@ -2,17 +2,17 @@
 
 #define NODE_ADDON_API_DISABLE_DEPRECATED
 #include "napi.h"
-#include "napi_manager.h"
+#include "hello/NapiManager.h"
 
 namespace helloxcomponent {
 
 Napi::Object Init(Napi::Env env, Napi::Object exports) {
-  std::srand(std::time({}));
+  hello::NapiManager::Init(env);
   exports.Set("createNativeNode",
-              Napi::Function::New<NapiManager::NapiCreateNativeNode>(env));
+              Napi::Function::New<hello::NapiManager::NapiCreateNativeNode>(env));
   exports.Set(
       "setDelegatedCompositing",
-      Napi::Function::New<NapiManager::NapiSetDelegatedCompositing>(env));
+      Napi::Function::New<hello::NapiManager::NapiSetDelegatedCompositing>(env));
   return exports;
 }
 

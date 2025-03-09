@@ -16,7 +16,13 @@
 			"functional": "cpp",
 			"tuple": "cpp",
 			"utility": "cpp",
-			"variant": "cpp"
+			"variant": "cpp",
+			"string": "cpp",
+			"string_view": "cpp",
+			"compare": "cpp",
+			"cstdint": "cpp",
+			"optional": "cpp",
+			"system_error": "cpp"
 		}
 	}
 }
