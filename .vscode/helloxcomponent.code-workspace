@@ -1,0 +1,11 @@
+{
+	"folders": [
+		{
+			"path": ".."
+		},
+		{
+			"path": "../../command-line-tools/sdk/default/openharmony/native/sysroot/usr/include"
+		}
+	],
+	"settings": {}
+}

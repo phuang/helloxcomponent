@@ -1,0 +1,38 @@
+{
+  // See https://go.microsoft.com/fwlink/?LinkId=733558
+  // for the documentation about the tasks.json format
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "assemble hap",
+      "type": "shell",
+      "command": "~/sources/command-line-tools/bin/hvigorw",
+      "args": [
+        "assembleHap"
+      ],
+      "detail": "Assembling HAP"
+    },
+    {
+      "label": "install hap",
+      "type": "shell",
+      "command": "hdc.exe",
+      "args": [
+        "install",
+        "entry/build/default/outputs/default/entry-default-signed.hap"
+      ],
+      "dependsOn": "assemble hap",
+      "detail": "Install Hap"
+    },
+    {
+      "label": "run hap",
+      "type": "shell",
+      "command": "hdc.exe",
+      "args": [
+        "shell", "aa", "start", "-a", "EntryAbility",
+        "-b", "com.example.helloxcomponent",
+      ],
+      "dependsOn": "install hap",
+      "detail": "run hap"
+    },
+  ]
+}
