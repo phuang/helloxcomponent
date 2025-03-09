@@ -12,4 +12,16 @@ constexpr const char *APP_LOG_TAG = "HelloXComponent";
 #define LOGW(...) ((void)OH_LOG_Print(LOG_APP, LOG_WARN, LOG_DOMAIN, APP_LOG_TAG, __VA_ARGS__))
 #define LOGE(...) ((void)OH_LOG_Print(LOG_APP, LOG_ERROR, LOG_DOMAIN, APP_LOG_TAG, __VA_ARGS__))
 
+#define FATAL_IF(CONDITION, ARGS...)  \
+  if (CONDITION) { \
+    LOGE(ARGS); \
+    abort(); \
+  }
+
+#define CHECK(CONDITION) \
+  if (!(CONDITION)) { \
+    LOGE(#CONDITION" is false"); \
+    abort(); \
+  }
+
 #endif //HELLOXCOMPONENT_LOG_H

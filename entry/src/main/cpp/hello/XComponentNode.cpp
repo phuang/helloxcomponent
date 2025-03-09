@@ -14,8 +14,12 @@
 
 namespace hello {
 namespace {
+
+// const char kPictureUri[] = "/data/storage/el1/bundle/entry/resources/resfile/pexels-janik-butz-5366526.jpg";
+const char kPictureUri[] = "/data/storage/el1/bundle/entry/resources/resfile/pexels-quang-nguyen-vinh-2166711.jpg";
+
 std::map<OH_NativeXComponent *, XComponentNode *> xcomponent_nodes_;
-}
+} // namespace
 
 // static
 std::unique_ptr<XComponentNode> XComponentNode::Create(std::string id, Type type) {
@@ -35,10 +39,10 @@ std::unique_ptr<XComponentNode> XComponentNode::Create(std::string id, Type type
 
 XComponentNode::XComponentNode(ArkUI_NodeHandle handle)
     : handle_(handle), component_(OH_NativeXComponent_GetNativeXComponent(handle_)),
-      bitmap_renderer_(std::make_unique<BitmapRenderer>(
-          "/data/storage/el1/bundle/entry/resources/resfile/pexels-janik-butz-5366526.jpg")) {
+      bitmap_renderer_(std::make_unique<BitmapRenderer>(kPictureUri)) {
   assert(component_);
   xcomponent_nodes_[component_] = this;
+  
   static OH_NativeXComponent_Callback callbacks = {
       [](OH_NativeXComponent *component, void *window) { GetInstance(component)->OnSurfaceCreated(window); },
       [](OH_NativeXComponent *component, void *window) { GetInstance(component)->OnSurfaceChanged(window); },
@@ -46,7 +50,9 @@ XComponentNode::XComponentNode(ArkUI_NodeHandle handle)
       [](OH_NativeXComponent *component, void *window) { GetInstance(component)->DispatchTouchEvent(window); },
   };
   int32_t retval = OH_NativeXComponent_RegisterCallback(component_, &callbacks);
-//  LOGE("EEEE OH_NativeXComponent_RegisterCallback() return %{public}d", retval);
+  if (retval != 0) {
+    LOGE("OH_NativeXComponent_RegisterCallback() return %{public}d", retval);
+  }
 }
 
 XComponentNode::~XComponentNode() {
@@ -96,14 +102,18 @@ void XComponentNode::OnSurfaceDestroyed(void *window) {
 void XComponentNode::DispatchTouchEvent(void *window) { LOGE("XComponentNode::%{public}s()", __func__); }
 
 void XComponentNode::OnFrame(uint64_t timestamp, uint64_t target_timestamp) {
-  LOGE("XComponentNode::%{public}s()", __func__);
+//  LOGE("XComponentNode::%{public}s()", __func__);
+
   OHNativeWindowBuffer *window_buffer = nullptr;
   int fenceFd = -1;
   int32_t retval = OH_NativeWindow_NativeWindowRequestBuffer(window_, &window_buffer, &fenceFd);
+  if (retval != 0) {
+    LOGE("EEEE OH_NativeWindow_NativeWindowRequestBuffer() failed retval=%{public}d", retval);
+  }
+
   if (fenceFd != -1) {
     close(fenceFd);
   }
-//  LOGE("EEEE OH_NativeWindow_NativeWindowRequestBuffer() return %{public}d fenceFd=%{public}d", retval, fenceFd);
 
   OH_NativeBuffer *buffer = nullptr;
   retval = OH_NativeBuffer_FromNativeWindowBuffer(window_buffer, &buffer);
@@ -111,35 +121,20 @@ void XComponentNode::OnFrame(uint64_t timestamp, uint64_t target_timestamp) {
   OH_NativeBuffer_Config config;
   OH_NativeBuffer_GetConfig(buffer, &config);
 
-//  LOGE("EEEE NativeBuffer: size=%{public}dx%{public}d stride=%{public}d format=%{public}d", config.width,
-  //  config.height,
-//       config.stride, config.format);
-
-
   void *addr = nullptr;
   retval = OH_NativeBuffer_Map(buffer, &addr);
+  if (retval != 0) {
+    LOGE("EEEE OH_NativeBuffer_Map() failed retval=%{public}d", retval);
+  }
 
   bitmap_renderer_->Render(addr, config.width, config.height, config.stride, target_timestamp);
 
-  //  LOGE("EEEE OH_NativeBuffer_Map() target_timestamp=%{public}lu", target_timestamp);
-//
-//  LOGE("EEEE OnFrame() return %{public}d", retval);
-
-//  static uint32_t frame = 0;
-//  frame = (++frame % 256);
-//
-//  uint32_t *line = reinterpret_cast<uint32_t *>(addr);
-//  for (uint64_t y = 0; y < config.height; ++y) {
-//    auto *pixel = line;
-//    for (uint64_t x = 0; x < config.width; ++x) {
-//      *pixel = (((x * 256 / config.width) + frame) & 0xff) | ((((y * 256 / config.height) + frame) & 0xff) << 8);
-//      pixel++;
-//    }
-//    line += config.stride / 4;
-//  }
-
   OH_NativeBuffer_Unmap(buffer);
+
   retval = OH_NativeWindow_NativeWindowFlushBuffer(window_, window_buffer, -1, {});
+  if (retval != 0) {
+    LOGE("EEEE OH_NativeWindow_NativeWindowFlushBuffer() failed retval=%{public}d", retval);
+  }
 }
 
 // static

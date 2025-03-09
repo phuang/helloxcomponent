@@ -16,8 +16,8 @@
 namespace hello {
 
 BitmapRenderer::BitmapRenderer(const std::string &uri) {
-  dx_ = std::abs(rand()) % 5 + 5;
-  dy_ = std::abs(rand()) % 5 + 5;
+  dx_ = std::abs(rand()) % 20 - 10;
+  dy_ = std::abs(rand()) % 20 - 10;
   x_ = std::abs(std::rand()) % (picture_width_);
   y_ = std::abs(std::rand()) % (picture_height_);
   LoadPicture(uri);
@@ -29,7 +29,6 @@ void BitmapRenderer::LoadPicture(const std::string &uri) {
   OH_Pixelmap_ImageInfo *image_info = nullptr;
 
   do {
-//      char uri[] = "/data/storage/el1/bundle/entry/resources/resfile/pexels-janik-butz-5366526.jpg";
     Image_ErrorCode retval =
         OH_ImageSourceNative_CreateFromUri(const_cast<char *>(uri.c_str()), uri.size(), &image_source);
     if (retval != IMAGE_SUCCESS) {

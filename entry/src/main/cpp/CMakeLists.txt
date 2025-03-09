@@ -16,8 +16,14 @@ add_library(helloxcomponent SHARED
     common/log.h
     hello/BitmapRenderer.cpp
     hello/BitmapRenderer.h
+    hello/DelegatedNodeContent.cpp
+    hello/DelegatedNodeContent.h
     hello/XComponentNode.cpp
     hello/XComponentNode.h
+    hello/NodeContent.cpp
+    hello/NodeContent.h
+    hello/NonDelegatedNodeContent.cpp
+    hello/NonDelegatedNodeContent.h
     napi_init.cpp
     napi_manager.cpp
     napi_manager.h
