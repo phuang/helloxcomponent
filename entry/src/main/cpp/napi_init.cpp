@@ -8,12 +8,15 @@ namespace helloxcomponent {
 
 Napi::Object Init(Napi::Env env, Napi::Object exports) {
   std::srand(std::time({}));
-  exports.Set("createNativeNode", Napi::Function::New<NapiManager::NapiCreateNativeNode>(env));
-  exports.Set("setDelegatedCompositing", Napi::Function::New<NapiManager::NapiSetDelegatedCompositing>(env));
+  exports.Set("createNativeNode",
+              Napi::Function::New<NapiManager::NapiCreateNativeNode>(env));
+  exports.Set(
+      "setDelegatedCompositing",
+      Napi::Function::New<NapiManager::NapiSetDelegatedCompositing>(env));
   return exports;
 }
 
-} // namespace helloxcomponent
+}  // namespace helloxcomponent
 
 using helloxcomponent::Init;
 

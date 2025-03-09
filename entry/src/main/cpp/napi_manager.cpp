@@ -1,6 +1,5 @@
 #include "napi_manager.h"
 
-#include <ace/xcomponent/native_interface_xcomponent.h>
 #include <arkui/native_node.h>
 #include <arkui/native_node_napi.h>
 
@@ -8,13 +7,12 @@
 #include <cstdint>
 #include <string>
 
-#include "common/log.h"
 #include "hello/DelegatedNodeContent.h"
 
 namespace helloxcomponent {
 
 // static
-NapiManager *NapiManager::GetInstance() {
+NapiManager* NapiManager::GetInstance() {
   static NapiManager manager;
   return &manager;
 }
@@ -22,41 +20,44 @@ NapiManager *NapiManager::GetInstance() {
 NapiManager::NapiManager() = default;
 NapiManager::~NapiManager() = default;
 
-
 // static
-Napi::Value NapiManager::NapiCreateNativeNode(const Napi::CallbackInfo &info) {
+Napi::Value NapiManager::NapiCreateNativeNode(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
 
   if (info.Length() != 2) {
-    Napi::Error::New(env, "Wrong number of arguments").ThrowAsJavaScriptException();
+    Napi::Error::New(env, "Wrong number of arguments")
+        .ThrowAsJavaScriptException();
     return env.Null();
   }
 
   ArkUI_NodeContentHandle content_handle = nullptr;
-  int32_t retval = OH_ArkUI_GetNodeContentFromNapiValue(env, info[0], &content_handle);
+  int32_t retval =
+      OH_ArkUI_GetNodeContentFromNapiValue(env, info[0], &content_handle);
   if (retval != ARKUI_ERROR_CODE_NO_ERROR) {
-    LOGE("OH_ArkUI_GetNodeContentFromNapiValue() failed");
-    Napi::Error::New(env, "Arg 0 is not NodeContent").ThrowAsJavaScriptException();
+    Napi::Error::New(env, "Arg 0 is not NodeContent")
+        .ThrowAsJavaScriptException();
     return env.Null();
   }
-  
+
   if (!info[1].IsBoolean()) {
     Napi::Error::New(env, "Arg is not boolean").ThrowAsJavaScriptException();
     return env.Null();
   }
   bool delegated = info[1].As<Napi::Boolean>().Value();
-  
+
   GetInstance()->CreateNativeNode(content_handle, delegated);
 
   return env.Null();
 }
 
 // static
-Napi::Value NapiManager::NapiSetDelegatedCompositing(const Napi::CallbackInfo &info) {
+Napi::Value NapiManager::NapiSetDelegatedCompositing(
+    const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
 
   if (info.Length() != 1) {
-    Napi::Error::New(env, "Wrong number of arguments").ThrowAsJavaScriptException();
+    Napi::Error::New(env, "Wrong number of arguments")
+        .ThrowAsJavaScriptException();
     return env.Null();
   }
 
@@ -72,14 +73,15 @@ Napi::Value NapiManager::NapiSetDelegatedCompositing(const Napi::CallbackInfo &i
   return env.Null();
 }
 
-void NapiManager::CreateNativeNode(ArkUI_NodeContentHandle content_handle, bool delegated) {
+void NapiManager::CreateNativeNode(ArkUI_NodeContentHandle content_handle,
+                                   bool delegated) {
   if (delegated) {
-    delegated_node_content_ = std::make_unique<hello::DelegatedNodeContent>(content_handle);
+    delegated_node_content_ =
+        std::make_unique<hello::DelegatedNodeContent>(content_handle);
   } else {
-    
   }
 }
 
 void NapiManager::SetDelegatedCompositing(bool enable) {}
 
-} // namespace helloxcomponent
+}  // namespace helloxcomponent

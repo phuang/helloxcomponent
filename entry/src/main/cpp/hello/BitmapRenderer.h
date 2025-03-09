@@ -1,8 +1,8 @@
 //
 // Created on 2025-03-08.
 //
-// Node APIs are not fully supported. To solve the compilation error of the interface cannot be found,
-// please include "napi/native_api.h".
+// Node APIs are not fully supported. To solve the compilation error of the
+// interface cannot be found, please include "napi/native_api.h".
 
 #ifndef HELLOXCOMPONENT_BITMAPRENDERER_H
 #define HELLOXCOMPONENT_BITMAPRENDERER_H
@@ -14,13 +14,17 @@
 namespace hello {
 
 class BitmapRenderer {
-public:
+ public:
   explicit BitmapRenderer(const std::string& uri);
-  void Render(void *pixels, int32_t width, int32_t height, int32_t stride, uint64_t timestamp);
+  void Render(void* pixels,
+              int32_t width,
+              int32_t height,
+              int32_t stride,
+              uint64_t timestamp);
 
-private:
+ private:
   void LoadPicture(const std::string& uri);
-  
+
   std::vector<uint8_t> picture_pixels_;
   uint32_t picture_width_ = 0;
   uint32_t picture_height_ = 0;
@@ -31,6 +35,6 @@ private:
   int32_t dy_ = 0;
 };
 
-} // namespace hello
+}  // namespace hello
 
-#endif // HELLOXCOMPONENT_BITMAPRENDERER_H
+#endif  // HELLOXCOMPONENT_BITMAPRENDERER_H

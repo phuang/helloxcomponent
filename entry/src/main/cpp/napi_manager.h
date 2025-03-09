@@ -1,26 +1,21 @@
 #ifndef HELLOXCOMPONENT_NAPI_MANAGER_H_
 #define HELLOXCOMPONENT_NAPI_MANAGER_H_
 
-#include "hello/XComponentNode.h"
-
-#include <string>
+#include "hello/NodeContent.h"
 
 #define NODE_ADDON_API_DISABLE_DEPRECATED
 #include "napi.h"
 
-namespace hello {
-class NodeContent;
-}
-
 namespace helloxcomponent {
 
 class NapiManager {
-public:
-  static NapiManager *GetInstance();
-  static Napi::Value NapiCreateNativeNode(const Napi::CallbackInfo &info);
-  static Napi::Value NapiSetDelegatedCompositing(const Napi::CallbackInfo &info);
+ public:
+  static NapiManager* GetInstance();
+  static Napi::Value NapiCreateNativeNode(const Napi::CallbackInfo& info);
+  static Napi::Value NapiSetDelegatedCompositing(
+      const Napi::CallbackInfo& info);
 
-private:
+ private:
   NapiManager();
   ~NapiManager();
 
@@ -31,12 +26,10 @@ private:
 
   std::unique_ptr<hello::NodeContent> delegated_node_content_;
 
-  std::string id_;
-
   // Hold a weak reference of the controller
   Napi::Reference<Napi::Object> controller_;
 };
 
-} // namespace helloxcomponent
+}  // namespace helloxcomponent
 
-#endif // HELLOXCOMPONENT_NAPI_MANAGER_H_
+#endif  // HELLOXCOMPONENT_NAPI_MANAGER_H_
