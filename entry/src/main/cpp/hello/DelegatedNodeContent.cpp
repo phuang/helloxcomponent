@@ -7,16 +7,26 @@
 #include "hello/DelegatedNodeContent.h"
 
 namespace hello {
+namespace {
+const char kRootPictureUri[] =
+    "/data/storage/el1/bundle/entry/resources/resfile/"
+    "pexels-janik-butz-5366526.jpg";
+const char kChildPictureUri[] =
+    "/data/storage/el1/bundle/entry/resources/resfile/"
+    "pexels-quang-nguyen-vinh-2166711.jpg";
+}  // namespace
 
 DelegatedNodeContent::DelegatedNodeContent(
     ArkUI_NodeContentHandle content_handle)
     : NodeContent(content_handle) {
-  root_node_ = hello::XComponentNode::Create("root_view",
+  root_renderer_ = std::make_unique<BitmapRenderer>(kRootPictureUri);
+  root_node_ = hello::XComponentNode::Create(root_renderer_.get(), "root_view",
                                              hello::XComponentNode::kSurface);
   root_node_->SetWidthPercent(1);
   root_node_->SetHeightPercent(1);
 
-  child_node_ = hello::XComponentNode::Create("child_view",
+  child_renderer_ = std::make_unique<BitmapRenderer>(kChildPictureUri);
+  child_node_ = hello::XComponentNode::Create(child_renderer_.get(), "child_view",
                                               hello::XComponentNode::kSurface);
   root_node_->AddChild(child_node_.get());
   child_node_->SetPosition(40, 200);

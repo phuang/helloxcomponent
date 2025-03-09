@@ -32,7 +32,11 @@
         "-b", "com.example.helloxcomponent",
       ],
       "dependsOn": "install hap",
-      "detail": "run hap"
+      "detail": "run hap",
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      }
     },
   ]
 }

@@ -4,7 +4,6 @@
 #include <ace/xcomponent/native_interface_xcomponent.h>
 #include <arkui/native_node.h>
 #include <native_window/external_window.h>
-#include "hello/BitmapRenderer.h"
 
 #include <memory>
 #include <string>
@@ -13,9 +12,21 @@ namespace hello {
 
 class XComponentNode {
  public:
-  enum Type { kSurface, kTexture };
+  class Delegate {
+   public:
+    virtual ~Delegate() = default;
+    virtual void RenderPixels(void* pixels,
+                              int32_t width,
+                              int32_t height,
+                              int32_t stride,
+                              uint64_t timestamp) = 0;
+  };
 
-  static std::unique_ptr<XComponentNode> Create(std::string id, Type type);
+  enum Type { kSurface, kTexture };
+  static std::unique_ptr<XComponentNode> Create(Delegate* delegate,
+                                                std::string id,
+                                                Type type);
+
   ~XComponentNode();
 
   void SetPosition(float x, float y) { SetAttribute(NODE_POSITION, x, y); }
@@ -49,7 +60,7 @@ class XComponentNode {
   virtual void OnFrame(uint64_t timestamp, uint64_t target_timestamp);
 
  private:
-  explicit XComponentNode(ArkUI_NodeHandle handle);
+  XComponentNode(Delegate* delegate, ArkUI_NodeHandle handle);
 
   static XComponentNode* GetInstance(OH_NativeXComponent* component);
 
@@ -90,14 +101,13 @@ class XComponentNode {
     api()->setAttribute(handle_, attribute, &item);
   }
 
+  Delegate* const delegate_;
   const ArkUI_NodeHandle handle_;
   OH_NativeXComponent* const component_;
 
   OHNativeWindow* window_ = nullptr;
   uint64_t surface_width_ = 0;
   uint64_t surface_height_ = 0;
-
-  std::unique_ptr<BitmapRenderer> bitmap_renderer_;
 };
 
 }  // namespace hello

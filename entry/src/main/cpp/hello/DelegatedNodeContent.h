@@ -11,6 +11,8 @@
 
 #include <memory>
 
+#include "hello/BitmapRenderer.h"
+
 namespace hello {
 
 class DelegatedNodeContent : public NodeContent {
@@ -26,6 +28,8 @@ class DelegatedNodeContent : public NodeContent {
   void OnRootNodeDetached() override;
 
   bool visible_ = false;
+  std::unique_ptr<BitmapRenderer> root_renderer_;
+  std::unique_ptr<BitmapRenderer> child_renderer_;
   std::unique_ptr<hello::XComponentNode> root_node_;
   std::unique_ptr<hello::XComponentNode> child_node_;
 };

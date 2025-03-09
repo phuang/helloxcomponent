@@ -15,24 +15,20 @@
 namespace hello {
 namespace {
 
-// const char kPictureUri[] =
-// "/data/storage/el1/bundle/entry/resources/resfile/pexels-janik-butz-5366526.jpg";
-const char kPictureUri[] =
-    "/data/storage/el1/bundle/entry/resources/resfile/"
-    "pexels-quang-nguyen-vinh-2166711.jpg";
-
 std::map<OH_NativeXComponent*, XComponentNode*> xcomponent_nodes_;
 }  // namespace
 
 // static
-std::unique_ptr<XComponentNode> XComponentNode::Create(std::string id,
+std::unique_ptr<XComponentNode> XComponentNode::Create(Delegate* delegate,
+                                                       std::string id,
                                                        Type type) {
   ArkUI_NodeHandle handle = api()->createNode(ARKUI_NODE_XCOMPONENT);
   if (!handle) {
     return {};
   }
 
-  std::unique_ptr<XComponentNode> component(new XComponentNode(handle));
+  std::unique_ptr<XComponentNode> component(
+      new XComponentNode(delegate, handle));
 
   component->SetAttribute(NODE_XCOMPONENT_TYPE,
                           type == kSurface ? ARKUI_XCOMPONENT_TYPE_SURFACE
@@ -42,10 +38,10 @@ std::unique_ptr<XComponentNode> XComponentNode::Create(std::string id,
   return component;
 }
 
-XComponentNode::XComponentNode(ArkUI_NodeHandle handle)
-    : handle_(handle),
-      component_(OH_NativeXComponent_GetNativeXComponent(handle_)),
-      bitmap_renderer_(std::make_unique<BitmapRenderer>(kPictureUri)) {
+XComponentNode::XComponentNode(Delegate* delegate, ArkUI_NodeHandle handle)
+    : delegate_(delegate),
+      handle_(handle),
+      component_(OH_NativeXComponent_GetNativeXComponent(handle_)) {
   assert(component_);
   xcomponent_nodes_[component_] = this;
 
@@ -64,7 +60,9 @@ XComponentNode::XComponentNode(ArkUI_NodeHandle handle)
       },
   };
   int32_t retval = OH_NativeXComponent_RegisterCallback(component_, &callbacks);
-  FATAL_IF(retval != 0, "OH_NativeXComponent_RegisterCallback() failed retval=%{public}d", retval);
+  FATAL_IF(retval != 0,
+           "OH_NativeXComponent_RegisterCallback() failed retval=%{public}d",
+           retval);
 }
 
 XComponentNode::~XComponentNode() {
@@ -103,30 +101,29 @@ void XComponentNode::OnSurfaceCreated(void* window) {
       retval, surface_width_, surface_height_);
 
   // OH_NativeXComponent_ExpectedRateRange range;
-  // retval = OH_NativeXComponent_SetExpectedFrameRateRange(component_, nullptr);
-  // FATAL_IF(retval != 0,
-  //          "OH_NativeXComponent_SetExpectedFrameRateRange() failed retval=%{public}d",
-  //          retval);
+  // retval = OH_NativeXComponent_SetExpectedFrameRateRange(component_,
+  // nullptr); FATAL_IF(retval != 0,
+  //          "OH_NativeXComponent_SetExpectedFrameRateRange() failed
+  //          retval=%{public}d", retval);
 
   retval = OH_NativeXComponent_RegisterOnFrameCallback(
       component_, [](OH_NativeXComponent* component, uint64_t timestamp,
                      uint64_t target_timestamp) {
         GetInstance(component)->OnFrame(timestamp, target_timestamp);
       });
-  FATAL_IF(retval != 0,
-           "OH_NativeXComponent_RegisterOnFrameCallback() failed retval=%{public}d",
-           retval);
+  FATAL_IF(
+      retval != 0,
+      "OH_NativeXComponent_RegisterOnFrameCallback() failed retval=%{public}d",
+      retval);
 }
 
-void XComponentNode::OnSurfaceChanged(void* window) {
-}
+void XComponentNode::OnSurfaceChanged(void* window) {}
 
 void XComponentNode::OnSurfaceDestroyed(void* window) {
   OH_NativeXComponent_UnregisterOnFrameCallback(component_);
 }
 
-void XComponentNode::DispatchTouchEvent(void* window) {
-}
+void XComponentNode::DispatchTouchEvent(void* window) {}
 
 void XComponentNode::OnFrame(uint64_t timestamp, uint64_t target_timestamp) {
   OHNativeWindowBuffer* window_buffer = nullptr;
@@ -156,8 +153,8 @@ void XComponentNode::OnFrame(uint64_t timestamp, uint64_t target_timestamp) {
   FATAL_IF(retval != 0, "OH_NativeBuffer_Map() failed retval=%{public}d",
            retval);
 
-  bitmap_renderer_->Render(addr, config.width, config.height, config.stride,
-                           target_timestamp);
+  delegate_->RenderPixels(addr, config.width, config.height, config.stride,
+                          target_timestamp);
 
   OH_NativeBuffer_Unmap(buffer);
 

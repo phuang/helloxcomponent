@@ -11,16 +11,19 @@
 #include <string>
 #include <vector>
 
+#include "hello/XComponentNode.h"
+
 namespace hello {
 
-class BitmapRenderer {
+class BitmapRenderer : public XComponentNode::Delegate {
  public:
   explicit BitmapRenderer(const std::string& uri);
-  void Render(void* pixels,
-              int32_t width,
-              int32_t height,
-              int32_t stride,
-              uint64_t timestamp);
+  ~BitmapRenderer() override = default;
+  void RenderPixels(void* pixels,
+                    int32_t width,
+                    int32_t height,
+                    int32_t stride,
+                    uint64_t timestamp) override;
 
  private:
   void LoadPicture(const std::string& uri);

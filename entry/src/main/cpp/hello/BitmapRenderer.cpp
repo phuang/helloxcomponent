@@ -92,11 +92,11 @@ void BitmapRenderer::LoadPicture(const std::string& uri) {
   }
 }
 
-void BitmapRenderer::Render(void* pixels,
-                            int32_t width,
-                            int32_t height,
-                            int32_t stride,
-                            uint64_t timestamp) {
+void BitmapRenderer::RenderPixels(void* pixels,
+                                  int32_t width,
+                                  int32_t height,
+                                  int32_t stride,
+                                  uint64_t timestamp) {
   x_ += dx_;
   y_ += dy_;
 
