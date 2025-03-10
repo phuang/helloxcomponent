@@ -6,7 +6,7 @@
 
 #include "hello/NodeContent.h"
 
-#include "common/log.h"
+#include "hello/Log.h"
 
 namespace hello {
 

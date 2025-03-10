@@ -6,15 +6,9 @@
 
 #include "hello/DelegatedNodeContent.h"
 
+#include "hello/Constants.h"
+
 namespace hello {
-namespace {
-const char kRootPictureUri[] =
-    "/data/storage/el1/bundle/entry/resources/resfile/"
-    "pexels-janik-butz-5366526.jpg";
-const char kChildPictureUri[] =
-    "/data/storage/el1/bundle/entry/resources/resfile/"
-    "pexels-quang-nguyen-vinh-2166711.jpg";
-}  // namespace
 
 DelegatedNodeContent::DelegatedNodeContent(
     ArkUI_NodeContentHandle content_handle)
@@ -31,19 +25,19 @@ DelegatedNodeContent::DelegatedNodeContent(
       child_texture_renderer_.get(), "child_texture_view",
       hello::XComponentNode::kEGLSurface);
   root_node_->AddChild(child_elg_surface_node_.get());
-  child_elg_surface_node_->SetPosition(16, 16);
-  child_elg_surface_node_->SetSurfaceSize(360, 360);
-  child_elg_surface_node_->SetWidth(360);
-  child_elg_surface_node_->SetHeight(360);
+  child_elg_surface_node_->SetPosition(kEGLSurfaceNodeX, kEGLSurfaceNodeX);
+  child_elg_surface_node_->SetSurfaceSize(kEGLSurfaceNodeSize, kEGLSurfaceNodeSize);
+  child_elg_surface_node_->SetWidth(kEGLSurfaceNodeSize);
+  child_elg_surface_node_->SetHeight(kEGLSurfaceNodeSize);
 
   child_bitmap_renderer_ = std::make_unique<BitmapRenderer>(kChildPictureUri);
   child_software_node_ = hello::XComponentNode::Create(
       child_bitmap_renderer_.get(), "child_surface_view",
       hello::XComponentNode::kSoftware);
   root_node_->AddChild(child_software_node_.get());
-  child_software_node_->SetPosition(36, 340);
-  child_software_node_->SetWidth(320);
-  child_software_node_->SetHeight(320);
+  child_software_node_->SetPosition(kBitmapNodeX, kBitmapNodeY);
+  child_software_node_->SetWidth(kBitmapNodeSize);
+  child_software_node_->SetHeight(kBitmapNodeSize);
 }
 
 DelegatedNodeContent::~DelegatedNodeContent() {

@@ -11,7 +11,7 @@
 #include <algorithm>
 #include <cstdlib>
 
-#include "common/log.h"
+#include "hello/Log.h"
 
 namespace hello {
 

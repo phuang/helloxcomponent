@@ -25,6 +25,11 @@ class BitmapRenderer : public XComponentNode::Delegate {
                     int32_t stride,
                     uint64_t timestamp) override;
 
+  const uint8_t* picture_pixels() const { return picture_pixels_.data(); }
+  uint32_t picture_width() const { return picture_width_; }
+  uint32_t picture_height() const { return picture_height_; }
+  uint32_t picture_stride() const { return picture_stride_; }
+
  private:
   void LoadPicture(const std::string& uri);
 

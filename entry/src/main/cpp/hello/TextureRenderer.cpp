@@ -2,7 +2,7 @@
 
 #include <mutex>
 
-#include "common/log.h"
+#include "hello/Log.h"
 #include "hello/GLCore.h"
 #include "hello/Matrix.h"
 
@@ -227,6 +227,7 @@ void TextureRenderer::RenderTexture(GLenum target,
 void TextureRenderer::RenderFrame(int32_t width,
                                   int32_t height,
                                   uint64_t timestamp) {
+  LOGE("RenderFrame called with width: %{public}d, height: %{public}d, timestamp: %{public}llu", width, height, timestamp);
   auto time = std::chrono::duration_cast<std::chrono::milliseconds>(
                   std::chrono::system_clock::now() - kStartTime)
                   .count();

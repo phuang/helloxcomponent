@@ -18,9 +18,13 @@ include_directories(${NATIVERENDER_ROOT_PATH}
                     ${NATIVERENDER_ROOT_PATH}/include)
 
 add_library(helloxcomponent SHARED
-    common/log.h
+    hello/Log.h
     hello/BitmapRenderer.cpp
     hello/BitmapRenderer.h
+    hello/Constants.cpp
+    hello/Constants.h
+    hello/Compositor.cpp
+    hello/Compositor.h
     hello/DelegatedNodeContent.cpp
     hello/DelegatedNodeContent.h
     hello/GLCore.cpp
@@ -29,6 +33,7 @@ add_library(helloxcomponent SHARED
     hello/GLFence.h
     hello/GLImage.cpp
     hello/GLImage.h
+    hello/Log.h
     hello/NapiManager.cpp
     hello/NapiManager.h
     hello/NodeContent.cpp

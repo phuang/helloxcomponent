@@ -7,7 +7,7 @@
 #include <cstdint>
 #include <string>
 
-#include "common/log.h"
+#include "hello/Log.h"
 #include "hello/DelegatedNodeContent.h"
 #include "hello/GLCore.h"
 

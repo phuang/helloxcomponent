@@ -4,7 +4,7 @@
 
 #include "hello/GLFence.h"
 
-#include "common/log.h"
+#include "hello/Log.h"
 #include "hello/GLCore.h"
 #include "hello/NapiManager.h"
 

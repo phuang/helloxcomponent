@@ -14,7 +14,7 @@
 #include <map>
 #include <mutex>
 
-#include "common/log.h"
+#include "hello/Log.h"
 #include "hello/BitmapRenderer.h"
 #include "hello/GLCore.h"
 #include "hello/GLFence.h"

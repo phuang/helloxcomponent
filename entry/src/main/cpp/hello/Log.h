@@ -1,5 +1,5 @@
-#ifndef HELLOXCOMPONENT_LOG_H
-#define HELLOXCOMPONENT_LOG_H
+#ifndef HELLO_LOG_H
+#define HELLO_LOG_H
 
 #include <hilog/log.h>
 
@@ -32,4 +32,4 @@ constexpr const char *APP_LOG_TAG = "HelloXComponent";
     abort(); \
   }
 
-#endif //HELLOXCOMPONENT_LOG_H
+#endif //HELLO_LOG_H

@@ -3,7 +3,7 @@
 #include <cstring>
 #include <string>
 
-#include "common/log.h"
+#include "hello/Log.h"
 
 namespace hello {
 namespace {
