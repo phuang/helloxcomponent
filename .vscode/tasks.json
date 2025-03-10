@@ -32,15 +32,21 @@
       "type": "shell",
       "command": "hdc.exe",
       "args": [
-        "shell", "aa", "start", "-a", "EntryAbility",
-        "-b", "com.example.helloxcomponent",
+        "shell",
+        "aa",
+        "start",
+        "-a",
+        "EntryAbility",
+        "-b",
+        "com.example.helloxcomponent"
       ],
       "dependsOn": "install hap",
       "detail": "run hap",
       "group": {
         "kind": "test",
         "isDefault": true
-      }
-    },
+      },
+      "problemMatcher": []
+    }
   ]
 }

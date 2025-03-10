@@ -25,6 +25,10 @@ add_library(helloxcomponent SHARED
     hello/DelegatedNodeContent.h
     hello/GLCore.cpp
     hello/GLCore.h
+    hello/GLFence.cpp
+    hello/GLFence.h
+    hello/GLImage.cpp
+    hello/GLImage.h
     hello/NapiManager.cpp
     hello/NapiManager.h
     hello/NodeContent.cpp

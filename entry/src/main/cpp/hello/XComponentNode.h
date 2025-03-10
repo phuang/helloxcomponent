@@ -69,6 +69,7 @@ class XComponentNode {
   virtual void OnSurfaceChanged(void* window);
   virtual void OnSurfaceDestroyed(void* window);
   virtual void DispatchTouchEvent(void* window);
+  virtual void OnFrame(uint64_t timestamp, uint64_t target_timestamp);
 
  private:
   XComponentNode(Delegate* delegate, ArkUI_NodeHandle handle, Type type);
@@ -110,6 +111,9 @@ class XComponentNode {
     ArkUI_AttributeItem item = {values, 2};
     api()->setAttribute(handle_, attribute, &item);
   }
+
+  bool is_surface() const { return type_ == kSurface; }
+  bool is_texture() const { return type_ == kTexture; }
 
   void SetAttribute(ArkUI_NodeAttributeType attribute, const char* string) {
     ArkUI_AttributeItem item = {.string = string};

@@ -24,7 +24,10 @@
 			"optional": "cpp",
 			"system_error": "cpp",
 			"thread": "cpp",
-			"streambuf": "cpp"
+			"streambuf": "cpp",
+			"complex": "cpp",
+			"ratio": "cpp",
+			"type_traits": "cpp"
 		}
 	}
 }
