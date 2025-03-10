@@ -8,6 +8,8 @@
 
 namespace hello {
 
+class GLCore;
+
 class NapiManager {
  public:
   static void Init(const Napi::Env& env);
@@ -17,6 +19,7 @@ class NapiManager {
       const Napi::CallbackInfo& info);
 
   const Napi::Env& env() const { return env_; }
+  GLCore* gl_core() const { return gl_core_.get(); }
 
  private:
   NapiManager(const Napi::Env& env);
@@ -31,6 +34,8 @@ class NapiManager {
 
   // Hold a weak reference of the controller
   Napi::Reference<Napi::Object> controller_;
+
+  std::unique_ptr<GLCore> gl_core_;
 };
 
 }  // namespace hello

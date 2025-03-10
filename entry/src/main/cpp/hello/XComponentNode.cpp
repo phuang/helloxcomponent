@@ -1,5 +1,8 @@
 #include "hello/XComponentNode.h"
 
+#include <EGL/egl.h>
+#include <EGL/eglext.h>
+#include <GLES3/gl3.h>
 #include <arkui/native_interface.h>
 #include <native_buffer/native_buffer.h>
 #include <native_window/external_window.h>
@@ -13,6 +16,7 @@
 
 #include "common/log.h"
 #include "hello/BitmapRenderer.h"
+#include "hello/GLCore.h"
 #include "hello/NapiManager.h"
 #include "hello/Thread.h"
 
@@ -32,19 +36,22 @@ std::unique_ptr<XComponentNode> XComponentNode::Create(Delegate* delegate,
   }
 
   std::unique_ptr<XComponentNode> component(
-      new XComponentNode(delegate, handle));
+      new XComponentNode(delegate, handle, type));
 
+  component->SetAttribute(NODE_XCOMPONENT_ID, id.c_str());
   component->SetAttribute(NODE_XCOMPONENT_TYPE,
                           type == kSurface ? ARKUI_XCOMPONENT_TYPE_SURFACE
                                            : ARKUI_XCOMPONENT_TYPE_TEXTURE);
-  component->SetAttribute(NODE_XCOMPONENT_ID, id.c_str());
 
   return component;
 }
 
-XComponentNode::XComponentNode(Delegate* delegate, ArkUI_NodeHandle handle)
+XComponentNode::XComponentNode(Delegate* delegate,
+                               ArkUI_NodeHandle handle,
+                               Type type)
     : delegate_(delegate),
       handle_(handle),
+      type_(type),
       component_(OH_NativeXComponent_GetNativeXComponent(handle_)) {
   assert(component_);
   xcomponent_nodes_[component_] = this;
@@ -100,12 +107,20 @@ void XComponentNode::AddChild(XComponentNode* child) {
 }
 
 void XComponentNode::StartDrawFrame() {
+  if (!delegate_) {
+    return;
+  }
+
   if (draw_frame_) {
     return;
   }
   draw_frame_ = true;
   if (pending_render_pixels_count_ == 0 && window_) {
-    DrawFrame();
+    if (type_ == kSurface) {
+      DrawSurface();
+    } else {
+      DrawTexture();
+    }
   }
 }
 
@@ -124,7 +139,12 @@ void XComponentNode::OnSurfaceCreated(void* window) {
            retval);
 
   if (draw_frame_) {
-    DrawFrame();
+    CHECK(delegate_);
+    if (type_ == kSurface) {
+      DrawSurface();
+    } else {
+      DrawTexture();
+    }
   }
   // LOGE(
   //     "EEEE OH_NativeXComponent_GetXComponentSize() return %{public}d "
@@ -167,7 +187,7 @@ struct RenderPixelsData {
   OH_NativeBuffer* buffer;
 };
 
-void XComponentNode::DrawFrame() {
+void XComponentNode::DrawSurface() {
   OHNativeWindowBuffer* window_buffer = nullptr;
   int fenceFd = -1;
   int32_t retval = OH_NativeWindow_NativeWindowRequestBuffer(
@@ -210,10 +230,110 @@ void XComponentNode::DrawFrame() {
                  "retval=%{public}d",
                  retval);
         if (draw_frame_) {
-          DrawFrame();
+          DrawSurface();
         }
         --pending_render_pixels_count_;
       });
+}
+
+void XComponentNode::DrawTexture() {
+  auto disp = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+  const auto* gl_core = NapiManager::GetInstance()->gl_core();
+
+  OHNativeWindowBuffer* window_buffer = nullptr;
+  int fenceFd = -1;
+  int32_t retval = OH_NativeWindow_NativeWindowRequestBuffer(
+      window_, &window_buffer, &fenceFd);
+  FATAL_IF(
+      retval != 0,
+      "OH_NativeWindow_NativeWindowRequestBuffer() failed retval=%{public}d",
+      retval);
+
+  OH_NativeBuffer* buffer = nullptr;
+  retval = OH_NativeBuffer_FromNativeWindowBuffer(window_buffer, &buffer);
+  FATAL_IF(retval != 0,
+           "OH_NativeBuffer_FromNativeWindowBuffer() failed retval=%{public}d",
+           retval);
+
+  if (fenceFd != -1) {
+    EGLint attribs[] = {EGL_SYNC_NATIVE_FENCE_FD_ANDROID, fenceFd, EGL_NONE};
+    EGLSyncKHR sync =
+        gl_core->eglCreateSyncKHR(disp, EGL_SYNC_NATIVE_FENCE_ANDROID, attribs);
+    FATAL_IF(sync == EGL_NO_SYNC_KHR, "eglCreateSyncKHR() failed: 0x%{public}x",
+             eglGetError());
+
+    gl_core->eglWaitSyncKHR(disp, sync, 0);
+    gl_core->eglDestroySyncKHR(disp, sync);
+    fenceFd = -1;
+
+    EGLint error = eglGetError();
+    FATAL_IF(error != EGL_SUCCESS, "eglGetError() returns 0x%{public}x", error);
+  }
+
+  EGLint attrs[] = {
+      EGL_IMAGE_PRESERVED,
+      EGL_TRUE,
+      EGL_NONE,
+  };
+  EGLImageKHR egl_image = gl_core->eglCreateImageKHR(
+      disp, EGL_NO_CONTEXT, EGL_NATIVE_BUFFER_OHOS, window_buffer, attrs);
+  FATAL_IF(egl_image == EGL_NO_IMAGE_KHR, "eglCreateImageKHR() failed!");
+
+  GLuint texture_id = 0;
+  glGenTextures(1, &texture_id);
+  glBindTexture(GL_TEXTURE_EXTERNAL_OES, texture_id);
+  glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  gl_core->glEGLImageTargetTexture2DOES(GL_TEXTURE_EXTERNAL_OES, egl_image);
+  {
+    GLenum error = glGetError();
+    FATAL_IF(
+        error != GL_NO_ERROR,
+        "glEGLImageTargetTexture2DOES() failed with GL error: 0x%{public}x",
+        error);
+  }
+
+  delegate_->RenderTexture(GL_TEXTURE_EXTERNAL_OES, texture_id, surface_width_,
+                           surface_height_, 0);
+  glBindTexture(GL_TEXTURE_EXTERNAL_OES, 0);
+  glDeleteTextures(1, &texture_id);
+  gl_core->eglDestroyImageKHR(disp, egl_image);
+
+  {
+    GLenum error = glGetError();
+    FATAL_IF(
+        error != GL_NO_ERROR,
+        "glEGLImageTargetTexture2DOES() failed with GL error: 0x%{public}x",
+        error);
+  }
+
+  {
+    EGLSyncKHR sync =
+        gl_core->eglCreateSyncKHR(disp, EGL_SYNC_NATIVE_FENCE_ANDROID, nullptr);
+    FATAL_IF(sync == EGL_NO_SYNC, "eglCreateSyncKHR() failed");
+
+    fenceFd = gl_core->eglDupNativeFenceFDANDROID(disp, sync);
+    LOGE("EEEE fenceFd=%{public}d", fenceFd);
+
+    gl_core->eglDestroySyncKHR(disp, sync);
+    EGLint error = eglGetError();
+    FATAL_IF(error != EGL_SUCCESS, "eglGetError() returns 0x%{public}x", error);
+  }
+
+  retval = OH_NativeWindow_NativeWindowFlushBuffer(window_, window_buffer,
+                                                   fenceFd, {});
+  FATAL_IF(retval != 0,
+           "OH_NativeWindow_NativeWindowFlushBuffer() failed retval=%{public}d",
+           retval);
+
+  renderer_thread_->PostTask([] {},
+                             [this] {
+                               if (draw_frame_) {
+                                 DrawTexture();
+                               }
+                             });
 }
 
 // static

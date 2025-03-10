@@ -22,7 +22,9 @@
 			"compare": "cpp",
 			"cstdint": "cpp",
 			"optional": "cpp",
-			"system_error": "cpp"
+			"system_error": "cpp",
+			"thread": "cpp",
+			"streambuf": "cpp"
 		}
 	}
 }

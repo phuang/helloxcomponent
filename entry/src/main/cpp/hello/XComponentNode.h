@@ -1,6 +1,7 @@
 #ifndef HELLOXCOMPONENT_XCOMPONENTNODE_H
 #define HELLOXCOMPONENT_XCOMPONENTNODE_H
 
+#include <GLES2/gl2.h>
 #include <ace/xcomponent/native_interface_xcomponent.h>
 #include <arkui/native_node.h>
 #include <native_window/external_window.h>
@@ -23,7 +24,12 @@ class XComponentNode {
                               int32_t width,
                               int32_t height,
                               int32_t stride,
-                              uint64_t timestamp) = 0;
+                              uint64_t timestamp) {}
+    virtual void RenderTexture(GLenum target,
+                               GLuint texture_id,
+                               int32_t width,
+                               int32_t height,
+                               uint64_t timestamp) {}
   };
 
   enum Type { kSurface, kTexture };
@@ -65,11 +71,13 @@ class XComponentNode {
   virtual void DispatchTouchEvent(void* window);
 
  private:
-  XComponentNode(Delegate* delegate, ArkUI_NodeHandle handle);
+  XComponentNode(Delegate* delegate, ArkUI_NodeHandle handle, Type type);
 
   static XComponentNode* GetInstance(OH_NativeXComponent* component);
 
   void DrawFrame();
+  void DrawSurface();
+  void DrawTexture();
 
   void SetAttribute(ArkUI_NodeAttributeType attribute, uint32_t u32) {
     ArkUI_NumberValue value = {.u32 = u32};
@@ -110,6 +118,7 @@ class XComponentNode {
 
   Delegate* const delegate_;
   const ArkUI_NodeHandle handle_;
+  const Type type_;
   OH_NativeXComponent* const component_;
 
   std::unique_ptr<Thread> renderer_thread_;

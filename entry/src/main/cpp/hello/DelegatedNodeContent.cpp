@@ -19,19 +19,31 @@ const char kChildPictureUri[] =
 DelegatedNodeContent::DelegatedNodeContent(
     ArkUI_NodeContentHandle content_handle)
     : NodeContent(content_handle) {
-  root_renderer_ = std::make_unique<BitmapRenderer>(kRootPictureUri);
-  root_node_ = hello::XComponentNode::Create(root_renderer_.get(), "root_view",
-                                             hello::XComponentNode::kSurface);
+  root_bitmap_renderer_ = std::make_unique<BitmapRenderer>(kRootPictureUri);
+  root_node_ =
+      hello::XComponentNode::Create(root_bitmap_renderer_.get(), "root_view",
+                                    hello::XComponentNode::kSurface);
   root_node_->SetWidthPercent(1);
   root_node_->SetHeightPercent(1);
 
-  child_renderer_ = std::make_unique<BitmapRenderer>(kChildPictureUri);
-  child_node_ = hello::XComponentNode::Create(child_renderer_.get(), "child_view",
-                                              hello::XComponentNode::kSurface);
-  root_node_->AddChild(child_node_.get());
-  child_node_->SetPosition(40, 200);
-  child_node_->SetWidth(512);
-  child_node_->SetHeight(512);
+  // child_bitmap_renderer_ = std::make_unique<BitmapRenderer>(kChildPictureUri);
+  // child_surface_node_ = hello::XComponentNode::Create(
+  //     child_bitmap_renderer_.get(), "child_surface_view",
+  //     hello::XComponentNode::kSurface);
+  // root_node_->AddChild(child_surface_node_.get());
+  // child_surface_node_->SetPosition(80, 400);
+  // child_surface_node_->SetWidth(256);
+  // child_surface_node_->SetHeight(256);
+
+  child_texture_renderer_ = std::make_unique<TextureRenderer>();
+  child_texture_node_ = hello::XComponentNode::Create(
+      child_texture_renderer_.get(), "child_texture_view",
+      hello::XComponentNode::kTexture);
+  root_node_->AddChild(child_texture_node_.get());
+  child_texture_node_->SetPosition(80, 80);
+  child_texture_node_->SetSurfaceSize(256, 256);
+  child_texture_node_->SetWidth(256);
+  child_texture_node_->SetHeight(256);
 }
 
 DelegatedNodeContent::~DelegatedNodeContent() {
@@ -46,10 +58,20 @@ void DelegatedNodeContent::SetVisible(bool visible) {
   visible_ = visible;
   if (visible_) {
     root_node_->StartDrawFrame();
-    child_node_->StartDrawFrame();
+    if (child_surface_node_) {
+      child_surface_node_->StartDrawFrame();
+    }
+    if (child_texture_node_) {
+      child_texture_node_->StartDrawFrame();
+    }
   } else {
     root_node_->StopDrawFrame();
-    child_node_->StopDrawFrame();
+    if (child_surface_node_) {
+      child_surface_node_->StopDrawFrame();
+    }
+    if (child_texture_node_) {
+      child_texture_node_->StopDrawFrame();
+    }
   }
 }
 

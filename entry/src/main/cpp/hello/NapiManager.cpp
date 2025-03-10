@@ -9,6 +9,7 @@
 
 #include "common/log.h"
 #include "hello/DelegatedNodeContent.h"
+#include "hello/GLCore.h"
 
 namespace hello {
 namespace {
@@ -29,9 +30,13 @@ NapiManager* NapiManager::GetInstance() {
 
 NapiManager::NapiManager(const Napi::Env& env) : env_(env) {
   std::srand(std::time({}));
+  gl_core_ = std::make_unique<GLCore>();
+  gl_core_->Init();
 }
 
-NapiManager::~NapiManager() = default;
+NapiManager::~NapiManager() {
+  gl_core_->Destroy();
+}
 
 // static
 Napi::Value NapiManager::NapiCreateNativeNode(const Napi::CallbackInfo& info) {
