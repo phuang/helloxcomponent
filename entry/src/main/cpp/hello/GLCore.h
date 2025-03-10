@@ -30,6 +30,7 @@ class GLCore {
   void Destroy();
 
   EGLDisplay display() const { return display_; }
+  EGLConfig config() const { return config_; }
   EGLContext context() const { return context_; }
 
   EGLDisplay eglGetPlatformDisplayEXT(EGLenum platform,
@@ -76,6 +77,7 @@ class GLCore {
   void InitializeFunctions();
 
   EGLDisplay display_ = EGL_NO_DISPLAY;
+  EGLConfig config_ = EGL_NO_CONFIG_KHR;
   EGLSurface surface_ = EGL_NO_SURFACE;
   EGLContext context_ = EGL_NO_CONTEXT;
 

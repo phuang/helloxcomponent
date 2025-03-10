@@ -22,23 +22,23 @@ DelegatedNodeContent::DelegatedNodeContent(
   root_bitmap_renderer_ = std::make_unique<BitmapRenderer>(kRootPictureUri);
   root_node_ =
       hello::XComponentNode::Create(root_bitmap_renderer_.get(), "root_view",
-                                    hello::XComponentNode::kSurface);
+                                    hello::XComponentNode::kSoftware);
   root_node_->SetWidthPercent(1);
   root_node_->SetHeightPercent(1);
 
-  // child_bitmap_renderer_ = std::make_unique<BitmapRenderer>(kChildPictureUri);
-  // child_surface_node_ = hello::XComponentNode::Create(
-  //     child_bitmap_renderer_.get(), "child_surface_view",
-  //     hello::XComponentNode::kSurface);
-  // root_node_->AddChild(child_surface_node_.get());
-  // child_surface_node_->SetPosition(80, 400);
-  // child_surface_node_->SetWidth(256);
-  // child_surface_node_->SetHeight(256);
+  child_bitmap_renderer_ = std::make_unique<BitmapRenderer>(kChildPictureUri);
+  child_surface_node_ = hello::XComponentNode::Create(
+      child_bitmap_renderer_.get(), "child_surface_view",
+      hello::XComponentNode::kSoftware);
+  root_node_->AddChild(child_surface_node_.get());
+  child_surface_node_->SetPosition(80, 400);
+  child_surface_node_->SetWidth(256);
+  child_surface_node_->SetHeight(256);
 
   child_texture_renderer_ = std::make_unique<TextureRenderer>();
   child_texture_node_ = hello::XComponentNode::Create(
       child_texture_renderer_.get(), "child_texture_view",
-      hello::XComponentNode::kTexture);
+      hello::XComponentNode::kEGLSurface);
   root_node_->AddChild(child_texture_node_.get());
   child_texture_node_->SetPosition(80, 80);
   child_texture_node_->SetSurfaceSize(256, 256);

@@ -1,11 +1,11 @@
 #ifndef HELLOXCOMPONENT_XCOMPONENTNODE_H
 #define HELLOXCOMPONENT_XCOMPONENTNODE_H
 
+#include <EGL/egl.h>
 #include <GLES2/gl2.h>
 #include <ace/xcomponent/native_interface_xcomponent.h>
 #include <arkui/native_node.h>
 #include <native_window/external_window.h>
-#include <uv.h>
 
 #include <deque>
 #include <memory>
@@ -30,11 +30,14 @@ class XComponentNode {
                                int32_t width,
                                int32_t height,
                                uint64_t timestamp) {}
+    virtual void RenderFrame(int32_t width,
+                             int32_t height,
+                             uint64_t timestamp) {}
   };
 
-  enum Type { kSurface, kTexture };
+  enum Type { kSoftware, kEGLSurface, kEGLImage };
   static std::unique_ptr<XComponentNode> Create(Delegate* delegate,
-                                                std::string id,
+                                                const std::string& id,
                                                 Type type);
 
   ~XComponentNode();
@@ -72,7 +75,10 @@ class XComponentNode {
   virtual void OnFrame(uint64_t timestamp, uint64_t target_timestamp);
 
  private:
-  XComponentNode(Delegate* delegate, ArkUI_NodeHandle handle, Type type);
+  XComponentNode(Delegate* delegate,
+                 ArkUI_NodeHandle handle,
+                 const std::string& id,
+                 Type type);
 
   static XComponentNode* GetInstance(OH_NativeXComponent* component);
 
@@ -112,8 +118,9 @@ class XComponentNode {
     api()->setAttribute(handle_, attribute, &item);
   }
 
-  bool is_surface() const { return type_ == kSurface; }
-  bool is_texture() const { return type_ == kTexture; }
+  bool is_software() const { return type_ == kSoftware; }
+  bool using_egl_surface() const { return type_ == kEGLSurface; }
+  bool using_egl_image() const { return type_ == kEGLImage; }
 
   void SetAttribute(ArkUI_NodeAttributeType attribute, const char* string) {
     ArkUI_AttributeItem item = {.string = string};
@@ -122,6 +129,7 @@ class XComponentNode {
 
   Delegate* const delegate_;
   const ArkUI_NodeHandle handle_;
+  const std::string id_;
   const Type type_;
   OH_NativeXComponent* const component_;
 
@@ -130,6 +138,8 @@ class XComponentNode {
   OHNativeWindow* window_ = nullptr;
   uint64_t surface_width_ = 0;
   uint64_t surface_height_ = 0;
+
+  EGLSurface egl_surface_ = EGL_NO_SURFACE;
 
   int pending_render_pixels_count_ = 0;
   bool draw_frame_ = false;

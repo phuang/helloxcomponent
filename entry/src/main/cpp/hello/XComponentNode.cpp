@@ -24,39 +24,36 @@
 
 namespace hello {
 namespace {
-
 std::map<OH_NativeXComponent*, XComponentNode*> xcomponent_nodes_;
 }  // namespace
 
 // static
 std::unique_ptr<XComponentNode> XComponentNode::Create(Delegate* delegate,
-                                                       std::string id,
+                                                       const std::string& id,
                                                        Type type) {
   ArkUI_NodeHandle handle = api()->createNode(ARKUI_NODE_XCOMPONENT);
-  if (!handle) {
-    return {};
-  }
+  FATAL_IF(handle == nullptr, "createNode(ARKUI_NODE_XCOMPONENT) failed!");
 
   std::unique_ptr<XComponentNode> component(
-      new XComponentNode(delegate, handle, type));
-
-  component->SetAttribute(NODE_XCOMPONENT_ID, id.c_str());
-  component->SetAttribute(NODE_XCOMPONENT_TYPE,
-                          type == kSurface ? ARKUI_XCOMPONENT_TYPE_SURFACE
-                                           : ARKUI_XCOMPONENT_TYPE_TEXTURE);
+      new XComponentNode(delegate, handle, id, type));
 
   return component;
 }
 
 XComponentNode::XComponentNode(Delegate* delegate,
                                ArkUI_NodeHandle handle,
+                               const std::string& id,
                                Type type)
     : delegate_(delegate),
       handle_(handle),
+      id_(id),
       type_(type),
       component_(OH_NativeXComponent_GetNativeXComponent(handle_)) {
   assert(component_);
   xcomponent_nodes_[component_] = this;
+
+  SetAttribute(NODE_XCOMPONENT_ID, id_.c_str());
+  SetAttribute(NODE_XCOMPONENT_TYPE, ARKUI_XCOMPONENT_TYPE_SURFACE);
 
   static OH_NativeXComponent_Callback callbacks = {
       [](OH_NativeXComponent* component, void* window) {
@@ -77,14 +74,20 @@ XComponentNode::XComponentNode(Delegate* delegate,
            "OH_NativeXComponent_RegisterCallback() failed retval=%{public}d",
            retval);
 
-  const auto& env = NapiManager::GetInstance()->env();
-  uv_loop_t* loop = nullptr;
-  napi_status status = napi_get_uv_event_loop(env, &loop);
-  FATAL_IF(status != napi_ok,
-           "napi_get_uv_event_loop() failed status=%{public}d", status);
+  if (!delegate_) {
+    // If delegate_ is null, no need to draw.
+    return;
+  }
 
-  if (is_surface()) {
-    // If is surface, the xcomponent is rastered with CPU on a separated CPU
+  if (is_software()) {
+    // If is surface with delegate_ for rendering, the xcomponent is rastered
+    // with CPU on a separated thread.
+    const auto& env = NapiManager::GetInstance()->env();
+    uv_loop_t* loop = nullptr;
+    napi_status status = napi_get_uv_event_loop(env, &loop);
+    FATAL_IF(status != napi_ok,
+             "napi_get_uv_event_loop() failed status=%{public}d", status);
+
     renderer_thread_ = std::make_unique<Thread>(loop);
     renderer_thread_->Start();
   }
@@ -113,6 +116,7 @@ void XComponentNode::AddChild(XComponentNode* child) {
 
 void XComponentNode::StartDrawFrame() {
   if (!delegate_) {
+    // If delegate_ is nullptr, no need to draw.
     return;
   }
 
@@ -121,93 +125,74 @@ void XComponentNode::StartDrawFrame() {
   }
   draw_frame_ = true;
 
-  switch (type_) {
-    case kSurface: {
-      if (pending_render_pixels_count_ > 0) {
-        // There is pending RenderPixels() calls, when the pending calls are
-        // done, new frame will be initialed automactilly.
-        break;
-      }
-      if (!window_) {
-        // Surface is not created yet, delay drawing frame until surface is
-        // created.
-        break;
-      }
-      DrawSurface();
-      break;
+  if (is_software()) {
+    if (pending_render_pixels_count_ > 0) {
+      // There is pending RenderPixels() calls, when the pending calls are
+      // done, new frame will be initialed automactilly.
+      return;
     }
-    case kTexture: {
-      OH_NativeXComponent_RegisterOnFrameCallback(
-          component_, [](OH_NativeXComponent* component, uint64_t timestamp,
-                         uint64_t target_timestamp) {
-            GetInstance(component)->OnFrame(timestamp, target_timestamp);
-          });
-      break;
+    if (!window_) {
+      // Surface is not created yet, delay drawing frame until surface is
+      // created.
+      return;
     }
+    DrawSurface();
+    return;
   }
+
+  OH_NativeXComponent_RegisterOnFrameCallback(
+      component_, [](OH_NativeXComponent* component, uint64_t timestamp,
+                     uint64_t target_timestamp) {
+        GetInstance(component)->OnFrame(timestamp, target_timestamp);
+      });
 }
 
 void XComponentNode::StopDrawFrame() {
-  draw_frame_ = false;
-  switch (type_) {
-    case kSurface: {
-      // Do noting, when pending RenderPixels are done, not new frame will be
-      // draw.
-      break;
-    }
-    case kTexture: {
-      // Unregister the on frame callback to stop new frames.
-      OH_NativeXComponent_UnregisterOnFrameCallback(component_);
-      break;
-    }
+  if (!delegate_) {
+    CHECK(!draw_frame_);
+    return;
   }
+
+  if (is_software()) {
+    // Do noting, when pending RenderPixels are done, not new frame will be
+    // draw.
+    return;
+  }
+  OH_NativeXComponent_UnregisterOnFrameCallback(component_);
 }
 
 void XComponentNode::OnSurfaceCreated(void* window) {
-  LOGE("XComponentNode::%{public}s()", __func__);
-  window_ = reinterpret_cast<OHNativeWindow*>(window);
-
-  int32_t retval = OH_NativeXComponent_GetXComponentSize(
-      component_, window_, &surface_width_, &surface_height_);
-  FATAL_IF(retval != 0,
-           "OH_NativeXComponent_GetXComponentSize() failed retval=%{public}d",
-           retval);
+  OnSurfaceChanged(window);
 
   if (draw_frame_) {
     CHECK(delegate_);
-    if (type_ == kSurface) {
+    if (is_software()) {
       DrawSurface();
     } else {
       DrawTexture();
     }
   }
-  // LOGE(
-  //     "EEEE OH_NativeXComponent_GetXComponentSize() return %{public}d "
-  //     "%{public}lux%{public}lu",
-  //     retval, surface_width_, surface_height_);
-  //
-  // OH_NativeXComponent_ExpectedRateRange range;
-  // retval = OH_NativeXComponent_SetExpectedFrameRateRange(component_,
-  // nullptr); FATAL_IF(retval != 0,
-  //          "OH_NativeXComponent_SetExpectedFrameRateRange() failed
-  //          retval=%{public}d", retval);
-  //
-  // retval = OH_NativeXComponent_RegisterOnFrameCallback(
-  //     component_, [](OH_NativeXComponent* component, uint64_t timestamp,
-  //                    uint64_t target_timestamp) {
-  //       GetInstance(component)->OnFrame(timestamp, target_timestamp);
-  //     });
-  // FATAL_IF(
-  //     retval != 0,
-  //     "OH_NativeXComponent_RegisterOnFrameCallback() failed
-  //     retval=%{public}d", retval);
 }
 
-void XComponentNode::OnSurfaceChanged(void* window) {}
-
-void XComponentNode::OnSurfaceDestroyed(void* window) {
-  // OH_NativeXComponent_UnregisterOnFrameCallback(component_);
+void XComponentNode::OnSurfaceChanged(void* window) {
+  window_ = reinterpret_cast<OHNativeWindow*>(window);
+  int32_t retval = OH_NativeXComponent_GetXComponentSize(
+      component_, window_, &surface_width_, &surface_height_);
+  FATAL_IF(retval != 0,
+           "OH_NativeXComponent_GetXComponentSize() failed retval=%{public}d",
+           retval);
+  if (using_egl_surface()) {
+    const auto* gl_core = NapiManager::GetInstance()->gl_core();
+    EGLDisplay display = gl_core->display();
+    egl_surface_ =
+        eglCreateWindowSurface(display, gl_core->config(), window_, nullptr);
+    FATAL_IF(egl_surface_ == EGL_NO_SURFACE,
+             "eglCreateWindowSurface() failed. EGL error: 0x%{public}x",
+             eglGetError());
+  }
 }
+
+void XComponentNode::OnSurfaceDestroyed(void* window) {}
 
 void XComponentNode::DispatchTouchEvent(void* window) {}
 
@@ -223,7 +208,7 @@ struct RenderPixelsData {
 };
 
 void XComponentNode::OnFrame(uint64_t timestamp, uint64_t targetTimestamp) {
-  CHECK(type_ == kTexture);
+  CHECK(!is_software());
   if (window_) {
     DrawTexture();
   }
@@ -280,10 +265,19 @@ void XComponentNode::DrawSurface() {
 
 void XComponentNode::DrawTexture() {
   CHECK(window_);
-  // const auto* gl_core = NapiManager::GetInstance()->gl_core();
-  // if (!eglMakeCurrent(gl_core->display(), EGL_NO_SURFACE, EGL_NO_SURFACE, gl_core->context())) {
-  //   CHECK_EGL_ERROR();
-  // }
+
+  if (using_egl_surface()) {
+    CHECK(egl_surface_ != EGL_NO_SURFACE);
+    const auto* gl_core = NapiManager::GetInstance()->gl_core();
+    EGLDisplay display = gl_core->display();
+    EGLContext context = gl_core->context();
+    if (!eglMakeCurrent(display, egl_surface_, egl_surface_, context)) {
+      FATAL("eglMakeCurrent() failed. EGL error: 0x%{public}x", eglGetError());
+    }
+    delegate_->RenderFrame(surface_width_, surface_height_, 0);
+    eglSwapBuffers(display, egl_surface_);
+    return;
+  }
 
   OHNativeWindowBuffer* window_buffer = nullptr;
   int fd = -1;

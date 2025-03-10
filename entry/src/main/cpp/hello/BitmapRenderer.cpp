@@ -32,7 +32,7 @@ void BitmapRenderer::LoadPicture(const std::string& uri) {
     Image_ErrorCode retval = OH_ImageSourceNative_CreateFromUri(
         const_cast<char*>(uri.c_str()), uri.size(), &image_source);
     if (retval != IMAGE_SUCCESS) {
-      LOGE("EEEE OH_ImageSourceNative_CreateFromUri() failed retval=%{public}d",
+      LOGE("OH_ImageSourceNative_CreateFromUri() failed retval=%{public}d",
            retval);
       break;
     }
@@ -40,23 +40,20 @@ void BitmapRenderer::LoadPicture(const std::string& uri) {
     retval =
         OH_ImageSourceNative_CreatePixelmap(image_source, nullptr, &pixelmap);
     if (retval != IMAGE_SUCCESS) {
-      LOGE(
-          "EEEE OH_ImageSourceNative_CreatePixelmap() failed retval=%{public}d",
-          retval);
+      LOGE("OH_ImageSourceNative_CreatePixelmap() failed retval=%{public}d",
+           retval);
       break;
     }
 
     retval = OH_PixelmapImageInfo_Create(&image_info);
     if (retval != IMAGE_SUCCESS) {
-      LOGE("EEEE OH_PixelmapImageInfo_Create() failed retval=%{public}d",
-           retval);
+      LOGE("OH_PixelmapImageInfo_Create() failed retval=%{public}d", retval);
       break;
     }
 
     retval = OH_PixelmapNative_GetImageInfo(pixelmap, image_info);
     if (retval != IMAGE_SUCCESS) {
-      LOGE("EEEE OH_PixelmapNative_GetImageInfo() failed retval=%{public}d",
-           retval);
+      LOGE("OH_PixelmapNative_GetImageInfo() failed retval=%{public}d", retval);
       break;
     }
 
@@ -66,17 +63,13 @@ void BitmapRenderer::LoadPicture(const std::string& uri) {
     OH_PixelmapImageInfo_GetRowStride(image_info, &picture_stride_);
     OH_PixelmapImageInfo_GetPixelFormat(image_info, &format);
 
-    LOGE("EEEE size=%{public}dx%{public}d stride=%{public}d format=%{public}d",
-         picture_width_, picture_height_, picture_stride_, format);
-
     picture_pixels_.resize(picture_height_ * picture_stride_);
 
     size_t buffer_size = picture_pixels_.size();
     retval = OH_PixelmapNative_ReadPixels(pixelmap, picture_pixels_.data(),
                                           &buffer_size);
     if (retval != IMAGE_SUCCESS) {
-      LOGE("EEEE OH_PixelmapNative_ReadPixels() failed retval=%{public}d",
-           retval);
+      LOGE("OH_PixelmapNative_ReadPixels() failed retval=%{public}d", retval);
       break;
     }
   } while (false);

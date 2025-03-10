@@ -17,13 +17,10 @@ class TextureRenderer : public XComponentNode::Delegate {
                      int32_t width,
                      int32_t height,
                      uint64_t timestamp) override;
+  void RenderFrame(int32_t width, int32_t height, uint64_t timestamp) override;
 
  private:
   const uint64_t delta_;
-  int32_t width_ = 0;
-  int32_t height_ = 0;
-  // GLuint fbo_ = 0;
-  // GLuint rbo_ = 0;
 };
 
 }  // namespace hello

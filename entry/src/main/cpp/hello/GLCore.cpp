@@ -68,28 +68,25 @@ void GLCore::Init() {
     FATAL("Failed to bind OpenGL ES API");
   }
 
-  EGLConfig config;
-  const EGLint config_attribs[] = {EGL_SURFACE_TYPE,
-                                   EGL_WINDOW_BIT,
-                                   EGL_RED_SIZE,
-                                   8,
-                                   EGL_GREEN_SIZE,
-                                   8,
-                                   EGL_BLUE_SIZE,
-                                   8,
-                                   EGL_ALPHA_SIZE,
-                                   8,
-                                   EGL_RENDERABLE_TYPE,
-                                   EGL_OPENGL_ES3_BIT,
-                                   EGL_NONE};
+  // clang-format off
+  const EGLint config_attribs[] = {
+    EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
+    EGL_RED_SIZE, 8,
+    EGL_GREEN_SIZE, 8,
+    EGL_BLUE_SIZE, 8,
+    EGL_ALPHA_SIZE, 8,
+    EGL_RENDERABLE_TYPE, EGL_OPENGL_ES3_BIT,
+    EGL_NONE };
+  // clang-format on
+
   EGLint num_configs;
-  if (!eglChooseConfig(display_, config_attribs, &config, 1, &num_configs)) {
+  if (!eglChooseConfig(display_, config_attribs, &config_, 1, &num_configs)) {
     FATAL("eglChooseConfig() failed");
   }
 
   const EGLint context_attribs[] = {EGL_CONTEXT_CLIENT_VERSION, 3, EGL_NONE};
   context_ =
-      eglCreateContext(display_, config, EGL_NO_CONTEXT, context_attribs);
+      eglCreateContext(display_, config_, EGL_NO_CONTEXT, context_attribs);
   FATAL_IF(context_ == EGL_NO_CONTEXT, "eglCreateContext() failed");
 
   if (!eglMakeCurrent(display_, EGL_NO_SURFACE, EGL_NO_SURFACE, context_)) {

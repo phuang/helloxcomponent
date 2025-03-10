@@ -3,8 +3,8 @@
 #include <mutex>
 
 #include "common/log.h"
-#include "hello/Matrix.h"
 #include "hello/GLCore.h"
+#include "hello/Matrix.h"
 
 namespace hello {
 namespace {
@@ -194,29 +194,6 @@ void TextureRenderer::RenderTexture(GLenum target,
                                     int32_t width,
                                     int32_t height,
                                     uint64_t timestamp) {
-  // LOGE(
-  //     "EEEE TextureRenderer::RenderTexture() texture_id=%{public}d, "
-  //     "width=%{public}d, "
-  //     "height=%{public}d, timestamp=%{public}lu",
-  //     texture_id, width, height, timestamp);
-
-  // if (width_ != width || height_ != height) {
-  //   width_ = width;
-  //   height_ = height;
-  //   if (rbo_ != 0) {
-  //     glDeleteRenderbuffers(1, &rbo_);
-  //     rbo_ = 0;
-  //   }
-
-  //   glGenRenderbuffers(1, &rbo_);
-  //   glBindRenderbuffer(GL_RENDERBUFFER, rbo_);
-  //   glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT16, width_,
-  //                         height_);
-  //   glBindFramebuffer(GL_FRAMEBUFFER, fbo_);
-  //   glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
-  //                             GL_RENDERBUFFER, rbo_);
-  // }
-
   CHECK_GL_ERROR();
 
   GLuint fbo = 0;
@@ -236,6 +213,20 @@ void TextureRenderer::RenderTexture(GLenum target,
   FATAL_IF(retval != GL_FRAMEBUFFER_COMPLETE,
            "Framebuffer is not complete: 0x%{public}X", retval);
 
+  RenderFrame(width, height, timestamp);
+
+  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, target, 0, 0);
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
+  glBindRenderbuffer(GL_RENDERBUFFER, 0);
+  glDeleteBuffers(1, &fbo);
+  glDeleteRenderbuffers(1, &rbo);
+
+  CHECK_GL_ERROR();
+}
+
+void TextureRenderer::RenderFrame(int32_t width,
+                                  int32_t height,
+                                  uint64_t timestamp) {
   auto time = std::chrono::duration_cast<std::chrono::milliseconds>(
                   std::chrono::system_clock::now() - kStartTime)
                   .count();
@@ -247,12 +238,11 @@ void TextureRenderer::RenderTexture(GLenum target,
   };
 
   // Set the viewport
-  glViewport(0, 0, width_, height_);
+  glViewport(0, 0, width, height);
 
   // Clear the screen to red
   glClearColor(compute_color(1000), compute_color(3000), compute_color(2000),
                1.0f);
-  glClearColor(1, 1, 1, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   // Use the shader program
@@ -285,14 +275,6 @@ void TextureRenderer::RenderTexture(GLenum target,
   glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
   glBindVertexArray(0);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-
-  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, target, 0, 0);
-  glBindFramebuffer(GL_FRAMEBUFFER, 0);
-  glBindRenderbuffer(GL_RENDERBUFFER, 0);
-  glDeleteBuffers(1, &fbo);
-  glDeleteRenderbuffers(1, &rbo);
-
-  CHECK_GL_ERROR();
 }
 
 }  // namespace hello
