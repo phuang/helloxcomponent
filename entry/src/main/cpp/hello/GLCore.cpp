@@ -14,19 +14,18 @@ void PrintEGLExtensions(EGLDisplay display) {
   size_t extlen = strlen(extensions);
   const char* end = extensions + strlen(extensions);
 
-
   while (extensions < end) {
-      /* Skip whitespaces, if any */
-      if (*extensions == ' ') {
-          extensions++;
-          continue;
-      }
+    /* Skip whitespaces, if any */
+    if (*extensions == ' ') {
+      extensions++;
+      continue;
+    }
 
-      size_t n = strcspn(extensions, " ");
-      std::string extension(extensions, n);
-      extensions += n;
+    size_t n = strcspn(extensions, " ");
+    std::string extension(extensions, n);
+    extensions += n;
 
-      LOGE("    %{public}s", extension.c_str());
+    LOGE("    %{public}s", extension.c_str());
   }
 }
 
@@ -37,48 +36,19 @@ GLCore::GLCore() {}
 GLCore::~GLCore() {}
 
 void GLCore::InitializeFunctions() {
-  eglGetPlatformDisplayEXTFn_ =
-      reinterpret_cast<PFNEGLGETPLATFORMDISPLAYEXTPROC>(
-          eglGetProcAddress("eglGetPlatformDisplayEXT"));
-  FATAL_IF(eglGetPlatformDisplayEXTFn_ == nullptr,
-           "eglGetProcAddress(eglGetPlatformDisplayEXT) failed");
+#define GETPROC(name, TYPE)                                     \
+  name##Fn_ = reinterpret_cast<TYPE>(eglGetProcAddress(#name)); \
+  FATAL_IF(name##Fn_ == nullptr, "eglGetProcAddress(" #name ") failed");
 
-  eglCreateSyncKHRFn_ = reinterpret_cast<PFNEGLCREATESYNCKHRPROC>(
-      eglGetProcAddress("eglCreateSyncKHR"));
-  FATAL_IF(eglCreateSyncKHRFn_ == nullptr,
-           "eglGetProcAddress(eglCreateSyncKHR) failed");
-
-  eglDestroySyncKHRFn_ = reinterpret_cast<PFNEGLDESTROYSYNCKHRPROC>(
-      eglGetProcAddress("eglDestroySyncKHR"));
-  FATAL_IF(eglDestroySyncKHRFn_ == nullptr,
-           "eglGetProcAddress(eglDestroySyncKHR) failed");
-
-  eglWaitSyncKHRFn_ = reinterpret_cast<PFNEGLWAITSYNCKHRPROC>(
-      eglGetProcAddress("eglWaitSyncKHR"));
-  FATAL_IF(eglWaitSyncKHRFn_ == nullptr,
-           "eglGetProcAddress(eglWaitSyncKHR) failed");
-
-  eglDupNativeFenceFDANDROIDFn_ =
-      reinterpret_cast<PFNEGLDUPNATIVEFENCEFDANDROIDPROC>(
-          eglGetProcAddress("eglDupNativeFenceFDANDROID"));
-  FATAL_IF(eglDupNativeFenceFDANDROIDFn_ == nullptr,
-           "eglGetProcAddress(eglDupNativeFenceFDANDROID) failed");
-
-  eglCreateImageKHRFn_ = reinterpret_cast<PFNEGLCREATEIMAGEKHRPROC>(
-      eglGetProcAddress("eglCreateImageKHR"));
-  FATAL_IF(eglCreateImageKHRFn_ == nullptr,
-           "eglGetProcAddress(eglCreateImageKHR) failed");
-
-  eglDestroyImageKHRFn_ = reinterpret_cast<PFNEGLDESTROYIMAGEKHRPROC>(
-      eglGetProcAddress("eglDestroyImageKHR"));
-  FATAL_IF(eglDestroyImageKHRFn_ == nullptr,
-           "eglGetProcAddress(eglDestroyImageKHR) failed");
-
-  glEGLImageTargetTexture2DOESFn_ =
-      reinterpret_cast<PFNGLEGLIMAGETARGETTEXTURE2DOESPROC>(
-          eglGetProcAddress("glEGLImageTargetTexture2DOES"));
-  FATAL_IF(glEGLImageTargetTexture2DOESFn_ == nullptr,
-           "eglGetProcAddress(glEGLImageTargetTexture2DOES) failed");
+  GETPROC(eglGetPlatformDisplayEXT, PFNEGLGETPLATFORMDISPLAYEXTPROC)
+  GETPROC(eglCreateSyncKHR, PFNEGLCREATESYNCKHRPROC)
+  GETPROC(eglDestroySyncKHR, PFNEGLDESTROYSYNCKHRPROC)
+  GETPROC(eglWaitSyncKHR, PFNEGLWAITSYNCKHRPROC)
+  GETPROC(eglDupNativeFenceFDANDROID, PFNEGLDUPNATIVEFENCEFDANDROIDPROC)
+  GETPROC(eglCreateImageKHR, PFNEGLCREATEIMAGEKHRPROC)
+  GETPROC(eglDestroyImageKHR, PFNEGLDESTROYIMAGEKHRPROC)
+  GETPROC(glEGLImageTargetTexture2DOES, PFNGLEGLIMAGETARGETTEXTURE2DOESPROC)
+#undef GETPROC
 }
 
 void GLCore::Init() {
@@ -92,7 +62,7 @@ void GLCore::Init() {
     FATAL("eglInitialize() failed");
   }
   LOGE("eglInitialize() major=%{public}d minor=%{public}d", major, minor);
-  PrintEGLExtensions(display_);
+  // PrintEGLExtensions(display_);
 
   if (eglBindAPI(EGL_OPENGL_ES_API) == EGL_FALSE) {
     FATAL("Failed to bind OpenGL ES API");
