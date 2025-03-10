@@ -279,15 +279,16 @@ void XComponentNode::DrawSurface() {
 }
 
 void XComponentNode::DrawTexture() {
-  auto disp = eglGetDisplay(EGL_DEFAULT_DISPLAY);
-  const auto* gl_core = NapiManager::GetInstance()->gl_core();
-
   CHECK(window_);
+  // const auto* gl_core = NapiManager::GetInstance()->gl_core();
+  // if (!eglMakeCurrent(gl_core->display(), EGL_NO_SURFACE, EGL_NO_SURFACE, gl_core->context())) {
+  //   CHECK_EGL_ERROR();
+  // }
 
   OHNativeWindowBuffer* window_buffer = nullptr;
   int fd = -1;
-  int32_t retval = OH_NativeWindow_NativeWindowRequestBuffer(
-      window_, &window_buffer, &fd);
+  int32_t retval =
+      OH_NativeWindow_NativeWindowRequestBuffer(window_, &window_buffer, &fd);
   FATAL_IF(
       retval != 0,
       "OH_NativeWindow_NativeWindowRequestBuffer() failed retval=%{public}d",
@@ -305,27 +306,21 @@ void XComponentNode::DrawTexture() {
 
   {
     GLImage image;
-    image.Initialize(window_buffer);
-
-    GLTexture texture = image.Bind();
-
-    {
-      GLenum error = glGetError();
-      FATAL_IF(
-          error != GL_NO_ERROR,
-          "glEGLImageTargetTexture2DOES() failed with GL error: 0x%{public}x",
-          error);
+    if (!image.Initialize(window_buffer)) {
+      FATAL("Initialize EGLImageKHR failed!");
     }
 
+    GLTexture texture = image.Bind();
     delegate_->RenderTexture(texture.target(), texture.texture(),
                              surface_width_, surface_height_, 0);
   }
 
   {
     auto fence = GLFence::Create();
+    if (!fence) {
+      FATAL("Create EGLSyncKHR failed!");
+    }
     fence_fd = fence->GetFd();
-    EGLint error = eglGetError();
-    FATAL_IF(error != EGL_SUCCESS, "eglGetError() returns 0x%{public}x", error);
   }
 
   retval = OH_NativeWindow_NativeWindowFlushBuffer(window_, window_buffer,

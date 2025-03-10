@@ -4,6 +4,7 @@
 
 #include "common/log.h"
 #include "hello/Matrix.h"
+#include "hello/GLCore.h"
 
 namespace hello {
 namespace {
@@ -193,12 +194,11 @@ void TextureRenderer::RenderTexture(GLenum target,
                                     int32_t width,
                                     int32_t height,
                                     uint64_t timestamp) {
-  // Create FBO RBO, etc
-  LOGE(
-      "EEEE TextureRenderer::RenderTexture() texture_id=%{public}d, "
-      "width=%{public}d, "
-      "height=%{public}d, timestamp=%{public}lu",
-      texture_id, width, height, timestamp);
+  // LOGE(
+  //     "EEEE TextureRenderer::RenderTexture() texture_id=%{public}d, "
+  //     "width=%{public}d, "
+  //     "height=%{public}d, timestamp=%{public}lu",
+  //     texture_id, width, height, timestamp);
 
   // if (width_ != width || height_ != height) {
   //   width_ = width;
@@ -216,6 +216,8 @@ void TextureRenderer::RenderTexture(GLenum target,
   //   glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
   //                             GL_RENDERBUFFER, rbo_);
   // }
+
+  CHECK_GL_ERROR();
 
   GLuint fbo = 0;
   GLuint rbo = 0;
@@ -289,6 +291,8 @@ void TextureRenderer::RenderTexture(GLenum target,
   glBindRenderbuffer(GL_RENDERBUFFER, 0);
   glDeleteBuffers(1, &fbo);
   glDeleteRenderbuffers(1, &rbo);
+
+  CHECK_GL_ERROR();
 }
 
 }  // namespace hello

@@ -23,7 +23,10 @@ bool GLImage::Initialize(OHNativeWindowBuffer* window_buffer) {
   };
   egl_image_ = gl_core->eglCreateImageKHR(
       display, EGL_NO_CONTEXT, EGL_NATIVE_BUFFER_OHOS, window_buffer, attrs);
-  FATAL_IF(egl_image_ == EGL_NO_IMAGE_KHR, "eglCreateImageKHR() failed!");
+  if (egl_image_ == EGL_NO_IMAGE_KHR) {
+    LOGE("eglCreateImageKHR() faile: 0x%{public}X", eglGetError());
+    return false;
+  }
 
   return true;
 }
@@ -34,6 +37,7 @@ void GLImage::Destroy() {
     EGLDisplay display = gl_core->display();
     gl_core->eglDestroyImageKHR(display, egl_image_);
     egl_image_ = EGL_NO_IMAGE_KHR;
+    CHECK_EGL_ERROR();
   }
 }
 
@@ -47,6 +51,8 @@ GLTexture GLImage::Bind() {
   glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
   glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
   gl_core->glEGLImageTargetTexture2DOES(GL_TEXTURE_EXTERNAL_OES, egl_image_);
+
+  CHECK_GL_ERROR();
 
   return GLTexture(GL_TEXTURE_EXTERNAL_OES, texture);
 }

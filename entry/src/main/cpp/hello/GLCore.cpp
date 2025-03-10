@@ -1,52 +1,47 @@
 #include "hello/GLCore.h"
 
+#include <cstring>
+#include <string>
+
 #include "common/log.h"
 
 namespace hello {
+namespace {
+
+void PrintEGLExtensions(EGLDisplay display) {
+  const char* extensions = eglQueryString(display, EGL_EXTENSIONS);
+  LOGE("%{public}s", extensions);
+  size_t extlen = strlen(extensions);
+  const char* end = extensions + strlen(extensions);
+
+
+  while (extensions < end) {
+      /* Skip whitespaces, if any */
+      if (*extensions == ' ') {
+          extensions++;
+          continue;
+      }
+
+      size_t n = strcspn(extensions, " ");
+      std::string extension(extensions, n);
+      extensions += n;
+
+      LOGE("    %{public}s", extension.c_str());
+  }
+}
+
+}  // namespace
 
 GLCore::GLCore() {}
 
 GLCore::~GLCore() {}
 
-void GLCore::Init() {
-  display_ = eglGetDisplay(EGL_DEFAULT_DISPLAY);
-  FATAL_IF(display_ == EGL_NO_DISPLAY, "eglGetDisplay() failed");
-
-  EGLint major, minor;
-  if (!eglInitialize(display_, &major, &minor)) {
-    FATAL("eglInitialize() failed");
-  }
-
-  if (eglBindAPI(EGL_OPENGL_ES_API) == EGL_FALSE) {
-    FATAL("Failed to bind OpenGL ES API");
-  }
-
-  EGLConfig config;
-  EGLint config_attribs[] = {EGL_SURFACE_TYPE,
-                             EGL_WINDOW_BIT,
-                             EGL_RED_SIZE,
-                             8,
-                             EGL_GREEN_SIZE,
-                             8,
-                             EGL_BLUE_SIZE,
-                             8,
-                             EGL_ALPHA_SIZE,
-                             8,
-                             EGL_RENDERABLE_TYPE,
-                             EGL_OPENGL_ES3_BIT,
-                             EGL_NONE};
-  EGLint numConfigs;
-  if (!eglChooseConfig(display_, config_attribs, &config, 1, &numConfigs)) {
-    FATAL("eglChooseConfig() failed");
-  }
-
-  EGLint contextAttribs[] = {EGL_CONTEXT_CLIENT_VERSION, 3, EGL_NONE};
-  context_ = eglCreateContext(display_, config, EGL_NO_CONTEXT, contextAttribs);
-  FATAL_IF(context_ == EGL_NO_CONTEXT, "eglCreateContext() failed");
-
-  if (!eglMakeCurrent(display_, EGL_NO_SURFACE, EGL_NO_SURFACE, context_)) {
-    FATAL("eglMakeCurrent() failed");
-  }
+void GLCore::InitializeFunctions() {
+  eglGetPlatformDisplayEXTFn_ =
+      reinterpret_cast<PFNEGLGETPLATFORMDISPLAYEXTPROC>(
+          eglGetProcAddress("eglGetPlatformDisplayEXT"));
+  FATAL_IF(eglGetPlatformDisplayEXTFn_ == nullptr,
+           "eglGetProcAddress(eglGetPlatformDisplayEXT) failed");
 
   eglCreateSyncKHRFn_ = reinterpret_cast<PFNEGLCREATESYNCKHRPROC>(
       eglGetProcAddress("eglCreateSyncKHR"));
@@ -86,14 +81,54 @@ void GLCore::Init() {
            "eglGetProcAddress(glEGLImageTargetTexture2DOES) failed");
 }
 
-void GLCore::Draw() {
-  glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
-  glClear(GL_COLOR_BUFFER_BIT);
+void GLCore::Init() {
+  InitializeFunctions();
 
-  eglSwapBuffers(display_, surface_);
+  display_ = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+  FATAL_IF(display_ == EGL_NO_DISPLAY, "eglGetPlatformDisplayEXT() failed");
+
+  EGLint major, minor;
+  if (!eglInitialize(display_, &major, &minor)) {
+    FATAL("eglInitialize() failed");
+  }
+  LOGE("eglInitialize() major=%{public}d minor=%{public}d", major, minor);
+  PrintEGLExtensions(display_);
+
+  if (eglBindAPI(EGL_OPENGL_ES_API) == EGL_FALSE) {
+    FATAL("Failed to bind OpenGL ES API");
+  }
+
+  EGLConfig config;
+  const EGLint config_attribs[] = {EGL_SURFACE_TYPE,
+                                   EGL_WINDOW_BIT,
+                                   EGL_RED_SIZE,
+                                   8,
+                                   EGL_GREEN_SIZE,
+                                   8,
+                                   EGL_BLUE_SIZE,
+                                   8,
+                                   EGL_ALPHA_SIZE,
+                                   8,
+                                   EGL_RENDERABLE_TYPE,
+                                   EGL_OPENGL_ES3_BIT,
+                                   EGL_NONE};
+  EGLint num_configs;
+  if (!eglChooseConfig(display_, config_attribs, &config, 1, &num_configs)) {
+    FATAL("eglChooseConfig() failed");
+  }
+
+  const EGLint context_attribs[] = {EGL_CONTEXT_CLIENT_VERSION, 3, EGL_NONE};
+  context_ =
+      eglCreateContext(display_, config, EGL_NO_CONTEXT, context_attribs);
+  FATAL_IF(context_ == EGL_NO_CONTEXT, "eglCreateContext() failed");
+
+  if (!eglMakeCurrent(display_, EGL_NO_SURFACE, EGL_NO_SURFACE, context_)) {
+    FATAL("eglMakeCurrent() failed");
+  }
 }
 
 void GLCore::Destroy() {
+  LOGE("GLCore::Destroy()");
   eglMakeCurrent(display_, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
   eglDestroyContext(display_, context_);
   eglTerminate(display_);
