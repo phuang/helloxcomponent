@@ -8,6 +8,7 @@
 namespace hello {
 
 class BitmapRenderer;
+class NativeWindow;
 class TextureRenderer;
 
 class Compositor : public XComponentNode::Delegate {
@@ -19,7 +20,9 @@ class Compositor : public XComponentNode::Delegate {
 
  private:
   std::unique_ptr<TextureRenderer> texture_renderer_;
+  std::unique_ptr<NativeWindow> texture_native_window_;
   std::unique_ptr<BitmapRenderer> bitmap_renderer_;
+  std::unique_ptr<NativeWindow> bitmap_native_window_;
 };
 
 }  // namespace hello

@@ -36,6 +36,8 @@ add_library(helloxcomponent SHARED
     hello/Log.h
     hello/NapiManager.cpp
     hello/NapiManager.h
+    hello/NativeWindow.cpp
+    hello/NativeWindow.h
     hello/NodeContent.cpp
     hello/NodeContent.h
     hello/NonDelegatedNodeContent.cpp
@@ -57,6 +59,7 @@ target_link_libraries(helloxcomponent PUBLIC
     hilog_ndk.z
     image_source
     native_buffer
+    native_image
     native_window
     pixelmap
     uv

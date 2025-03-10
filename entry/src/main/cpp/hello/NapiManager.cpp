@@ -9,6 +9,7 @@
 
 #include "hello/Log.h"
 #include "hello/DelegatedNodeContent.h"
+#include "hello/NonDelegatedNodeContent.h"
 #include "hello/GLCore.h"
 
 namespace hello {
@@ -98,14 +99,18 @@ void NapiManager::CreateNativeNode(ArkUI_NodeContentHandle content_handle,
     delegated_node_content_ =
         std::make_unique<hello::DelegatedNodeContent>(content_handle);
   } else {
+    non_delegated_node_content_ =
+    std::make_unique<hello::NonDelegatedNodeContent>(content_handle);
   }
 }
 
 void NapiManager::SetDelegatedCompositing(bool enable) {
   if (enable) {
     delegated_node_content_->SetVisible(true);
+    non_delegated_node_content_->SetVisible(false);
   } else {
     delegated_node_content_->SetVisible(false);
+    non_delegated_node_content_->SetVisible(true);
   }
 }
 
