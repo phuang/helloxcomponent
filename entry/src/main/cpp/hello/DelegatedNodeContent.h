@@ -33,8 +33,8 @@ class DelegatedNodeContent : public NodeContent {
   std::unique_ptr<BitmapRenderer> child_bitmap_renderer_;
   std::unique_ptr<TextureRenderer> child_texture_renderer_;
   std::unique_ptr<hello::XComponentNode> root_node_;
-  std::unique_ptr<hello::XComponentNode> child_surface_node_;
-  std::unique_ptr<hello::XComponentNode> child_texture_node_;
+  std::unique_ptr<hello::XComponentNode> child_software_node_;
+  std::unique_ptr<hello::XComponentNode> child_elg_surface_node_;
 };
 
 }  // namespace hello

@@ -136,7 +136,7 @@ void XComponentNode::StartDrawFrame() {
       // created.
       return;
     }
-    DrawSurface();
+    SoftwareDrawFrame();
     return;
   }
 
@@ -153,11 +153,13 @@ void XComponentNode::StopDrawFrame() {
     return;
   }
 
+  draw_frame_ = false;
   if (is_software()) {
     // Do noting, when pending RenderPixels are done, not new frame will be
     // draw.
     return;
   }
+
   OH_NativeXComponent_UnregisterOnFrameCallback(component_);
 }
 
@@ -167,9 +169,9 @@ void XComponentNode::OnSurfaceCreated(void* window) {
   if (draw_frame_) {
     CHECK(delegate_);
     if (is_software()) {
-      DrawSurface();
+      SoftwareDrawFrame();
     } else {
-      DrawTexture();
+      HardwareDrawFrame();
     }
   }
 }
@@ -210,11 +212,11 @@ struct RenderPixelsData {
 void XComponentNode::OnFrame(uint64_t timestamp, uint64_t targetTimestamp) {
   CHECK(!is_software());
   if (window_) {
-    DrawTexture();
+    HardwareDrawFrame();
   }
 }
 
-void XComponentNode::DrawSurface() {
+void XComponentNode::SoftwareDrawFrame() {
   OHNativeWindowBuffer* window_buffer = nullptr;
   int fenceFd = -1;
   int32_t retval = OH_NativeWindow_NativeWindowRequestBuffer(
@@ -257,13 +259,13 @@ void XComponentNode::DrawSurface() {
                  "retval=%{public}d",
                  retval);
         if (draw_frame_) {
-          DrawSurface();
+          SoftwareDrawFrame();
         }
         --pending_render_pixels_count_;
       });
 }
 
-void XComponentNode::DrawTexture() {
+void XComponentNode::HardwareDrawFrame() {
   CHECK(window_);
 
   if (using_egl_surface()) {

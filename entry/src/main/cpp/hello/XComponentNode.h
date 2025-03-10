@@ -82,9 +82,8 @@ class XComponentNode {
 
   static XComponentNode* GetInstance(OH_NativeXComponent* component);
 
-  void DrawFrame();
-  void DrawSurface();
-  void DrawTexture();
+  void SoftwareDrawFrame();
+  void HardwareDrawFrame();
 
   void SetAttribute(ArkUI_NodeAttributeType attribute, uint32_t u32) {
     ArkUI_NumberValue value = {.u32 = u32};
