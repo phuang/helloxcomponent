@@ -27,7 +27,9 @@
 			"streambuf": "cpp",
 			"complex": "cpp",
 			"ratio": "cpp",
-			"type_traits": "cpp"
+			"type_traits": "cpp",
+			"semaphore": "cpp",
+			"stop_token": "cpp"
 		}
 	}
 }

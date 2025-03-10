@@ -1,8 +1,8 @@
 #include "hello/GLImage.h"
 
+#include "common/log.h"
 #include "hello/GLCore.h"
 #include "hello/NapiManager.h"
-#include "common/log.h"
 
 namespace hello {
 
@@ -13,8 +13,8 @@ GLImage::~GLImage() {
 }
 
 bool GLImage::Initialize(OHNativeWindowBuffer* window_buffer) {
-  auto disp = eglGetDisplay(EGL_DEFAULT_DISPLAY);
   const auto* gl_core = NapiManager::GetInstance()->gl_core();
+  EGLDisplay display = gl_core->display();
 
   EGLint attrs[] = {
       EGL_IMAGE_PRESERVED,
@@ -22,7 +22,7 @@ bool GLImage::Initialize(OHNativeWindowBuffer* window_buffer) {
       EGL_NONE,
   };
   egl_image_ = gl_core->eglCreateImageKHR(
-      disp, EGL_NO_CONTEXT, EGL_NATIVE_BUFFER_OHOS, window_buffer, attrs);
+      display, EGL_NO_CONTEXT, EGL_NATIVE_BUFFER_OHOS, window_buffer, attrs);
   FATAL_IF(egl_image_ == EGL_NO_IMAGE_KHR, "eglCreateImageKHR() failed!");
 
   return true;
@@ -30,9 +30,9 @@ bool GLImage::Initialize(OHNativeWindowBuffer* window_buffer) {
 
 void GLImage::Destroy() {
   if (egl_image_ != EGL_NO_IMAGE_KHR) {
-    auto disp = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     const auto* gl_core = NapiManager::GetInstance()->gl_core();
-    gl_core->eglDestroyImageKHR(disp, egl_image_);
+    EGLDisplay display = gl_core->display();
+    gl_core->eglDestroyImageKHR(display, egl_image_);
     egl_image_ = EGL_NO_IMAGE_KHR;
   }
 }
@@ -50,6 +50,5 @@ GLTexture GLImage::Bind() {
 
   return GLTexture(GL_TEXTURE_EXTERNAL_OES, texture);
 }
-
 
 }  // namespace hello

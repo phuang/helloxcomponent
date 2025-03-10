@@ -15,7 +15,8 @@ GLFence::GLFence() = default;
 GLFence::~GLFence() {
   if (sync_ != EGL_NO_SYNC_KHR) {
     const auto* gl_core = NapiManager::GetInstance()->gl_core();
-    gl_core->eglDestroySyncKHR(eglGetCurrentDisplay(), sync_);
+  EGLDisplay display = gl_core->display();
+  gl_core->eglDestroySyncKHR(display, sync_);
   }
 }
 
@@ -41,7 +42,8 @@ std::shared_ptr<GLFence> GLFence::CreateFromFenceFd(ScopedFd fenceFd) {
 
 bool GLFence::init(EGLint type, const EGLint* attribs) {
   const auto* gl_core = NapiManager::GetInstance()->gl_core();
-  sync_ = gl_core->eglCreateSyncKHR(eglGetCurrentDisplay(), type, attribs);
+  EGLDisplay display = gl_core->display();
+  sync_ = gl_core->eglCreateSyncKHR(display, type, attribs);
   if (sync_ == EGL_NO_SYNC_KHR) {
     LOGE("Failed to eglCreateSyncKHR");
     return false;
@@ -51,15 +53,17 @@ bool GLFence::init(EGLint type, const EGLint* attribs) {
 
 void GLFence::Wait() {
   const auto* gl_core = NapiManager::GetInstance()->gl_core();
-  if (gl_core->eglWaitSyncKHR(eglGetCurrentDisplay(), sync_, 0) == EGL_FALSE) {
+  EGLDisplay display = gl_core->display();
+  if (gl_core->eglWaitSyncKHR(display, sync_, 0) == EGL_FALSE) {
     LOGE("Failed to eglWaitSyncKHR");
   }
 }
 
 ScopedFd GLFence::GetFd() {
   const auto* gl_core = NapiManager::GetInstance()->gl_core();
+  EGLDisplay display = gl_core->display();
   EGLint fd =
-      gl_core->eglDupNativeFenceFDANDROID(eglGetCurrentDisplay(), sync_);
+      gl_core->eglDupNativeFenceFDANDROID(display, sync_);
   if (fd == EGL_NO_NATIVE_FENCE_FD_ANDROID) {
     LOGE("Failed to eglDupNativeFenceFDANDROID");
     return {};

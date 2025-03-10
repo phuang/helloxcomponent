@@ -18,6 +18,7 @@ class GLCore {
   void Draw();
   void Destroy();
 
+  EGLDisplay display() const { return display_; }
   EGLContext context() const { return context_; }
 
   EGLSyncKHR eglCreateSyncKHR(EGLDisplay dpy,
