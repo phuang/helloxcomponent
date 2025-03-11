@@ -13,7 +13,7 @@ class TextureRenderer : public XComponentNode::Delegate {
   ~TextureRenderer() override;
 
   void RenderTexture(GLenum target,
-                     GLuint texture_id,
+                     GLuint texture,
                      int32_t width,
                      int32_t height,
                      uint64_t timestamp) override;

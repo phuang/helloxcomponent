@@ -11,7 +11,7 @@ namespace hello {
 Compositor::Compositor() {
   LOGE("Compositor::Compositor()");
   texture_renderer_ = std::make_unique<TextureRenderer>();
-  bitmap_renderer_ = std::make_unique<BitmapRenderer>(kChildPictureUri);
+  bitmap_renderer_ = std::make_unique<BitmapRenderer>(kPictureRiverUri);
 
   texture_native_window_ =
       NativeWindow::Create(kEGLSurfaceNodeSize, kEGLSurfaceNodeSize);

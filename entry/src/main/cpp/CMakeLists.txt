@@ -48,6 +48,8 @@ add_library(helloxcomponent SHARED
     hello/Thread.h
     hello/XComponentNode.cpp
     hello/XComponentNode.h
+    hello/SyncFence.cpp
+    hello/SyncFence.h
     napi_init.cpp
 )
 

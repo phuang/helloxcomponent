@@ -3,8 +3,8 @@
 
 namespace hello {
 
-extern const char kRootPictureUri[];
-extern const char kChildPictureUri[];
+extern const char kPictureSkyUri[];
+extern const char kPictureRiverUri[];
 
 // Mate 60 default scale factor
 

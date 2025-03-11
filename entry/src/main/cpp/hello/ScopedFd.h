@@ -11,10 +11,10 @@ namespace hello {
 
 class ScopedFd {
  public:
-  explicit ScopedFd(int fd) : fd_(fd) {}
-  ScopedFd() : ScopedFd(-1) {}
+ ScopedFd() : ScopedFd(-1) {}
+ explicit ScopedFd(int fd) : fd_(fd) {}
 
-  ~ScopedFd() { reset(); }
+ ~ScopedFd() { reset(); }
 
   ScopedFd(const ScopedFd&) = delete;
   ScopedFd& operator=(const ScopedFd&) = delete;

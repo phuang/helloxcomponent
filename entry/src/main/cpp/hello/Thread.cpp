@@ -30,25 +30,23 @@ void Thread::Stop() {
   }
 }
 
-void Thread::PostTask(const std::function<void()>& task) {
+void Thread::PostTask(std::function<void()>&& task) {
   {
     std::lock_guard<std::mutex> lock(mutex_);
-    task_queue_.push(task);
+    task_queue_.push(std::move(task));
   }
   cv_.notify_one();
 }
 
-void Thread::PostTask(const std::function<void()>& task,
-                      const std::function<void()>& done) {
+void Thread::PostTask(std::function<void()>&& task, std::function<void()>&& done) {
   // create napi thread safe function
 
-
   // Run task in this thread, and run done in the loop thread.
-  PostTask([this, task, done] {
+  PostTask([this, task = std::move(task), done = std::move(done)] {
     task();
     {
       std::unique_lock<std::mutex> lock(done_mutex_);
-      done_queue_.push(done);
+      done_queue_.push(std::move(done));
     }
     uv_async_send(&uv_async_);
   });
@@ -65,7 +63,7 @@ void Thread::Loop() {
         break;
       }
 
-      task = task_queue_.front();
+      task = std::move(task_queue_.front());
       task_queue_.pop();
     }
     task();

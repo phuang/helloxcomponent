@@ -190,7 +190,7 @@ TextureRenderer::~TextureRenderer() {
 }
 
 void TextureRenderer::RenderTexture(GLenum target,
-                                    uint32_t texture_id,
+                                    uint32_t texture,
                                     int32_t width,
                                     int32_t height,
                                     uint64_t timestamp) {
@@ -203,11 +203,11 @@ void TextureRenderer::RenderTexture(GLenum target,
 
   glGenRenderbuffers(1, &rbo);
   glBindRenderbuffer(GL_RENDERBUFFER, rbo);
-  glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT16, width, height);
-  glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
+  glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
+  glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT,
                             GL_RENDERBUFFER, rbo);
-  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, target,
-                         texture_id, 0);
+  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, target, texture,
+                         0);
   // Check if the framebuffer is complete
   GLenum retval = glCheckFramebufferStatus(GL_FRAMEBUFFER);
   FATAL_IF(retval != GL_FRAMEBUFFER_COMPLETE,
@@ -244,9 +244,9 @@ void TextureRenderer::RenderFrame(int32_t width,
   // Set the viewport
   glViewport(0, 0, width, height);
 
-  // Clear the screen to red
   glClearColor(compute_color(1000), compute_color(3000), compute_color(2000),
                1.0f);
+  glClearDepthf(1.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   // Use the shader program

@@ -13,31 +13,53 @@ namespace hello {
 DelegatedNodeContent::DelegatedNodeContent(
     ArkUI_NodeContentHandle content_handle)
     : NodeContent(content_handle) {
-  // root_bitmap_renderer_ = std::make_unique<BitmapRenderer>(kRootPictureUri);
-  root_node_ =
-      hello::XComponentNode::Create(root_bitmap_renderer_.get(), "root_view",
-                                    hello::XComponentNode::kSoftware);
-  root_node_->SetWidthPercent(1);
-  root_node_->SetHeightPercent(1);
+  {
+    auto renderer = std::make_unique<BitmapRenderer>(kPictureSkyUri);
+    root_node_ = hello::XComponentNode::Create(
+      renderer.get(), "root_view", hello::XComponentNode::kSoftware);
+    root_node_->SetWidthPercent(1);
+    root_node_->SetHeightPercent(1);
+    child_renderers_.push_back(std::move(renderer));
+  }
 
-  child_texture_renderer_ = std::make_unique<TextureRenderer>();
-  child_elg_surface_node_ = hello::XComponentNode::Create(
-      child_texture_renderer_.get(), "child_texture_view",
-      hello::XComponentNode::kEGLSurface);
-  root_node_->AddChild(child_elg_surface_node_.get());
-  child_elg_surface_node_->SetPosition(kEGLSurfaceNodeX, kEGLSurfaceNodeX);
-  child_elg_surface_node_->SetSurfaceSize(kEGLSurfaceNodeSize, kEGLSurfaceNodeSize);
-  child_elg_surface_node_->SetWidth(kEGLSurfaceNodeSize);
-  child_elg_surface_node_->SetHeight(kEGLSurfaceNodeSize);
-
-  child_bitmap_renderer_ = std::make_unique<BitmapRenderer>(kChildPictureUri);
-  child_software_node_ = hello::XComponentNode::Create(
-      child_bitmap_renderer_.get(), "child_surface_view",
-      hello::XComponentNode::kSoftware);
-  root_node_->AddChild(child_software_node_.get());
-  child_software_node_->SetPosition(kBitmapNodeX, kBitmapNodeY);
-  child_software_node_->SetWidth(kBitmapNodeSize);
-  child_software_node_->SetHeight(kBitmapNodeSize);
+#if 0
+  {
+    auto renderer = std::make_unique<TextureRenderer>();
+    auto node = hello::XComponentNode::Create(
+        renderer.get(), "child_1", hello::XComponentNode::kEGLSurface);
+    node->SetPosition(kEGLSurfaceNodeX, kEGLSurfaceNodeX);
+    node->SetSurfaceSize(kEGLSurfaceNodeSize, kEGLSurfaceNodeSize);
+    node->SetWidth(kEGLSurfaceNodeSize);
+    node->SetHeight(kEGLSurfaceNodeSize);
+    root_node_->AddChild(node.get());
+    child_renderers_.push_back(std::move(renderer));
+    child_nodes_.push_back(std::move(node));
+  }
+  {
+    auto renderer = std::make_unique<BitmapRenderer>(kPictureRiverUri);
+    auto node = hello::XComponentNode::Create(
+        renderer.get(), "child_2", hello::XComponentNode::kSoftware);
+    node->SetPosition(kBitmapNodeX, kBitmapNodeY);
+    node->SetSurfaceSize(kEGLSurfaceNodeSize, kEGLSurfaceNodeSize);
+    node->SetWidth(kBitmapNodeSize);
+    node->SetHeight(kBitmapNodeSize);
+    root_node_->AddChild(node.get());
+    child_renderers_.push_back(std::move(renderer));
+    child_nodes_.push_back(std::move(node));
+  }
+#endif
+  {
+    auto renderer = std::make_unique<BitmapRenderer>(kPictureRiverUri);
+    auto node = hello::XComponentNode::Create(renderer.get(), "child_2",
+                                              hello::XComponentNode::kSoftware);
+    node->SetPosition(20, 100);
+    // node->SetSurfaceSize(kEGLSurfaceNodeSize, kEGLSurfaceNodeSize);
+    node->SetWidthPercent(0.9);
+    node->SetHeightPercent(0.5);
+    root_node_->AddChild(node.get());
+    child_renderers_.push_back(std::move(renderer));
+    child_nodes_.push_back(std::move(node));
+  }
 }
 
 DelegatedNodeContent::~DelegatedNodeContent() {
@@ -52,19 +74,13 @@ void DelegatedNodeContent::SetVisible(bool visible) {
   visible_ = visible;
   if (visible_) {
     root_node_->StartDrawFrame();
-    if (child_software_node_) {
-      child_software_node_->StartDrawFrame();
-    }
-    if (child_elg_surface_node_) {
-      child_elg_surface_node_->StartDrawFrame();
+    for (auto& node : child_nodes_) {
+      node->StartDrawFrame();
     }
   } else {
     root_node_->StopDrawFrame();
-    if (child_software_node_) {
-      child_software_node_->StopDrawFrame();
-    }
-    if (child_elg_surface_node_) {
-      child_elg_surface_node_->StopDrawFrame();
+    for (auto& node : child_nodes_) {
+      node->StopDrawFrame();
     }
   }
 }

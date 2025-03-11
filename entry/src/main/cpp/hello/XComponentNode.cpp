@@ -14,12 +14,13 @@
 #include <map>
 #include <mutex>
 
-#include "hello/Log.h"
 #include "hello/BitmapRenderer.h"
 #include "hello/GLCore.h"
 #include "hello/GLFence.h"
 #include "hello/GLImage.h"
+#include "hello/Log.h"
 #include "hello/NapiManager.h"
+#include "hello/SyncFence.h"
 #include "hello/Thread.h"
 
 namespace hello {
@@ -102,7 +103,7 @@ XComponentNode::~XComponentNode() {
 ArkUI_NativeNodeAPI_1* XComponentNode::api() {
   static ArkUI_NativeNodeAPI_1* api = nullptr;
   static std::once_flag flag;
-  std::call_once(flag, [&]() {
+  std::call_once(flag, [&] {
     api = reinterpret_cast<ArkUI_NativeNodeAPI_1*>(
         OH_ArkUI_QueryModuleInterfaceByName(ARKUI_NATIVE_NODE,
                                             "ArkUI_NativeNodeAPI_1"));
@@ -218,17 +219,15 @@ void XComponentNode::OnFrame(uint64_t timestamp, uint64_t targetTimestamp) {
 
 void XComponentNode::SoftwareDrawFrame() {
   OHNativeWindowBuffer* window_buffer = nullptr;
-  int fenceFd = -1;
-  int32_t retval = OH_NativeWindow_NativeWindowRequestBuffer(
-      window_, &window_buffer, &fenceFd);
+  int fd = -1;
+  int32_t retval =
+      OH_NativeWindow_NativeWindowRequestBuffer(window_, &window_buffer, &fd);
   FATAL_IF(
       retval != 0,
       "OH_NativeWindow_NativeWindowRequestBuffer() failed retval=%{public}d",
       retval);
 
-  if (fenceFd != -1) {
-    close(fenceFd);
-  }
+  ScopedFd fence_fd(fd);
 
   OH_NativeBuffer* buffer = nullptr;
   retval = OH_NativeBuffer_FromNativeWindowBuffer(window_buffer, &buffer);
@@ -246,7 +245,9 @@ void XComponentNode::SoftwareDrawFrame() {
 
   ++pending_render_pixels_count_;
   renderer_thread_->PostTask(
-      [this, addr, config, window_buffer] {
+      [this, fd = fence_fd.release(), addr, config, window_buffer] {
+        SyncFence sync_fence((ScopedFd(fd)));
+        sync_fence.Wait(-1);
         delegate_->RenderPixels(addr, config.width, config.height,
                                 config.stride, 0);
       },
@@ -269,6 +270,7 @@ void XComponentNode::HardwareDrawFrame() {
   CHECK(window_);
 
   if (using_egl_surface()) {
+    // Use EGLSurface for rendering
     CHECK(egl_surface_ != EGL_NO_SURFACE);
     const auto* gl_core = NapiManager::GetInstance()->gl_core();
     EGLDisplay display = gl_core->display();
@@ -281,6 +283,8 @@ void XComponentNode::HardwareDrawFrame() {
     return;
   }
 
+  // Using EGLImage for rendering.
+  CHECK(using_egl_image())
   OHNativeWindowBuffer* window_buffer = nullptr;
   int fd = -1;
   int32_t retval =
@@ -318,6 +322,7 @@ void XComponentNode::HardwareDrawFrame() {
     }
     fence_fd = fence->GetFd();
   }
+  // glFinish();
 
   retval = OH_NativeWindow_NativeWindowFlushBuffer(window_, window_buffer,
                                                    fence_fd.release(), {});

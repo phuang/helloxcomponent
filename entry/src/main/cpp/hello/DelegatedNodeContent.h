@@ -10,6 +10,7 @@
 #include "hello/NodeContent.h"
 
 #include <memory>
+#include <vector>
 
 #include "hello/BitmapRenderer.h"
 #include "hello/TextureRenderer.h"
@@ -29,12 +30,9 @@ class DelegatedNodeContent : public NodeContent {
   void OnRootNodeDetached() override;
 
   bool visible_ = false;
-  std::unique_ptr<BitmapRenderer> root_bitmap_renderer_;
-  std::unique_ptr<BitmapRenderer> child_bitmap_renderer_;
-  std::unique_ptr<TextureRenderer> child_texture_renderer_;
-  std::unique_ptr<hello::XComponentNode> root_node_;
-  std::unique_ptr<hello::XComponentNode> child_software_node_;
-  std::unique_ptr<hello::XComponentNode> child_elg_surface_node_;
+  std::unique_ptr<XComponentNode> root_node_;
+  std::vector<std::unique_ptr<XComponentNode>> child_nodes_;
+  std::vector<std::unique_ptr<XComponentNode::Delegate>> child_renderers_;
 };
 
 }  // namespace hello

@@ -68,7 +68,9 @@
 			"stdexcept": "cpp",
 			"cinttypes": "cpp",
 			"format": "cpp",
-			"span": "cpp"
+			"span": "cpp",
+			"future": "cpp",
+			"cerrno": "cpp"
 		}
 	}
 }
