@@ -19,8 +19,9 @@ class Thread {
 
   void Start();
   void Stop();
-  void PostTask(std::function<void()>&& task);
-  void PostTask(std::function<void()>&& task, std::function<void()>&& done);
+  void PostTask(const std::function<void()>& task);
+  void PostTask(const std::function<void()>& task,
+                const std::function<void()>& done);
 
  private:
   void Loop();
