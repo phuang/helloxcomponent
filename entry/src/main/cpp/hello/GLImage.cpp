@@ -1,7 +1,7 @@
 #include "hello/GLImage.h"
 
-#include "hello/Log.h"
 #include "hello/GLCore.h"
+#include "hello/Log.h"
 #include "hello/NapiManager.h"
 
 namespace hello {
@@ -47,6 +47,13 @@ GLTexture GLImage::Bind() {
   GLuint texture;
   glGenTextures(1, &texture);
   glBindTexture(kTarget, texture);
+
+  // Set texture parameters
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
   gl_core->glEGLImageTargetTexture2DOES(kTarget, egl_image_);
 
   CHECK_GL_ERROR();
