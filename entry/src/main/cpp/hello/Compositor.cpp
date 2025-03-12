@@ -11,6 +11,7 @@
 #include "hello/Log.h"
 #include "hello/Matrix.h"
 #include "hello/NativeWindow.h"
+#include "hello/SyncFence.h"
 #include "hello/TextureRenderer.h"
 
 namespace hello {
@@ -98,38 +99,76 @@ void SetupGL() {
   });
 }
 
+const bool kUseNativeWindow = true;
+const int kPictureSize = 1040;
+
 }  // namespace
 
 Compositor::Compositor() {
   SetupGL();
   renderers_[0] = std::make_unique<BitmapRenderer>(kPictureSkyUri);
   renderers_[1] = std::make_unique<BitmapRenderer>(kPictureRiverUri);
-  glGenTextures(2, textures_);
 
-  // Set texture parameters
-  glBindTexture(GL_TEXTURE_2D, textures_[0]);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-  glBindTexture(GL_TEXTURE_2D, textures_[1]);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  if (kUseNativeWindow) {
+    native_windows_[0] = NativeWindow::Create(1260, 2538);
+    native_windows_[1] = NativeWindow::Create(kPictureSize, kPictureSize);
+    textures_[0] = native_windows_[0]->BindTexture();
+    textures_[1] = native_windows_[1]->BindTexture();
+  } else {
+    textures_[0] = GLTexture::Create();
+    textures_[1] = GLTexture::Create();
+  }
 }
 
-Compositor::~Compositor() {
-  glDeleteTextures(2, textures_);
-}
+Compositor::~Compositor() = default;
 
 void Compositor::RenderFrame(int32_t width,
                              int32_t height,
                              uint64_t timestamp) {
-  const int kPictureSize = 1040;
-  // LOGE("RenderFrame called with width: %{public}d, height: %{public}d", width,
-  //      height);
+  if (kUseNativeWindow) {
+    RenderFrameWithNativeWindow(width, height, timestamp);
+  } else {
+    UploadTextures(width, height, timestamp);
+    RenderFrameWithTexture(width, height, timestamp);
+  }
+}
+
+void Compositor::RenderFrameWithNativeWindow(int32_t width,
+                                             int32_t height,
+                                             uint64_t timestamp) {
+  UploadNativeWindows(width, height, timestamp);
+  RenderFrameWithTexture(width, height, timestamp);
+}
+
+void Compositor::UploadNativeWindows(int32_t width,
+                                     int32_t height,
+                                     uint64_t timestamp) {
+  for (int i = 0; i < 2; ++i) {
+    int32_t w, h, s;
+    ScopedFd fence_fd;
+    void* addr = nullptr;
+    // DCHECK_GL_ERROR();
+    native_windows_[i]->RequestBuffer(&w, &h, &s, &fence_fd, &addr);
+    LOGE("Requested buffer width: %{public}d, height: %{public}d, stride: %{public}d", w, h, s);
+    LOGE("Fence FD: %{public}d", fence_fd.get());
+    LOGE("Buffer address: %{public}p", addr);
+    // DCHECK_GL_ERROR();
+    SyncFence sync_fence(std::move(fence_fd));
+    // DCHECK_GL_ERROR();
+    sync_fence.Wait(-1);
+    // DCHECK_GL_ERROR();
+    renderers_[i]->RenderPixels(static_cast<uint8_t*>(addr), w, h, s, 0);
+    // DCHECK_GL_ERROR();
+    native_windows_[i]->FlushBuffer();
+    // DCHECK_GL_ERROR();
+    native_windows_[i]->UpdateSurfaceImage();
+    // DCHECK_GL_ERROR();
+  }
+}
+
+void Compositor::UploadTextures(int32_t width,
+                                int32_t height,
+                                uint64_t timestamp) {
   auto texture_upload = [](const uint8_t* src, uint32_t copy_width,
                            uint32_t copy_height, uint32_t src_stride) {
     glPixelStorei(GL_UNPACK_ROW_LENGTH, src_stride / 4);
@@ -138,20 +177,28 @@ void Compositor::RenderFrame(int32_t width,
     glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
   };
 
-  glBindTexture(GL_TEXTURE_2D, textures_[0]);
+  glBindTexture(GL_TEXTURE_2D, textures_[0].id());
   renderers_[0]->RenderPixels(width, height, timestamp, texture_upload);
 
-  glBindTexture(GL_TEXTURE_2D, textures_[1]);
+  glBindTexture(GL_TEXTURE_2D, textures_[1].id());
   renderers_[1]->RenderPixels(kPictureSize, kPictureSize, timestamp,
                               texture_upload);
+}
+
+void Compositor::RenderFrameWithTexture(int32_t width,
+                                        int32_t height,
+                                        uint64_t timestamp) {
+  // LOGE("RenderFrame called with width: %{public}d, height: %{public}d",
+  // width,
+  //      height);
 
   // Set the viewport
   glViewport(0, 0, width, height);
 
-  // glClearColor(0.0, 0.0, 0.0, 1.0f);
-  // glClearDepthf(1.0f);
-  // glDisable(GL_DEPTH_TEST);
-  // glClear(GL_COLOR_BUFFER_BIT);
+  glClearColor(0.8, 0.8, 0.8, 1.0f);
+  glClearDepthf(1.0f);
+  glDisable(GL_DEPTH_TEST);
+  glClear(GL_COLOR_BUFFER_BIT);
 
   // Use the shader program
   glUseProgram(program_);
@@ -164,7 +211,7 @@ void Compositor::RenderFrame(int32_t width,
 
   {
     // Rotate the triangle by angle{X,Y,Z}
-    Matrix4x4 transfrom_matrix = Matrix4x4::Scale(1, 1, 1);
+    Matrix4x4 transfrom_matrix = Matrix4x4::Scale(0.5, 0.5, 1);
 
     GLint u_transform_location = glGetUniformLocation(program_, "u_transform");
     glUniformMatrix4fv(u_transform_location, 1, GL_FALSE,
@@ -172,7 +219,7 @@ void Compositor::RenderFrame(int32_t width,
 
     // Bind texture_1 to texture unit 0
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, textures_[0]);
+    glBindTexture(textures_[0].target(), textures_[0].id());
     GLint u_texture_location = glGetUniformLocation(program_, "u_texture");
     glUniform1i(u_texture_location, 0);
 
@@ -184,10 +231,8 @@ void Compositor::RenderFrame(int32_t width,
     // transfrom_matrix *=
     //     Matrix4x4::Translate(static_cast<float>(kEGLSurfaceNodeX),
     //                          static_cast<float>(kEGLSurfaceNodeY), 0);
-    transfrom_matrix *=
-        Matrix4x4::Scale(1.0f * kPictureSize / width,
-                         1.0f * kPictureSize / height, 1);
-
+    transfrom_matrix *= Matrix4x4::Scale(1.0f * kPictureSize / width,
+                                         1.0f * kPictureSize / height, 1);
 
     GLint u_transform_location = glGetUniformLocation(program_, "u_transform");
     glUniformMatrix4fv(u_transform_location, 1, GL_FALSE,
@@ -195,7 +240,7 @@ void Compositor::RenderFrame(int32_t width,
 
     // Bind texture_1 to texture unit 0
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, textures_[1]);
+    glBindTexture(textures_[1].target(), textures_[1].id());
     GLint u_texture_location = glGetUniformLocation(program_, "u_texture");
     glUniform1i(u_texture_location, 0);
 

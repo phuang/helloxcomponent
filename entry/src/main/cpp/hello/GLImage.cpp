@@ -44,21 +44,15 @@ void GLImage::Destroy() {
 GLTexture GLImage::Bind() {
   const GLenum kTarget = GL_TEXTURE_EXTERNAL_OES;
   auto* gl_core = NapiManager::GetInstance()->gl_core();
-  GLuint texture;
-  glGenTextures(1, &texture);
-  glBindTexture(kTarget, texture);
 
-  // Set texture parameters
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  GLTexture texture = GLTexture::Create(kTarget);
 
+  glBindTexture(kTarget, texture.id());
   gl_core->glEGLImageTargetTexture2DOES(kTarget, egl_image_);
 
   DCHECK_GL_ERROR();
 
-  return GLTexture(kTarget, texture);
+  return texture;
 }
 
 }  // namespace hello

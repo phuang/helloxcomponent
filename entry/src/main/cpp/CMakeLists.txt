@@ -9,6 +9,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 add_definitions(-DOHOS_PLATFORM)
 add_definitions(-DEGL_EGLEXT_PROTOTYPES=1)
+# add_definitions(-DNDEBUG=1)
 
 if(DEFINED PACKAGE_FIND_FILE)
     include(${PACKAGE_FIND_FILE})
@@ -33,6 +34,8 @@ add_library(helloxcomponent SHARED
     hello/GLFence.h
     hello/GLImage.cpp
     hello/GLImage.h
+    hello/GLTexture.cpp
+    hello/GLTexture.h
     hello/Log.h
     hello/NapiManager.cpp
     hello/NapiManager.h

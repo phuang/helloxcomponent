@@ -13,6 +13,7 @@
 
 namespace hello {
 
+class NativeWindow;
 class Thread;
 
 class XComponentNode {
@@ -134,13 +135,12 @@ class XComponentNode {
 
   std::unique_ptr<Thread> renderer_thread_;
 
-  OHNativeWindow* window_ = nullptr;
+  std::unique_ptr<NativeWindow> window_;
   uint64_t surface_width_ = 0;
   uint64_t surface_height_ = 0;
 
   EGLSurface egl_surface_ = EGL_NO_SURFACE;
 
-  int pending_render_pixels_count_ = 0;
   bool draw_frame_ = false;
 };
 

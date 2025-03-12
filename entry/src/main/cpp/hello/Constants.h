@@ -6,7 +6,7 @@ namespace hello {
 extern const char kPictureSkyUri[];
 extern const char kPictureRiverUri[];
 
-// Mate 60 default scale factor
+constexpr int kFrameRate = 60;
 
 constexpr float kScaleFactor = 3.25f;
 

@@ -10,53 +10,9 @@
 
 #include <memory>
 
+#include "hello/GLTexture.h"
+
 namespace hello {
-
-class GLTexture {
- public:
-  GLTexture(GLenum target, GLuint texture)
-      : target_(target), texture_(texture) {}
-
-  ~GLTexture() {
-    reset();
-  }
-
-  // Move constructor
-  GLTexture(GLTexture&& other) noexcept
-      : target_(other.target_), texture_(other.texture_) {
-      other.target_ = GL_NONE;
-      other.texture_ = 0;
-  }
-
-  // Move assignment operator
-  GLTexture& operator=(GLTexture&& other) noexcept {
-    if (this != &other) {
-      reset();
-      target_ = other.target_;
-      texture_ = other.texture_;
-      other.target_ = GL_NONE;
-      other.texture_ = 0;
-    }
-    return *this;
-  }
-
-  GLTexture(const GLTexture& other) = delete;
-  GLTexture& operator=(const GLTexture& other)  = delete;
-
-  GLenum target() const { return target_; }
-  GLuint texture() const { return texture_; }
-
-  void reset() {
-    if (texture_) {
-      glDeleteTextures(1, &texture_);
-      texture_ = 0;
-    }
-  }
-
- private:
-  GLenum target_ = GL_NONE;
-  GLuint texture_ = 0;
-};
 
 class GLImage {
  public:

@@ -25,12 +25,12 @@ namespace hello {
              __LINE__, error);                                              \
   }
 
-#if defined(DEBUG)
-#define DCHECK_EGL_ERROR() CHECK_EGL_ERROR()
-#define DCHECK_GL_ERROR() CHECK_GL_ERROR()
-#else
+#if defined(NDEBUG)
 #define DCHECK_EGL_ERROR()
 #define DCHECK_GL_ERROR()
+#else
+#define DCHECK_EGL_ERROR() CHECK_EGL_ERROR()
+#define DCHECK_GL_ERROR() CHECK_GL_ERROR()
 #endif
 
 class GLCore {

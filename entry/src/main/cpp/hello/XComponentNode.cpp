@@ -15,11 +15,13 @@
 #include <mutex>
 
 #include "hello/BitmapRenderer.h"
+#include "hello/Constants.h"
 #include "hello/GLCore.h"
 #include "hello/GLFence.h"
 #include "hello/GLImage.h"
 #include "hello/Log.h"
 #include "hello/NapiManager.h"
+#include "hello/NativeWindow.h"
 #include "hello/SyncFence.h"
 #include "hello/Thread.h"
 
@@ -126,20 +128,12 @@ void XComponentNode::StartDrawFrame() {
   }
   draw_frame_ = true;
 
-  if (is_software()) {
-    if (pending_render_pixels_count_ > 0) {
-      // There is pending RenderPixels() calls, when the pending calls are
-      // done, new frame will be initialed automactilly.
-      return;
-    }
-    if (!window_) {
-      // Surface is not created yet, delay drawing frame until surface is
-      // created.
-      return;
-    }
-    SoftwareDrawFrame();
-    return;
-  }
+  OH_NativeXComponent_ExpectedRateRange range = {
+      .min = kFrameRate,
+      .max = kFrameRate,
+      .expected = kFrameRate,
+  };
+  OH_NativeXComponent_SetExpectedFrameRateRange(component_, &range);
 
   OH_NativeXComponent_RegisterOnFrameCallback(
       component_, [](OH_NativeXComponent* component, uint64_t timestamp,
@@ -155,12 +149,6 @@ void XComponentNode::StopDrawFrame() {
   }
 
   draw_frame_ = false;
-  if (is_software()) {
-    // Do noting, when pending RenderPixels are done, not new frame will be
-    // draw.
-    return;
-  }
-
   OH_NativeXComponent_UnregisterOnFrameCallback(component_);
 }
 
@@ -169,26 +157,22 @@ void XComponentNode::OnSurfaceCreated(void* window) {
 
   if (draw_frame_) {
     CHECK(delegate_);
-    if (is_software()) {
-      SoftwareDrawFrame();
-    } else {
-      HardwareDrawFrame();
-    }
   }
 }
 
 void XComponentNode::OnSurfaceChanged(void* window) {
-  window_ = reinterpret_cast<OHNativeWindow*>(window);
+  window_ = NativeWindow::CreateFromNativeWindow(
+      reinterpret_cast<OHNativeWindow*>(window));
   int32_t retval = OH_NativeXComponent_GetXComponentSize(
-      component_, window_, &surface_width_, &surface_height_);
+      component_, window_->window(), &surface_width_, &surface_height_);
   FATAL_IF(retval != 0,
            "OH_NativeXComponent_GetXComponentSize() failed retval=%{public}d",
            retval);
   if (using_egl_surface()) {
     const auto* gl_core = NapiManager::GetInstance()->gl_core();
     EGLDisplay display = gl_core->display();
-    egl_surface_ =
-        eglCreateWindowSurface(display, gl_core->config(), window_, nullptr);
+    egl_surface_ = eglCreateWindowSurface(display, gl_core->config(),
+                                          window_->window(), nullptr);
     FATAL_IF(egl_surface_ == EGL_NO_SURFACE,
              "eglCreateWindowSurface() failed. EGL error: 0x%{public}x",
              eglGetError());
@@ -211,58 +195,30 @@ struct RenderPixelsData {
 };
 
 void XComponentNode::OnFrame(uint64_t timestamp, uint64_t targetTimestamp) {
-  CHECK(!is_software());
-  if (window_) {
+  if (!window_) {
+    return;
+  }
+  if (is_software()) {
+    SoftwareDrawFrame();
+  } else {
     HardwareDrawFrame();
   }
 }
 
 void XComponentNode::SoftwareDrawFrame() {
-  OHNativeWindowBuffer* window_buffer = nullptr;
-  int fd = -1;
-  int32_t retval =
-      OH_NativeWindow_NativeWindowRequestBuffer(window_, &window_buffer, &fd);
-  FATAL_IF(
-      retval != 0,
-      "OH_NativeWindow_NativeWindowRequestBuffer() failed retval=%{public}d",
-      retval);
-
-  ScopedFd fence_fd(fd);
-
-  OH_NativeBuffer* buffer = nullptr;
-  retval = OH_NativeBuffer_FromNativeWindowBuffer(window_buffer, &buffer);
-  FATAL_IF(retval != 0,
-           "OH_NativeBuffer_FromNativeWindowBuffer() failed retval=%{public}d",
-           retval);
-
-  OH_NativeBuffer_Config config;
-  OH_NativeBuffer_GetConfig(buffer, &config);
-
+  int32_t width, height, stride;
+  ScopedFd fence_fd;
   void* addr = nullptr;
-  retval = OH_NativeBuffer_Map(buffer, &addr);
-  FATAL_IF(retval != 0, "OH_NativeBuffer_Map() failed retval=%{public}d",
-           retval);
 
-  ++pending_render_pixels_count_;
+  window_->RequestBuffer(&width, &height, &stride, &fence_fd, &addr);
   renderer_thread_->PostTask(
-      [this, fd = fence_fd.release(), addr, config, window_buffer] {
+      [this, width, height, stride, fd = fence_fd.release(), addr] {
         SyncFence sync_fence((ScopedFd(fd)));
         sync_fence.Wait(-1);
-        delegate_->RenderPixels(addr, config.width, config.height,
-                                config.stride, 0);
+        delegate_->RenderPixels(addr, width, height, stride, 0);
       },
-      [this, window_buffer, buffer] {
-        OH_NativeBuffer_Unmap(buffer);
-        int32_t retval = OH_NativeWindow_NativeWindowFlushBuffer(
-            window_, window_buffer, -1, {});
-        FATAL_IF(retval != 0,
-                 "OH_NativeWindow_NativeWindowFlushBuffer() failed "
-                 "retval=%{public}d",
-                 retval);
-        if (draw_frame_) {
-          SoftwareDrawFrame();
-        }
-        --pending_render_pixels_count_;
+      [this] {
+        window_->FlushBuffer();
       });
 }
 
@@ -287,8 +243,8 @@ void XComponentNode::HardwareDrawFrame() {
   CHECK(using_egl_image())
   OHNativeWindowBuffer* window_buffer = nullptr;
   int fd = -1;
-  int32_t retval =
-      OH_NativeWindow_NativeWindowRequestBuffer(window_, &window_buffer, &fd);
+  int32_t retval = OH_NativeWindow_NativeWindowRequestBuffer(
+      window_->window(), &window_buffer, &fd);
   FATAL_IF(
       retval != 0,
       "OH_NativeWindow_NativeWindowRequestBuffer() failed retval=%{public}d",
@@ -311,8 +267,8 @@ void XComponentNode::HardwareDrawFrame() {
     }
 
     GLTexture texture = image.Bind();
-    delegate_->RenderTexture(texture.target(), texture.texture(),
-                             surface_width_, surface_height_, 0);
+    delegate_->RenderTexture(texture.target(), texture.id(), surface_width_,
+                             surface_height_, 0);
   }
 
   {
@@ -324,8 +280,8 @@ void XComponentNode::HardwareDrawFrame() {
   }
   // glFinish();
 
-  retval = OH_NativeWindow_NativeWindowFlushBuffer(window_, window_buffer,
-                                                   fence_fd.release(), {});
+  retval = OH_NativeWindow_NativeWindowFlushBuffer(
+      window_->window(), window_buffer, fence_fd.release(), {});
   FATAL_IF(retval != 0,
            "OH_NativeWindow_NativeWindowFlushBuffer() failed retval=%{public}d",
            retval);
