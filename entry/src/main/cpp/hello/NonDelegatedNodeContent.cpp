@@ -6,20 +6,18 @@
 
 #include "hello/NonDelegatedNodeContent.h"
 
-#include "hello/XComponentNode.h"
 #include "hello/Compositor.h"
+#include "hello/XComponentNode.h"
 
 namespace hello {
-namespace {
-}  // namespace
+namespace {}  // namespace
 
 NonDelegatedNodeContent::NonDelegatedNodeContent(
     ArkUI_NodeContentHandle content_handle)
     : NodeContent(content_handle) {
   compositor_ = std::make_unique<Compositor>();
-  root_node_ =
-      hello::XComponentNode::Create(compositor_.get(), "root_view",
-                                    hello::XComponentNode::kEGLSurface);
+  root_node_ = XComponentNode::Create(compositor_.get(), "root_view",
+                                      XComponentNode::kEGLSurface);
   root_node_->SetWidthPercent(1);
   root_node_->SetHeightPercent(1);
 }

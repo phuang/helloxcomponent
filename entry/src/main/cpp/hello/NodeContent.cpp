@@ -12,8 +12,7 @@ namespace hello {
 
 NodeContent::NodeContent(ArkUI_NodeContentHandle content_handle)
     : content_handle_(content_handle) {
-  FATAL_IF(!hello::XComponentNode::api(),
-           "hello::XComponentNode::api() failed");
+  FATAL_IF(!XComponentNode::api(), "XComponentNode::api() failed");
 
   int32_t retval = OH_ArkUI_NodeContent_SetUserData(content_handle, this);
   FATAL_IF(retval != ARKUI_ERROR_CODE_NO_ERROR,

@@ -7,10 +7,10 @@
 #include <cstdint>
 #include <string>
 
-#include "hello/Log.h"
 #include "hello/DelegatedNodeContent.h"
-#include "hello/NonDelegatedNodeContent.h"
 #include "hello/GLCore.h"
+#include "hello/Log.h"
+#include "hello/NonDelegatedNodeContent.h"
 
 namespace hello {
 namespace {
@@ -97,10 +97,10 @@ void NapiManager::CreateNativeNode(ArkUI_NodeContentHandle content_handle,
                                    bool delegated) {
   if (delegated) {
     delegated_node_content_ =
-        std::make_unique<hello::DelegatedNodeContent>(content_handle);
+        std::make_unique<DelegatedNodeContent>(content_handle);
   } else {
     non_delegated_node_content_ =
-    std::make_unique<hello::NonDelegatedNodeContent>(content_handle);
+        std::make_unique<NonDelegatedNodeContent>(content_handle);
   }
 }
 

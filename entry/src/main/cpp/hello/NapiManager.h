@@ -30,8 +30,8 @@ class NapiManager {
 
   Napi::Env env_{nullptr};
 
-  std::unique_ptr<hello::NodeContent> delegated_node_content_;
-  std::unique_ptr<hello::NodeContent> non_delegated_node_content_;
+  std::unique_ptr<NodeContent> delegated_node_content_;
+  std::unique_ptr<NodeContent> non_delegated_node_content_;
 
   // Hold a weak reference of the controller
   Napi::Reference<Napi::Object> controller_;

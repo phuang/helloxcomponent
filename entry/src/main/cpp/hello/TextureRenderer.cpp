@@ -143,7 +143,7 @@ void SetupGL() {
 
 }  // namespace
 
-TextureRenderer::TextureRenderer() : delta_(5) {
+TextureRenderer::TextureRenderer() : delta_(std::abs(std::rand()) % 10 + 5) {
   SetupGL();
   // glGenFramebuffers(1, &fbo_);
 }
