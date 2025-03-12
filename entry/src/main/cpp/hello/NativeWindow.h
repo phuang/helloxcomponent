@@ -10,6 +10,7 @@
 #include <deque>
 
 #include "hello/GLTexture.h"
+#include "hello/GLImage.h"
 #include "hello/ScopedFd.h"
 
 namespace hello {
@@ -22,8 +23,7 @@ class NativeWindow {
                                              NATIVEBUFFER_USAGE_CPU_READ |
                                              NATIVEBUFFER_USAGE_CPU_WRITE |
                                              NATIVEBUFFER_USAGE_ALIGNMENT_512 |
-                                             NATIVEBUFFER_USAGE_MEM_DMA |
-                                             0;
+                                             NATIVEBUFFER_USAGE_MEM_DMA;
 
   static std::unique_ptr<NativeWindow> Create(int32_t width,
                                               int32_t height,
@@ -47,6 +47,9 @@ class NativeWindow {
   GLTexture BindTexture();
   void UpdateSurfaceImage();
 
+  std::unique_ptr<GLImage> AcquireGLImage();
+  void ReleaseGLImage(std::unique_ptr<GLImage> gl_image);
+
   bool RequestBuffer(int32_t* width,
                      int32_t* height,
                      int32_t* stride,
@@ -68,6 +71,9 @@ class NativeWindow {
   OHNativeWindow* window_ = nullptr;
   std::deque<OHNativeWindowBuffer*> window_buffers_;
   std::deque<OH_NativeBuffer*> buffers_;
+
+  std::deque<OHNativeWindowBuffer*> acquired_window_buffers_;
+
 };
 
 }  // namespace hello

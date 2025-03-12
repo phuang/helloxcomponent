@@ -7,6 +7,8 @@
 #ifndef HELLOXCOMPONENT_BITMAPRENDERER_H
 #define HELLOXCOMPONENT_BITMAPRENDERER_H
 
+#include <multimedia/image_framework/image/image_source_native.h>
+
 #include <cstdint>
 #include <string>
 #include <vector>
@@ -38,6 +40,7 @@ class BitmapRenderer : public XComponentNode::Delegate {
   uint32_t picture_width() const { return picture_width_; }
   uint32_t picture_height() const { return picture_height_; }
   uint32_t picture_stride() const { return picture_stride_; }
+  int32_t picture_format() const { return picture_format_; }
 
  private:
   void LoadPicture(const std::string& uri);
@@ -46,6 +49,7 @@ class BitmapRenderer : public XComponentNode::Delegate {
   uint32_t picture_width_ = 0;
   uint32_t picture_height_ = 0;
   uint32_t picture_stride_ = 0;
+  int32_t picture_format_ = PIXEL_FORMAT_UNKNOWN;
   int32_t x_ = 0;
   int32_t y_ = 0;
   int32_t dx_ = 0;

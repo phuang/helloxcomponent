@@ -5,6 +5,9 @@
 		},
 		{
 			"path": "../../command-line-tools/sdk/default/openharmony/native/sysroot/usr/include"
+		},
+		{
+			"path": "../../openharmony/foundation/graphic"
 		}
 	],
 	"settings": {
@@ -70,7 +73,8 @@
 			"format": "cpp",
 			"span": "cpp",
 			"future": "cpp",
-			"cerrno": "cpp"
+			"cerrno": "cpp",
+			"iostream": "cpp"
 		}
 	}
 }

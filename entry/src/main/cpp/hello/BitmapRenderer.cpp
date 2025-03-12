@@ -6,8 +6,6 @@
 
 #include "hello/BitmapRenderer.h"
 
-#include <multimedia/image_framework/image/image_source_native.h>
-
 #include <algorithm>
 #include <cstdlib>
 
@@ -62,11 +60,10 @@ void BitmapRenderer::LoadPicture(const std::string& uri) {
       break;
     }
 
-    int32_t format = 0;
     OH_PixelmapImageInfo_GetWidth(image_info, &picture_width_);
     OH_PixelmapImageInfo_GetHeight(image_info, &picture_height_);
     OH_PixelmapImageInfo_GetRowStride(image_info, &picture_stride_);
-    OH_PixelmapImageInfo_GetPixelFormat(image_info, &format);
+    OH_PixelmapImageInfo_GetPixelFormat(image_info, &picture_format_);
 
     picture_pixels_.resize(picture_height_ * picture_stride_);
 

@@ -17,6 +17,10 @@
 namespace hello {
 namespace {
 
+const bool kUseNativeWindow = true;
+const int kPictureSize = 1040;
+const float kRootScale = 1.0f;
+
 // clang-format off
 const GLfloat kQuadVertices[] = {
   // Positions    // Texture Coords
@@ -99,9 +103,6 @@ void SetupGL() {
   });
 }
 
-const bool kUseNativeWindow = true;
-const int kPictureSize = 1040;
-
 }  // namespace
 
 Compositor::Compositor() {
@@ -126,63 +127,71 @@ void Compositor::RenderFrame(int32_t width,
                              int32_t height,
                              uint64_t timestamp) {
   if (kUseNativeWindow) {
-    RenderFrameWithNativeWindow(width, height, timestamp);
+    UploadNativeWindows(width, height, timestamp);
+    RenderFrameWithTexture(width, height, timestamp);
   } else {
     UploadTextures(width, height, timestamp);
     RenderFrameWithTexture(width, height, timestamp);
   }
 }
 
-void Compositor::RenderFrameWithNativeWindow(int32_t width,
-                                             int32_t height,
-                                             uint64_t timestamp) {
-  UploadNativeWindows(width, height, timestamp);
-  RenderFrameWithTexture(width, height, timestamp);
-}
-
 void Compositor::UploadNativeWindows(int32_t width,
                                      int32_t height,
                                      uint64_t timestamp) {
   for (int i = 0; i < 2; ++i) {
-    int32_t w, h, s;
+    int32_t w, h, stride;
     ScopedFd fence_fd;
     void* addr = nullptr;
-    // DCHECK_GL_ERROR();
-    native_windows_[i]->RequestBuffer(&w, &h, &s, &fence_fd, &addr);
-    LOGE("Requested buffer width: %{public}d, height: %{public}d, stride: %{public}d", w, h, s);
-    LOGE("Fence FD: %{public}d", fence_fd.get());
-    LOGE("Buffer address: %{public}p", addr);
-    // DCHECK_GL_ERROR();
+    DCHECK_GL_ERROR();
+    native_windows_[i]->RequestBuffer(&w, &h, &stride, &fence_fd, &addr);
+    // LOGE("Requested buffer width: %{public}d, height: %{public}d, stride:
+    // %{public}d", w, h, stride); LOGE("Fence FD: %{public}d", fence_fd.get());
+    // LOGE("Buffer address: %{public}p", addr);
+    DCHECK_GL_ERROR();
     SyncFence sync_fence(std::move(fence_fd));
-    // DCHECK_GL_ERROR();
+    DCHECK_GL_ERROR();
     sync_fence.Wait(-1);
-    // DCHECK_GL_ERROR();
-    renderers_[i]->RenderPixels(static_cast<uint8_t*>(addr), w, h, s, 0);
-    // DCHECK_GL_ERROR();
+    DCHECK_GL_ERROR();
+    renderers_[i]->RenderPixels(static_cast<uint8_t*>(addr), w, h, stride, 0);
+    DCHECK_GL_ERROR();
     native_windows_[i]->FlushBuffer();
-    // DCHECK_GL_ERROR();
+    DCHECK_GL_ERROR();
     native_windows_[i]->UpdateSurfaceImage();
-    // DCHECK_GL_ERROR();
+    // if (gl_images_[i]) {
+    //   native_windows_[i]->ReleaseGLImage(std::move(gl_images_[i]));
+    // }
+    // gl_images_[i] = native_windows_[i]->AcquireGLImage();
+    // textures_[i] = gl_images_[i]->Bind();
+    DCHECK_GL_ERROR();
   }
 }
 
 void Compositor::UploadTextures(int32_t width,
                                 int32_t height,
                                 uint64_t timestamp) {
-  auto texture_upload = [](const uint8_t* src, uint32_t copy_width,
-                           uint32_t copy_height, uint32_t src_stride) {
+  GLenum target;
+  auto texture_upload = [&target](const uint8_t* src, uint32_t copy_width,
+                                  uint32_t copy_height, uint32_t src_stride) {
     glPixelStorei(GL_UNPACK_ROW_LENGTH, src_stride / 4);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, copy_width, copy_height, 0, GL_RGBA,
+    glTexImage2D(target, 0, GL_RGBA, copy_width, copy_height, 0, GL_RGBA,
                  GL_UNSIGNED_BYTE, src);
     glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
   };
 
-  glBindTexture(GL_TEXTURE_2D, textures_[0].id());
+  DCHECK_GL_ERROR();
+  target = textures_[0].target();
+  glBindTexture(textures_[0].target(), textures_[0].id());
+  DCHECK_GL_ERROR();
   renderers_[0]->RenderPixels(width, height, timestamp, texture_upload);
+  DCHECK_GL_ERROR();
 
-  glBindTexture(GL_TEXTURE_2D, textures_[1].id());
+  target = textures_[0].target();
+  DCHECK_GL_ERROR();
+  glBindTexture(textures_[0].target(), textures_[1].id());
+  DCHECK_GL_ERROR();
   renderers_[1]->RenderPixels(kPictureSize, kPictureSize, timestamp,
                               texture_upload);
+  DCHECK_GL_ERROR();
 }
 
 void Compositor::RenderFrameWithTexture(int32_t width,
@@ -211,7 +220,7 @@ void Compositor::RenderFrameWithTexture(int32_t width,
 
   {
     // Rotate the triangle by angle{X,Y,Z}
-    Matrix4x4 transfrom_matrix = Matrix4x4::Scale(0.5, 0.5, 1);
+    Matrix4x4 transfrom_matrix = Matrix4x4::Scale(kRootScale, kRootScale, 1);
 
     GLint u_transform_location = glGetUniformLocation(program_, "u_transform");
     glUniformMatrix4fv(u_transform_location, 1, GL_FALSE,

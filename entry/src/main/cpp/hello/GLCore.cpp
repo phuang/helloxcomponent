@@ -98,7 +98,11 @@ void GLCore::Init() {
   InitializeFunctions();
 
   display_ = eglGetDisplay(EGL_DEFAULT_DISPLAY);
-  FATAL_IF(display_ == EGL_NO_DISPLAY, "eglGetPlatformDisplayEXT() failed");
+  FATAL_IF(display_ == EGL_NO_DISPLAY, "eglGetDisplay() failed");
+
+  // display_ = this->eglGetPlatformDisplayEXT(EGL_PLATFORM_OHOS_KHR,
+  //                                           EGL_DEFAULT_DISPLAY, nullptr);
+  // FATAL_IF(display_ == EGL_NO_DISPLAY, "eglGetPlatformDisplayEXT() failed");
 
   EGLint major, minor;
   if (!eglInitialize(display_, &major, &minor)) {

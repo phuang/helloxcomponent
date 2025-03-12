@@ -42,13 +42,12 @@ void GLImage::Destroy() {
 }
 
 GLTexture GLImage::Bind() {
-  const GLenum kTarget = GL_TEXTURE_EXTERNAL_OES;
   auto* gl_core = NapiManager::GetInstance()->gl_core();
 
-  GLTexture texture = GLTexture::Create(kTarget);
+  GLTexture texture = GLTexture::Create(GL_TEXTURE_EXTERNAL_OES);
 
-  glBindTexture(kTarget, texture.id());
-  gl_core->glEGLImageTargetTexture2DOES(kTarget, egl_image_);
+  glBindTexture(GL_TEXTURE_EXTERNAL_OES, texture.id());
+  gl_core->glEGLImageTargetTexture2DOES(GL_TEXTURE_EXTERNAL_OES, egl_image_);
 
   DCHECK_GL_ERROR();
 

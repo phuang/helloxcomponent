@@ -2,8 +2,9 @@
 
 #include <GLES2/gl2ext.h>
 
-#include "hello/Log.h"
 #include "hello/GLCore.h"
+#include "hello/GLFence.h"
+#include "hello/Log.h"
 
 namespace hello {
 
@@ -66,6 +67,24 @@ bool NativeWindow::Initialize(int32_t width,
     return false;
   }
 
+  retval = OH_NativeWindow_NativeWindowHandleOpt(window_, SET_USAGE, usages);
+  if (retval != 0) {
+    LOGE(
+        "OH_NativeWindow_NativeWindowHandleOpt(SET_USAGE) failed "
+        "retval=%{public}d",
+        retval);
+    return false;
+  }
+
+  retval = OH_NativeWindow_NativeWindowHandleOpt(window_, SET_FORMAT, format);
+  if (retval != 0) {
+    LOGE(
+        "OH_NativeWindow_NativeWindowHandleOpt(SET_FROMAT) failed "
+        "retval=%{public}d",
+        retval);
+    return false;
+  }
+
   return true;
 }
 
@@ -81,12 +100,50 @@ GLTexture NativeWindow::BindTexture() {
   return texture;
 }
 
+std::unique_ptr<GLImage> NativeWindow::AcquireGLImage() {
+  int fence_fd = -1;
+  OHNativeWindowBuffer* window_buffer = nullptr;
+  int32_t retval = OH_NativeImage_AcquireNativeWindowBuffer(
+      image_, &window_buffer, &fence_fd);
+  if (retval != 0) {
+    FATAL("OH_NativeImage_AcquireNativeWindowBuffer() failed retval=%{public}d",
+          retval);
+  }
+
+  auto gl_image = std::make_unique<GLImage>();
+  if (!gl_image->Initialize(window_buffer)) {
+    FATAL("GLImage::Initialize() failed");
+  }
+
+  if (auto fence = GLFence::CreateFromFenceFd(ScopedFd(fence_fd))) {
+    fence->Wait();
+  }
+
+  acquired_window_buffers_.push_back(window_buffer);
+  return gl_image;
+}
+
+void NativeWindow::ReleaseGLImage(std::unique_ptr<GLImage> gl_image) {
+  CHECK(!acquired_window_buffers_.empty());
+
+  auto fence = GLFence::Create();
+
+  int32_t retval = OH_NativeImage_ReleaseNativeWindowBuffer(
+      image_, acquired_window_buffers_.front(), fence->GetFd().release());
+  if (retval != 0) {
+    FATAL("OH_NativeImage_ReleaseNativeWindowBuffer() failed retval=%{public}d",
+          retval);
+  }
+  acquired_window_buffers_.pop_front();
+}
+
 void NativeWindow::UpdateSurfaceImage() {
   CHECK(image_);
   DCHECK_GL_ERROR();
   int32_t retval = OH_NativeImage_UpdateSurfaceImage(image_);
   if (retval != 0) {
-    FATAL("OH_NativeImage_UpdateSurfaceImage() failed retval=%{public}d", retval);
+    FATAL("OH_NativeImage_UpdateSurfaceImage() failed retval=%{public}d",
+          retval);
   }
 }
 
@@ -96,7 +153,8 @@ bool NativeWindow::RequestBuffer(int32_t* width,
                                  ScopedFd* fence_fd,
                                  void** addr) {
   OHNativeWindowBuffer* window_buffer = nullptr;
-  OH_NativeBuffer* buffer = nullptr;;
+  OH_NativeBuffer* buffer = nullptr;
+  ;
 
   int fd = -1;
   int32_t retval =
@@ -107,6 +165,13 @@ bool NativeWindow::RequestBuffer(int32_t* width,
       retval);
 
   fence_fd->reset(fd);
+
+  // uint64_t usage = 0;
+  // retval = OH_NativeWindow_NativeWindowHandleOpt(window_, GET_USAGE, &usage);
+  // FATAL_IF(retval != 0,
+  //          "OH_NativeBuffer_FromNativeWindowBuffer() failed
+  //          retval=%{public}d", retval);
+  // LOGE("EEEE usage=0x%{public}x", usage);
 
   retval = OH_NativeBuffer_FromNativeWindowBuffer(window_buffer, &buffer);
   FATAL_IF(retval != 0,
@@ -140,6 +205,8 @@ void NativeWindow::FlushBuffer() {
            "OH_NativeWindow_NativeWindowFlushBuffer() failed "
            "retval=%{public}d",
            retval);
+  // LOGE("EEEE FlushBuffer() window_buffer=%{public}p",
+  // window_buffers_.front());
 
   buffers_.pop_front();
   window_buffers_.pop_front();
