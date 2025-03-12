@@ -14,10 +14,15 @@
 #include "hello/Log.h"
 
 namespace hello {
+namespace {
+constexpr int32_t kSpeed = 20;
+}
 
 BitmapRenderer::BitmapRenderer(const std::string& uri) {
-  dx_ = std::abs(rand()) % 20 - 10;
-  dy_ = std::abs(rand()) % 20 - 10;
+  int angle = 45 + rand() % 10;
+  dx_ = kSpeed * std::sin(3.1415926 * angle / 180);
+  dy_ = kSpeed * std::cos(3.1415926 * angle / 180);
+
   x_ = std::abs(std::rand()) % (picture_width_);
   y_ = std::abs(std::rand()) % (picture_height_);
   LoadPicture(uri);
