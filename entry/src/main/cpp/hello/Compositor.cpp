@@ -181,12 +181,13 @@ void Compositor::RenderFrame(int32_t width,
 
   {
     Matrix4x4 transfrom_matrix = Matrix4x4::Identity();
-    transfrom_matrix *=
-        Matrix4x4::Scale(1.0f * kPictureSize / width,
-                         1.0f * kPictureSize / height, 1);
     // transfrom_matrix *=
     //     Matrix4x4::Translate(static_cast<float>(kEGLSurfaceNodeX),
     //                          static_cast<float>(kEGLSurfaceNodeY), 0);
+    transfrom_matrix *=
+        Matrix4x4::Scale(1.0f * kPictureSize / width,
+                         1.0f * kPictureSize / height, 1);
+
 
     GLint u_transform_location = glGetUniformLocation(program_, "u_transform");
     glUniformMatrix4fv(u_transform_location, 1, GL_FALSE,
