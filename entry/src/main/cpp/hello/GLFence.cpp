@@ -17,7 +17,7 @@ GLFence::~GLFence() {
     const auto* gl_core = NapiManager::GetInstance()->gl_core();
     EGLDisplay display = gl_core->display();
     gl_core->eglDestroySyncKHR(display, sync_);
-    CHECK_EGL_ERROR();
+    DCHECK_EGL_ERROR();
   }
 }
 

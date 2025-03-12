@@ -158,7 +158,7 @@ void TextureRenderer::RenderTexture(GLenum target,
                                     int32_t width,
                                     int32_t height,
                                     uint64_t timestamp) {
-  CHECK_GL_ERROR();
+  DCHECK_GL_ERROR();
 
   GLuint fbo = 0;
   GLuint rbo = 0;
@@ -185,7 +185,7 @@ void TextureRenderer::RenderTexture(GLenum target,
   glDeleteBuffers(1, &fbo);
   glDeleteRenderbuffers(1, &rbo);
 
-  CHECK_GL_ERROR();
+  DCHECK_GL_ERROR();
 }
 
 void TextureRenderer::RenderFrame(int32_t width,

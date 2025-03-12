@@ -13,10 +13,14 @@ struct Matrix4x4 {
   float data[16];
 
   static Matrix4x4 Identity() {
-    Matrix4x4 matrix = {.data = {1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
-                                 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f}
+    // clang-format off
+    Matrix4x4 matrix = {.data = {1.0f, 0.0f, 0.0f, 0.0f,
+                                 0.0f, 1.0f, 0.0f, 0.0f,
+                                 0.0f, 0.0f, 1.0f, 0.0f,
+                                 0.0f, 0.0f, 0.0f, 1.0f}
 
     };
+    // clang-format on
     return matrix;
   }
 
@@ -24,9 +28,12 @@ struct Matrix4x4 {
     float cosAngle = std::cos(angle);
     float sinAngle = std::sin(angle);
 
-    Matrix4x4 matrix = {.data = {1.0f, 0.0f, 0.0f, 0.0f, 0.0f, cosAngle,
-                                 -sinAngle, 0.0f, 0.0f, sinAngle, cosAngle,
-                                 0.0f, 0.0f, 0.0f, 0.0f, 1.0f}};
+    // clang-format off
+    Matrix4x4 matrix = {.data = {1.0f, 0.0f, 0.0f, 0.0f,
+                                 0.0f, cosAngle, -sinAngle, 0.0f,
+                                 0.0f, sinAngle, cosAngle, 0.0f,
+                                 0.0f, 0.0f, 0.0f, 1.0f}};
+    // clang-format on
     return matrix;
   }
 
@@ -34,9 +41,12 @@ struct Matrix4x4 {
     float cosAngle = std::cos(angle);
     float sinAngle = std::sin(angle);
 
-    Matrix4x4 matrix = {.data = {cosAngle, 0.0f, sinAngle, 0.0f, 0.0f, 1.0f,
-                                 0.0f, 0.0f, -sinAngle, 0.0f, cosAngle, 0.0f,
+    // clang-format off
+    Matrix4x4 matrix = {.data = {cosAngle, 0.0f, sinAngle, 0.0f,
+                                 0.0f, 1.0f, 0.0f, 0.0f,
+                                 -sinAngle, 0.0f, cosAngle, 0.0f,
                                  0.0f, 0.0f, 0.0f, 1.0f}};
+    // clang-format on
     return matrix;
   }
 
@@ -44,25 +54,40 @@ struct Matrix4x4 {
     float cosAngle = std::cos(angle);
     float sinAngle = std::sin(angle);
 
-    Matrix4x4 matrix = {.data = {cosAngle, -sinAngle, 0.0f, 0.0f, sinAngle,
-                                 cosAngle, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f,
+    // clang-format off
+    Matrix4x4 matrix = {.data = {cosAngle, -sinAngle, 0.0f, 0.0f,
+                                 sinAngle, cosAngle, 0.0f, 0.0f,
+                                 0.0f, 0.0f, 1.0f, 0.0f,
                                  0.0f, 0.0f, 0.0f, 1.0f}};
+    // clang-format on
     return matrix;
   }
 
   static Matrix4x4 Rotate(float angleX, float angleY, float angleZ) {
-    return RotateX(angleX) * RotateY(angleY) * RotateZ(angleZ);
+    Matrix4x4 result = Identity();
+    result *= RotateX(angleX);
+    result *= RotateY(angleY);
+    result *= RotateZ(angleZ);
+    return result;
   }
 
   static Matrix4x4 Translate(float x, float y, float z) {
-    Matrix4x4 matrix = {.data = {1.0f, 0.0f, 0.0f, x, 0.0f, 1.0f, 0.0f, y, 0.0f,
-                                 0.0f, 1.0f, z, 0.0f, 0.0f, 0.0f, 1.0f}};
+    // clang-format off
+    Matrix4x4 matrix = {.data = {1.0f, 0.0f, 0.0f, x,
+                                 0.0f, 1.0f, 0.0f, y,
+                                 0.0f, 0.0f, 1.0f, z,
+                                 0.0f, 0.0f, 0.0f, 1.0f}};
+    // clang-format on
     return matrix;
   }
 
   static Matrix4x4 Scale(float x, float y, float z) {
-    Matrix4x4 matrix = {.data = {x, 0.0f, 0.0f, 0.0f, 0.0f, y, 0.0f, 0.0f, 0.0f,
-                                 0.0f, z, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f}};
+    // clang-format off
+    Matrix4x4 matrix = {.data = {x, 0.0f, 0.0f, 0.0f,
+                                 0.0f, y, 0.0f, 0.0f,
+                                 0.0f, 0.0f, z, 0.0f,
+                                 0.0f, 0.0f, 0.0f, 1.0f}};
+    // clang-format on
     return matrix;
   }
 

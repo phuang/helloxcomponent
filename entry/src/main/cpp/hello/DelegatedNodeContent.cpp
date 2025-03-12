@@ -22,7 +22,7 @@ DelegatedNodeContent::DelegatedNodeContent(
     child_renderers_.push_back(std::move(renderer));
   }
 
-#if 1
+#if 0
   {
     // TODO: Fix kEGLImage mode. It doesn't render and
     // eglDupNativeFenceFDANDROID() returns -1 with EGL_BAD_DISPLAY constexpr
@@ -57,8 +57,7 @@ DelegatedNodeContent::DelegatedNodeContent(
     auto renderer = std::make_unique<BitmapRenderer>(kPictureRiverUri);
     auto node = XComponentNode::Create(renderer.get(), "child_2",
                                        XComponentNode::kSoftware);
-    node->SetPosition(20, 100);
-    // node->SetSurfaceSize(kEGLSurfaceNodeSize, kEGLSurfaceNodeSize);
+    node->SetPosition(36, 250);
     node->SetWidth(kBitmapNodeSize);
     node->SetHeight(kBitmapNodeSize);
     root_node_->AddChild(node.get());

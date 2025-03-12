@@ -37,7 +37,7 @@ void GLImage::Destroy() {
     EGLDisplay display = gl_core->display();
     gl_core->eglDestroyImageKHR(display, egl_image_);
     egl_image_ = EGL_NO_IMAGE_KHR;
-    CHECK_EGL_ERROR();
+    DCHECK_EGL_ERROR();
   }
 }
 
@@ -56,7 +56,7 @@ GLTexture GLImage::Bind() {
 
   gl_core->glEGLImageTargetTexture2DOES(kTarget, egl_image_);
 
-  CHECK_GL_ERROR();
+  DCHECK_GL_ERROR();
 
   return GLTexture(kTarget, texture);
 }

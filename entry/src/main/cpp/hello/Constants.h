@@ -14,7 +14,7 @@ constexpr int kEGLSurfaceNodeX = 16;
 constexpr int kEGLSurfaceNodeY = 16;
 constexpr int kEGLSurfaceNodeSize = 360;
 
-constexpr int kBitmapNodeX = 36;
+constexpr int kBitmapNodeX = 38;
 constexpr int kBitmapNodeY = 340;
 constexpr int kBitmapNodeSize = 320;
 

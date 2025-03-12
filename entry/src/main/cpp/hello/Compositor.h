@@ -22,6 +22,7 @@ class Compositor : public XComponentNode::Delegate {
 
  private:
   std::unique_ptr<BitmapRenderer> renderers_[2];
+  GLuint textures_[2];
 };
 
 }  // namespace hello

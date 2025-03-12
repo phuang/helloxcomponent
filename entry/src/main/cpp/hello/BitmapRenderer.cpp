@@ -89,6 +89,8 @@ void BitmapRenderer::RenderPixels(int32_t width,
                                   int32_t height,
                                   uint64_t timestamp,
                                   const RenderPixelsCallback& callback) {
+  // LOGE("RenderPixels called with width=%{public}d, height=%{public}d", width,
+  //      height);
   x_ += dx_;
   y_ += dy_;
 

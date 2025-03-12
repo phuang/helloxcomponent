@@ -3,7 +3,7 @@ import { Logger } from '../utils/Logger';
 import { NodeContent } from '@kit.ArkUI';
 
 const kUseTabs = true;
-const kDelegatedCompositingByDefault = true;
+const kDelegatedCompositingByDefault = false;
 
 @Entry
 @Component
