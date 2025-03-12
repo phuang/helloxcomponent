@@ -54,8 +54,8 @@ DelegatedNodeContent::DelegatedNodeContent(
                                               hello::XComponentNode::kSoftware);
     node->SetPosition(20, 100);
     // node->SetSurfaceSize(kEGLSurfaceNodeSize, kEGLSurfaceNodeSize);
-    node->SetWidthPercent(0.9);
-    node->SetHeightPercent(0.5);
+    node->SetWidth(kBitmapNodeSize);
+    node->SetHeight(kBitmapNodeSize);
     root_node_->AddChild(node.get());
     child_renderers_.push_back(std::move(renderer));
     child_nodes_.push_back(std::move(node));

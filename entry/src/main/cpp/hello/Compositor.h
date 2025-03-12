@@ -3,6 +3,8 @@
 
 #include "hello/XComponentNode.h"
 
+#include <GLES3/gl3.h>
+
 #include <memory>
 
 namespace hello {
@@ -19,10 +21,7 @@ class Compositor : public XComponentNode::Delegate {
   void RenderFrame(int32_t width, int32_t height, uint64_t timestamp) override;
 
  private:
-  std::unique_ptr<TextureRenderer> texture_renderer_;
-  std::unique_ptr<NativeWindow> texture_native_window_;
-  std::unique_ptr<BitmapRenderer> bitmap_renderer_;
-  std::unique_ptr<NativeWindow> bitmap_native_window_;
+  std::unique_ptr<BitmapRenderer> renderers_[2];
 };
 
 }  // namespace hello

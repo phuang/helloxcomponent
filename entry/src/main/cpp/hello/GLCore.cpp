@@ -31,6 +31,49 @@ void PrintEGLExtensions(EGLDisplay display) {
 
 }  // namespace
 
+// static
+GLuint GLCore::CreateShader(GLenum type, const char* source) {
+  GLuint shader = glCreateShader(type);
+  glShaderSource(shader, 1, &source, nullptr);
+  glCompileShader(shader);
+
+  GLint success;
+  glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
+  if (!success) {
+    GLint log_length;
+    glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &log_length);
+    char* log = new char[log_length];
+    glGetShaderInfoLog(shader, log_length, nullptr, log);
+    FATAL("Shader compile error: %{public}s", log);
+    delete[] log;
+  }
+  return shader;
+}
+
+// static
+GLuint GLCore::CreateProgram(const char* vs, const char* fs) {
+  // Create shader program
+  GLuint vertex_shader = GLCore::CreateShader(GL_VERTEX_SHADER, vs);
+  GLuint fragment_shader = GLCore::CreateShader(GL_FRAGMENT_SHADER, fs);
+  GLuint program = glCreateProgram();
+  glAttachShader(program, vertex_shader);
+  glAttachShader(program, fragment_shader);
+  glLinkProgram(program);
+
+  GLint success;
+  glGetProgramiv(program, GL_LINK_STATUS, &success);
+  if (!success) {
+    GLint log_length;
+    glGetProgramiv(program, GL_INFO_LOG_LENGTH, &log_length);
+    char* log = new char[log_length];
+    glGetProgramInfoLog(program, log_length, nullptr, log);
+    FATAL("Program link error: %{public}s", log);
+    delete[] log;
+  }
+
+  return program;
+}
+
 GLCore::GLCore() {}
 
 GLCore::~GLCore() {}

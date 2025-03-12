@@ -9,20 +9,27 @@
 
 namespace hello {
 
-#define CHECK_EGL_ERROR()                                                 \
-  {                                                                       \
-    EGLint error = eglGetError();                                         \
-    FATAL_IF(error != EGL_SUCCESS, "Got EGL error: 0x%{public}x", error); \
+#define CHECK_EGL_ERROR()                                                    \
+  {                                                                          \
+    EGLint error = eglGetError();                                            \
+    FATAL_IF(error != EGL_SUCCESS,                                           \
+             "%{public}s:%{public}d: Got EGL error: 0x%{public}x", __FILE__, \
+             __LINE__, error);                                               \
   }
 
-#define CHECK_GL_ERROR()                                                 \
-  {                                                                      \
-    GLenum error = glGetError();                                         \
-    FATAL_IF(error != GL_NO_ERROR, "Got GL error: 0x%{public}x", error); \
+#define CHECK_GL_ERROR()                                                    \
+  {                                                                         \
+    GLenum error = glGetError();                                            \
+    FATAL_IF(error != GL_NO_ERROR,                                          \
+             "%{public}s:%{public}d: Got GL error: 0x%{public}x", __FILE__, \
+             __LINE__, error);                                              \
   }
 
 class GLCore {
  public:
+  static GLuint CreateShader(GLenum type, const char* source);
+  static GLuint CreateProgram(const char* vs, const char* fs);
+
   GLCore();
   ~GLCore();
 

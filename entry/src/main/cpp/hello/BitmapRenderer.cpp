@@ -85,11 +85,10 @@ void BitmapRenderer::LoadPicture(const std::string& uri) {
   }
 }
 
-void BitmapRenderer::RenderPixels(void* pixels,
-                                  int32_t width,
+void BitmapRenderer::RenderPixels(int32_t width,
                                   int32_t height,
-                                  int32_t stride,
-                                  uint64_t timestamp) {
+                                  uint64_t timestamp,
+                                  const RenderPixelsCallback& callback) {
   x_ += dx_;
   y_ += dy_;
 
@@ -113,19 +112,30 @@ void BitmapRenderer::RenderPixels(void* pixels,
     y_ = picture_height_ - height;
   }
 
-  // Copy pixels
-  uint8_t* dst = reinterpret_cast<uint8_t*>(pixels);
   uint8_t* src = picture_pixels_.data() + y_ * picture_stride_ + x_ * 4;
-  size_t memcpy_size = std::min(static_cast<size_t>(width),
-                                static_cast<size_t>(picture_width_ - x_)) *
-                       4;
-  size_t copy_rows = std::min(static_cast<size_t>(height),
-                              static_cast<size_t>(picture_height_ - y_));
-  for (; copy_rows > 0; --copy_rows) {
-    memcpy(dst, src, memcpy_size);
-    dst += stride;
-    src += picture_stride_;
-  }
+  size_t memcpy_width = std::min(static_cast<size_t>(width),
+                                 static_cast<size_t>(picture_width_ - x_));
+  size_t copy_height = std::min(static_cast<size_t>(height),
+                                static_cast<size_t>(picture_height_ - y_));
+  callback(src, memcpy_width, copy_height, picture_stride_);
+}
+
+void BitmapRenderer::RenderPixels(void* pixels,
+                                  int32_t width,
+                                  int32_t height,
+                                  int32_t stride,
+                                  uint64_t timestamp) {
+  RenderPixels(width, height, timestamp,
+               [pixels, stride](const uint8_t* src, uint32_t copy_width,
+                                uint32_t copy_height, uint32_t src_stride) {
+                 uint8_t* dst = static_cast<uint8_t*>(pixels);
+                 size_t memcpy_size = copy_width * 4;
+                 for (; copy_height > 0; --copy_height) {
+                   memcpy(dst, src, memcpy_size);
+                   dst += stride;
+                   src += src_stride;
+                 }
+               });
 }
 
 }  // namespace hello

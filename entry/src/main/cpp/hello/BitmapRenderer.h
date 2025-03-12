@@ -10,6 +10,7 @@
 #include <cstdint>
 #include <string>
 #include <vector>
+#include <functional>
 
 #include "hello/XComponentNode.h"
 
@@ -19,6 +20,14 @@ class BitmapRenderer : public XComponentNode::Delegate {
  public:
   explicit BitmapRenderer(const std::string& uri);
   ~BitmapRenderer() override = default;
+
+  using RenderPixelsCallback = std::function<
+      void(const uint8_t* data, uint32_t width, uint32_t height, uint32_t stride)>;
+  void RenderPixels(int32_t width,
+                    int32_t height,
+                    uint64_t timestamp,
+                    const RenderPixelsCallback& callback);
+
   void RenderPixels(void* pixels,
                     int32_t width,
                     int32_t height,

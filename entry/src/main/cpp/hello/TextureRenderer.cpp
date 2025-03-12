@@ -13,7 +13,7 @@ static const std::chrono::system_clock::time_point kStartTime =
     std::chrono::system_clock::now();
 
 // clang-format off
-const GLfloat kCubeVertexArray[] = {
+const GLfloat kCubeVertices[] = {
   // float3 position, float4 color, float2 uv,
   1, -1, 1, 1, 0, 1, 1, 0, 1,
   -1, -1, 1, 0, 0, 1, 1, 1, 1,
@@ -73,8 +73,7 @@ constexpr int kColorOffset = 3 * sizeof(GLfloat);
 constexpr int kTexCoordOffset = 7 * sizeof(GLfloat);
 
 // Shader sources (simple shaders to draw a triangle)
-const char kVertexShaderSource[] =
-    R"(#version 300 es
+const char kVertexShaderSource[] = R"(#version 300 es
 in vec3 aPosition;
 in vec4 aColor;
 out vec4 vColor;
@@ -88,8 +87,7 @@ void main() {
 }
 )";
 
-const char kFragmentShaderSource[] =
-    R"(#version 300 es
+const char kFragmentShaderSource[] = R"(#version 300 es
 precision mediump float;
 in vec4 vColor;
 in vec2 vTexCoord;
@@ -104,27 +102,9 @@ GLuint vao_ = 0;
 GLuint vbo_ = 0;
 GLuint ebo_ = 0;
 
-GLuint CreateShader(GLenum type, const char* source) {
-  GLuint shader = glCreateShader(type);
-  glShaderSource(shader, 1, &source, nullptr);
-  glCompileShader(shader);
-
-  GLint success;
-  glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
-  if (!success) {
-    GLint log_length;
-    glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &log_length);
-    char* log = new char[log_length];
-    glGetShaderInfoLog(shader, log_length, nullptr, log);
-    FATAL("Shader compile error: %{public}s", log);
-    delete[] log;
-  }
-  return shader;
-}
-
 void SetupGL() {
   static std::once_flag flag;
-  std::call_once(flag, []() {
+  std::call_once(flag, [] {
     // Create VAO, VBO, and EBO
     glGenVertexArrays(1, &vao_);
     glGenBuffers(1, &vbo_);
@@ -133,7 +113,7 @@ void SetupGL() {
     glBindVertexArray(vao_);
 
     glBindBuffer(GL_ARRAY_BUFFER, vbo_);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(kCubeVertexArray), kCubeVertexArray,
+    glBufferData(GL_ARRAY_BUFFER, sizeof(kCubeVertices), kCubeVertices,
                  GL_STATIC_DRAW);
 
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, kStride,
@@ -156,24 +136,8 @@ void SetupGL() {
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
     // Create shader program
-    GLuint vertex_shader = CreateShader(GL_VERTEX_SHADER, kVertexShaderSource);
-    GLuint fragment_shader =
-        CreateShader(GL_FRAGMENT_SHADER, kFragmentShaderSource);
-    program_ = glCreateProgram();
-    glAttachShader(program_, vertex_shader);
-    glAttachShader(program_, fragment_shader);
-    glLinkProgram(program_);
-
-    GLint success;
-    glGetProgramiv(program_, GL_LINK_STATUS, &success);
-    if (!success) {
-      GLint log_length;
-      glGetProgramiv(program_, GL_INFO_LOG_LENGTH, &log_length);
-      char* log = new char[log_length];
-      glGetProgramInfoLog(program_, log_length, nullptr, log);
-      FATAL("Program link error: %{public}s", log);
-      delete[] log;
-    }
+    program_ =
+        GLCore::CreateProgram(kVertexShaderSource, kFragmentShaderSource);
   });
 }
 

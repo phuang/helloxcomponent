@@ -2,11 +2,13 @@ import helloxcomponent from 'libhelloxcomponent.so';
 import { Logger } from '../utils/Logger';
 import { NodeContent } from '@kit.ArkUI';
 
+const kUseTabs = true;
+const kDelegatedCompositingByDefault = false;
+
 @Entry
 @Component
 struct Index {
   @State message: string = 'Hello World';
-  private useTabs: boolean = false;
   private nodeContentDelegated: NodeContent = new NodeContent();
   private nodeContentNonDelegated: NodeContent = new NodeContent();
 
@@ -16,13 +18,14 @@ struct Index {
   }
 
   onDidBuild(): void {
-    helloxcomponent.setDelegatedCompositing(true);
+    helloxcomponent.setDelegatedCompositing(kDelegatedCompositingByDefault);
   }
 
   build() {
     Row() {
-      if (this.useTabs) {
-        Tabs() {
+      if (kUseTabs) {
+        Tabs({barPosition: BarPosition.End,
+              index: kDelegatedCompositingByDefault ? 0 : 1}) {
           TabContent() {
             ContentSlot(this.nodeContentDelegated)
           }.tabBar("Delegated Compositing")
