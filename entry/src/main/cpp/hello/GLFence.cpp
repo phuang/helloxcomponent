@@ -55,6 +55,8 @@ bool GLFence::init(EGLint type, const EGLint* attribs) {
 void GLFence::Wait() {
   const auto* gl_core = NapiManager::GetInstance()->gl_core();
   EGLDisplay display = gl_core->display();
+  LOGE("EEEE display = 0x%{public}x", display);
+
   if (gl_core->eglWaitSyncKHR(display, sync_, 0) == EGL_FALSE) {
     LOGE("eglWaitSyncKHR() faile: 0x%{public}X", eglGetError());
   }

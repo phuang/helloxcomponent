@@ -161,8 +161,14 @@ void XComponentNode::OnSurfaceCreated(void* window) {
 }
 
 void XComponentNode::OnSurfaceChanged(void* window) {
+  uint64_t usage = 0;
+  if (is_software()) {
+    usage |= NATIVEBUFFER_USAGE_HW_RENDER | NATIVEBUFFER_USAGE_HW_TEXTURE | NATIVEBUFFER_USAGE_CPU_WRITE;
+  } else {
+    usage |= NATIVEBUFFER_USAGE_HW_RENDER;
+  }
   window_ = NativeWindow::CreateFromNativeWindow(
-      reinterpret_cast<OHNativeWindow*>(window));
+      reinterpret_cast<OHNativeWindow*>(window), usage);
   int32_t retval = OH_NativeXComponent_GetXComponentSize(
       component_, window_->window(), &surface_width_, &surface_height_);
   FATAL_IF(retval != 0,
@@ -217,9 +223,7 @@ void XComponentNode::SoftwareDrawFrame() {
         sync_fence.Wait(-1);
         delegate_->RenderPixels(addr, width, height, stride, 0);
       },
-      [this] {
-        window_->FlushBuffer();
-      });
+      [this] { window_->FlushBuffer(); });
 }
 
 void XComponentNode::HardwareDrawFrame() {

@@ -27,11 +27,9 @@ enum Mode {
   // At consumer side, OH_NativeImage_AttachContext() and
   // OH_NativeImage_UpdateSurfaceImage() are used.
   kNativeWindow,
-  // Create
-  kNativeBuffer,
 };
 
-const Mode kMode = kNativeBuffer;
+const Mode kMode = kNativeWindow;
 
 const int32_t kWindowWidth = 1260;
 const int32_t kWindowHeight = 2530;
@@ -80,6 +78,18 @@ void main() {
 }
 )";
 
+const char kFragmentShaderEGLImageSource[] = R"(#version 300 es
+#extension GL_OES_EGL_image_external_essl3 : require
+precision mediump float;
+in vec2 v_texCoord;
+uniform samplerExternalOES u_texture;
+out vec4 fragColor;
+
+void main() {
+  fragColor = texture(u_texture, v_texCoord);
+}
+)";
+
 GLuint program_ = 0;
 GLuint vao_ = 0;
 GLuint vbo_ = 0;
@@ -115,8 +125,9 @@ void SetupGL() {
                  GL_STATIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-    program_ =
-        GLCore::CreateProgram(kVertexShaderSource, kFragmentShaderSource);
+    program_ = GLCore::CreateProgram(
+        kVertexShaderSource, kMode == kTexture ? kFragmentShaderSource
+                                               : kFragmentShaderEGLImageSource);
   });
 }
 
@@ -140,68 +151,6 @@ Compositor::Compositor() {
       textures_[1] = native_windows_[1]->BindTexture();
       break;
     }
-    case kNativeBuffer: {
-      // NATIVEBUFFER_USAGE_CPU_READ = (1ULL << 0),        /// < CPU read buffer
-      // */ NATIVEBUFFER_USAGE_CPU_WRITE = (1ULL << 1),       /// < CPU write
-      // memory */ NATIVEBUFFER_USAGE_MEM_DMA = (1ULL << 3),         /// <
-      // Direct memory access (DMA) buffer */ NATIVEBUFFER_USAGE_HW_RENDER =
-      // (1ULL << 8),       /// < For GPU write case */
-      // NATIVEBUFFER_USAGE_HW_TEXTURE = (1ULL << 9),      /// < For GPU read
-      // case */ NATIVEBUFFER_USAGE_CPU_READ_OFTEN = (1ULL << 16), /// < Often
-      // be mapped for direct CPU reads */ NATIVEBUFFER_USAGE_ALIGNMENT_512 =
-      // (1ULL << 18),  /// < 512 bytes alignment */
-      const uint64_t kUsage =
-          NATIVEBUFFER_USAGE_CPU_WRITE | NATIVEBUFFER_USAGE_CPU_READ |
-          NATIVEBUFFER_USAGE_HW_TEXTURE | NATIVEBUFFER_USAGE_HW_RENDER |
-          NATIVEBUFFER_USAGE_MEM_DMA;
-      {
-        OH_NativeBuffer_Config config = {
-            .width = kWindowWidth,
-            .height = kWindowHeight,
-            .format = NATIVEBUFFER_PIXEL_FMT_RGBA_8888,
-            .usage = kUsage,
-            .stride = 1260 * 4,
-        };
-        buffers_[0] = OH_NativeBuffer_Alloc(&config);
-        FATAL_IF(!buffers_[0], "OH_NativeBuffer_Alloc() failed");
-
-        window_buffers_[0] =
-            OH_NativeWindow_CreateNativeWindowBufferFromNativeBuffer(
-                buffers_[0]);
-        FATAL_IF(!window_buffers_[0],
-                 "OH_NativeWindow_CreateNativeWindowBufferFromNativeBuffer() "
-                 "failed");
-        gl_images_[0] = std::make_unique<GLImage>();
-        if (!gl_images_[0]->Initialize(window_buffers_[0])) {
-          FATAL("GLImage::Initialize() failed");
-        }
-        textures_[0] = gl_images_[0]->Bind();
-      }
-      {
-        OH_NativeBuffer_Config config = {
-            .width = kPictureSize,
-            .height = kPictureSize,
-            .format = NATIVEBUFFER_PIXEL_FMT_RGBA_8888,
-            .usage = kUsage,
-            .stride = kPictureSize * 4,
-        };
-        buffers_[1] = OH_NativeBuffer_Alloc(&config);
-        FATAL_IF(!buffers_[1], "OH_NativeBuffer_Alloc() failed");
-
-        window_buffers_[1] =
-            OH_NativeWindow_CreateNativeWindowBufferFromNativeBuffer(
-                buffers_[1]);
-        FATAL_IF(!window_buffers_[1],
-                 "OH_NativeWindow_CreateNativeWindowBufferFromNativeBuffer() "
-                 "failed");
-        gl_images_[1] = std::make_unique<GLImage>();
-        if (!gl_images_[1]->Initialize(window_buffers_[1])) {
-          FATAL("GLImage::Initialize() failed");
-        }
-        textures_[1] = gl_images_[0]->Bind();
-      }
-      break;
-    }
   }
 }
 
@@ -221,28 +170,6 @@ void Compositor::RenderFrame(int32_t width,
       RenderFrameWithTexture(width, height, timestamp);
       break;
     }
-    case kNativeBuffer: {
-      UploadNativeBuffers(width, height, timestamp);
-      RenderFrameWithTexture(width, height, timestamp);
-      break;
-    }
-  }
-}
-
-void Compositor::UploadNativeBuffers(int32_t width,
-                                     int32_t height,
-                                     uint64_t timestamp) {
-  for (int i = 0; i < 2; ++i) {
-    auto* window_buffer = window_buffers_[i];
-    auto* buffer = buffers_[i];
-    OH_NativeBuffer_Config config;
-    OH_NativeBuffer_GetConfig(buffer, &config);
-    void* addr = nullptr;
-    int32_t retval = OH_NativeBuffer_Map(buffer, &addr);
-    FATAL_IF(retval != 0, "OH_NativeBuffer_Map() failed");
-    renderers_[i]->RenderPixels(addr, config.width, config.height, config.width,
-                                0);
-    OH_NativeBuffer_Unmap(buffer);
   }
 }
 
@@ -253,27 +180,12 @@ void Compositor::UploadNativeWindows(int32_t width,
     int32_t w, h, stride;
     ScopedFd fence_fd;
     void* addr = nullptr;
-    DCHECK_GL_ERROR();
     native_windows_[i]->RequestBuffer(&w, &h, &stride, &fence_fd, &addr);
-    // LOGE("Requested buffer width: %{public}d, height: %{public}d, stride:
-    // %{public}d", w, h, stride); LOGE("Fence FD: %{public}d", fence_fd.get());
-    // LOGE("Buffer address: %{public}p", addr);
-    DCHECK_GL_ERROR();
     SyncFence sync_fence(std::move(fence_fd));
-    DCHECK_GL_ERROR();
     sync_fence.Wait(-1);
-    DCHECK_GL_ERROR();
     renderers_[i]->RenderPixels(static_cast<uint8_t*>(addr), w, h, stride, 0);
-    DCHECK_GL_ERROR();
     native_windows_[i]->FlushBuffer();
-    DCHECK_GL_ERROR();
     native_windows_[i]->UpdateSurfaceImage();
-    // if (gl_images_[i]) {
-    //   native_windows_[i]->ReleaseGLImage(std::move(gl_images_[i]));
-    // }
-    // gl_images_[i] = native_windows_[i]->AcquireGLImage();
-    // textures_[i] = gl_images_[i]->Bind();
-    DCHECK_GL_ERROR();
   }
 }
 
@@ -289,30 +201,20 @@ void Compositor::UploadTextures(int32_t width,
     glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
   };
 
-  DCHECK_GL_ERROR();
   target = textures_[0].target();
   glBindTexture(textures_[0].target(), textures_[0].id());
-  DCHECK_GL_ERROR();
   renderers_[0]->RenderPixels(kWindowWidth, kWindowHeight, timestamp,
                               texture_upload);
-  DCHECK_GL_ERROR();
 
   target = textures_[0].target();
-  DCHECK_GL_ERROR();
   glBindTexture(textures_[0].target(), textures_[1].id());
-  DCHECK_GL_ERROR();
   renderers_[1]->RenderPixels(kPictureSize, kPictureSize, timestamp,
                               texture_upload);
-  DCHECK_GL_ERROR();
 }
 
 void Compositor::RenderFrameWithTexture(int32_t width,
                                         int32_t height,
                                         uint64_t timestamp) {
-  // LOGE("RenderFrame called with width: %{public}d, height: %{public}d",
-  // width,
-  //      height);
-
   // Set the viewport
   glViewport(0, 0, width, height);
 
@@ -332,7 +234,7 @@ void Compositor::RenderFrameWithTexture(int32_t width,
 
   {
     // Rotate the triangle by angle{X,Y,Z}
-    Matrix4x4 transfrom_matrix = Matrix4x4::Scale(kRootScale, kRootScale, 1);
+    Matrix4x4 transfrom_matrix = Matrix4x4::Scale(kRootScale, kRootScale, 1.0f);
 
     GLint u_transform_location = glGetUniformLocation(program_, "u_transform");
     glUniformMatrix4fv(u_transform_location, 1, GL_FALSE,
@@ -348,12 +250,8 @@ void Compositor::RenderFrameWithTexture(int32_t width,
   }
 
   {
-    Matrix4x4 transfrom_matrix = Matrix4x4::Identity();
-    // transfrom_matrix *=
-    //     Matrix4x4::Translate(static_cast<float>(kEGLSurfaceNodeX),
-    //                          static_cast<float>(kEGLSurfaceNodeY), 0);
-    transfrom_matrix *= Matrix4x4::Scale(1.0f * kPictureSize / width,
-                                         1.0f * kPictureSize / height, 1);
+    Matrix4x4 transfrom_matrix = Matrix4x4::Scale(
+        1.0f * kPictureSize / width, 1.0f * kPictureSize / height, 1);
 
     GLint u_transform_location = glGetUniformLocation(program_, "u_transform");
     glUniformMatrix4fv(u_transform_location, 1, GL_FALSE,

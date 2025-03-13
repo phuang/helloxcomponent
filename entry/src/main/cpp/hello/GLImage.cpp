@@ -47,9 +47,10 @@ GLTexture GLImage::Bind() {
   auto* gl_core = NapiManager::GetInstance()->gl_core();
 
   GLTexture texture = GLTexture::Create(GL_TEXTURE_EXTERNAL_OES);
+  // GLTexture texture = GLTexture::Create(GL_TEXTURE_2D);
 
-  glBindTexture(GL_TEXTURE_EXTERNAL_OES, texture.id());
-  gl_core->glEGLImageTargetTexture2DOES(GL_TEXTURE_EXTERNAL_OES, egl_image_);
+  glBindTexture(texture.target(), texture.id());
+  gl_core->glEGLImageTargetTexture2DOES(texture.target(), egl_image_);
 
   DCHECK_GL_ERROR();
 

@@ -12,9 +12,9 @@ namespace hello {
 std::unique_ptr<NativeWindow> NativeWindow::Create(int32_t width,
                                                    int32_t height,
                                                    int32_t format,
-                                                   uint64_t usages) {
+                                                   uint64_t usage) {
   std::unique_ptr<NativeWindow> native_window(new NativeWindow());
-  if (!native_window->Initialize(width, height, format, usages)) {
+  if (!native_window->Initialize(width, height, format, usage)) {
     native_window = nullptr;
   }
   return native_window;
@@ -22,7 +22,16 @@ std::unique_ptr<NativeWindow> NativeWindow::Create(int32_t width,
 
 // static
 std::unique_ptr<NativeWindow> NativeWindow::CreateFromNativeWindow(
-    OHNativeWindow* window) {
+    OHNativeWindow* window,
+    uint64_t usage) {
+  int32_t retval =
+      OH_NativeWindow_NativeWindowHandleOpt(window, SET_USAGE, usage);
+  if (retval != 0) {
+    LOGE(
+        "OH_NativeWindow_NativeWindowHandleOpt(SET_USAGE) failed "
+        "retval=%{public}d",
+        retval);
+  }
   std::unique_ptr<NativeWindow> native_window(new NativeWindow(window));
   return native_window;
 }
@@ -40,14 +49,14 @@ NativeWindow::~NativeWindow() {
 bool NativeWindow::Initialize(int32_t width,
                               int32_t height,
                               int32_t format,
-                              uint64_t usages) {
+                              uint64_t usage) {
   image_ = OH_ConsumerSurface_Create();
   if (!image_) {
     LOGE("OH_ConsumerSurface_Create() failed");
     return false;
   }
 
-  int32_t retval = OH_ConsumerSurface_SetDefaultUsage(image_, usages);
+  int32_t retval = OH_ConsumerSurface_SetDefaultUsage(image_, usage);
   if (retval != 0) {
     LOGE("OH_ConsumerSurface_SetDefaultUsage() failed retval=%{public}d",
          retval);
@@ -67,14 +76,14 @@ bool NativeWindow::Initialize(int32_t width,
     return false;
   }
 
-  retval = OH_NativeWindow_NativeWindowHandleOpt(window_, SET_USAGE, usages);
-  if (retval != 0) {
-    LOGE(
-        "OH_NativeWindow_NativeWindowHandleOpt(SET_USAGE) failed "
-        "retval=%{public}d",
-        retval);
-    return false;
-  }
+  // retval = OH_NativeWindow_NativeWindowHandleOpt(window_, SET_USAGE, usages);
+  // if (retval != 0) {
+  //   LOGE(
+  //       "OH_NativeWindow_NativeWindowHandleOpt(SET_USAGE) failed "
+  //       "retval=%{public}d",
+  //       retval);
+  //   return false;
+  // }
 
   retval = OH_NativeWindow_NativeWindowHandleOpt(window_, SET_FORMAT, format);
   if (retval != 0) {
@@ -154,7 +163,6 @@ bool NativeWindow::RequestBuffer(int32_t* width,
                                  void** addr) {
   OHNativeWindowBuffer* window_buffer = nullptr;
   OH_NativeBuffer* buffer = nullptr;
-  ;
 
   int fd = -1;
   int32_t retval =
@@ -165,13 +173,6 @@ bool NativeWindow::RequestBuffer(int32_t* width,
       retval);
 
   fence_fd->reset(fd);
-
-  // uint64_t usage = 0;
-  // retval = OH_NativeWindow_NativeWindowHandleOpt(window_, GET_USAGE, &usage);
-  // FATAL_IF(retval != 0,
-  //          "OH_NativeBuffer_FromNativeWindowBuffer() failed
-  //          retval=%{public}d", retval);
-  // LOGE("EEEE usage=0x%{public}x", usage);
 
   retval = OH_NativeBuffer_FromNativeWindowBuffer(window_buffer, &buffer);
   FATAL_IF(retval != 0,

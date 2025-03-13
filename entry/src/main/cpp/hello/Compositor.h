@@ -37,9 +37,6 @@ class Compositor : public XComponentNode::Delegate {
   std::unique_ptr<BitmapRenderer> renderers_[2];
   GLTexture textures_[2];
   std::unique_ptr<NativeWindow> native_windows_[2];
-  std::unique_ptr<GLImage> gl_images_[2];
-  OH_NativeBuffer* buffers_[2];
-  OHNativeWindowBuffer* window_buffers_[2];
 };
 
 }  // namespace hello

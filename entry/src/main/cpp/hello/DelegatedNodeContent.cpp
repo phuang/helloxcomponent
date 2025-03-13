@@ -22,13 +22,13 @@ DelegatedNodeContent::DelegatedNodeContent(
     child_renderers_.push_back(std::move(renderer));
   }
 
-#if 0
+#if 1
   {
     // TODO: Fix kEGLImage mode. It doesn't render and
     // eglDupNativeFenceFDANDROID() returns -1 with EGL_BAD_DISPLAY constexpr
     // XComponentNode::Type type = XComponentNode::kEGLImage;
 
-    constexpr XComponentNode::Type type = XComponentNode::kEGLSurface;
+    constexpr XComponentNode::Type type = XComponentNode::kEGLImage;
 
     auto renderer = std::make_unique<TextureRenderer>();
     auto node = XComponentNode::Create(renderer.get(), "child_1", type);
