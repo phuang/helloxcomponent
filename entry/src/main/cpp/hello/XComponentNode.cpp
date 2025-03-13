@@ -165,7 +165,7 @@ void XComponentNode::OnSurfaceChanged(void* window) {
   if (is_software()) {
     usage |= NATIVEBUFFER_USAGE_HW_RENDER | NATIVEBUFFER_USAGE_HW_TEXTURE | NATIVEBUFFER_USAGE_CPU_WRITE;
   } else {
-    usage |= NATIVEBUFFER_USAGE_HW_RENDER;
+    usage |= NATIVEBUFFER_USAGE_HW_RENDER | NATIVEBUFFER_USAGE_HW_TEXTURE | NATIVEBUFFER_USAGE_CPU_WRITE;
   }
   window_ = NativeWindow::CreateFromNativeWindow(
       reinterpret_cast<OHNativeWindow*>(window), usage);
