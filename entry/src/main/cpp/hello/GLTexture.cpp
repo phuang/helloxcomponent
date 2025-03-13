@@ -44,8 +44,9 @@ GLTexture& GLTexture::operator=(GLTexture&& other) {
 }
 
 void GLTexture::reset() {
-  if (id_) {
+  if (id_ != 0) {
     glDeleteTextures(1, &id_);
+    target_ = GL_NONE;
     id_ = 0;
   }
 }

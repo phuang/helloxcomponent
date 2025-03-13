@@ -27,6 +27,8 @@ bool GLImage::Initialize(OHNativeWindowBuffer* window_buffer) {
     LOGE("eglCreateImageKHR() faile: 0x%{public}X", eglGetError());
     return false;
   }
+  DCHECK_EGL_ERROR();
+  DCHECK_GL_ERROR();
 
   return true;
 }

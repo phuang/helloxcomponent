@@ -17,7 +17,24 @@
 namespace hello {
 namespace {
 
-const bool kUseNativeWindow = true;
+enum Mode {
+  // Upload data with glTexImage2D()
+  kTexture,
+  // Create NativeImage and NativeWindows which use buffer queue.
+  // At producer side,
+  // OH_NativeWindow_NativeWindowRequestBuffer() and
+  // OH_NativeWindow_NativeWindowFlushBuffer() are used.
+  // At consumer side, OH_NativeImage_AttachContext() and
+  // OH_NativeImage_UpdateSurfaceImage() are used.
+  kNativeWindow,
+  // Create
+  kNativeBuffer,
+};
+
+const Mode kMode = kNativeBuffer;
+
+const int32_t kWindowWidth = 1260;
+const int32_t kWindowHeight = 2530;
 const int kPictureSize = 1040;
 const float kRootScale = 1.0f;
 
@@ -110,14 +127,81 @@ Compositor::Compositor() {
   renderers_[0] = std::make_unique<BitmapRenderer>(kPictureSkyUri);
   renderers_[1] = std::make_unique<BitmapRenderer>(kPictureRiverUri);
 
-  if (kUseNativeWindow) {
-    native_windows_[0] = NativeWindow::Create(1260, 2538);
-    native_windows_[1] = NativeWindow::Create(kPictureSize, kPictureSize);
-    textures_[0] = native_windows_[0]->BindTexture();
-    textures_[1] = native_windows_[1]->BindTexture();
-  } else {
-    textures_[0] = GLTexture::Create();
-    textures_[1] = GLTexture::Create();
+  switch (kMode) {
+    case kTexture: {
+      textures_[0] = GLTexture::Create();
+      textures_[1] = GLTexture::Create();
+      break;
+    }
+    case kNativeWindow: {
+      native_windows_[0] = NativeWindow::Create(kWindowWidth, kWindowHeight);
+      native_windows_[1] = NativeWindow::Create(kPictureSize, kPictureSize);
+      textures_[0] = native_windows_[0]->BindTexture();
+      textures_[1] = native_windows_[1]->BindTexture();
+      break;
+    }
+    case kNativeBuffer: {
+      // NATIVEBUFFER_USAGE_CPU_READ = (1ULL << 0),        /// < CPU read buffer
+      // */ NATIVEBUFFER_USAGE_CPU_WRITE = (1ULL << 1),       /// < CPU write
+      // memory */ NATIVEBUFFER_USAGE_MEM_DMA = (1ULL << 3),         /// <
+      // Direct memory access (DMA) buffer */ NATIVEBUFFER_USAGE_HW_RENDER =
+      // (1ULL << 8),       /// < For GPU write case */
+      // NATIVEBUFFER_USAGE_HW_TEXTURE = (1ULL << 9),      /// < For GPU read
+      // case */ NATIVEBUFFER_USAGE_CPU_READ_OFTEN = (1ULL << 16), /// < Often
+      // be mapped for direct CPU reads */ NATIVEBUFFER_USAGE_ALIGNMENT_512 =
+      // (1ULL << 18),  /// < 512 bytes alignment */
+      const uint64_t kUsage =
+          NATIVEBUFFER_USAGE_CPU_WRITE | NATIVEBUFFER_USAGE_CPU_READ |
+          NATIVEBUFFER_USAGE_HW_TEXTURE | NATIVEBUFFER_USAGE_HW_RENDER |
+          NATIVEBUFFER_USAGE_MEM_DMA;
+      {
+        OH_NativeBuffer_Config config = {
+            .width = kWindowWidth,
+            .height = kWindowHeight,
+            .format = NATIVEBUFFER_PIXEL_FMT_RGBA_8888,
+            .usage = kUsage,
+            .stride = 1260 * 4,
+        };
+        buffers_[0] = OH_NativeBuffer_Alloc(&config);
+        FATAL_IF(!buffers_[0], "OH_NativeBuffer_Alloc() failed");
+
+        window_buffers_[0] =
+            OH_NativeWindow_CreateNativeWindowBufferFromNativeBuffer(
+                buffers_[0]);
+        FATAL_IF(!window_buffers_[0],
+                 "OH_NativeWindow_CreateNativeWindowBufferFromNativeBuffer() "
+                 "failed");
+        gl_images_[0] = std::make_unique<GLImage>();
+        if (!gl_images_[0]->Initialize(window_buffers_[0])) {
+          FATAL("GLImage::Initialize() failed");
+        }
+        textures_[0] = gl_images_[0]->Bind();
+      }
+      {
+        OH_NativeBuffer_Config config = {
+            .width = kPictureSize,
+            .height = kPictureSize,
+            .format = NATIVEBUFFER_PIXEL_FMT_RGBA_8888,
+            .usage = kUsage,
+            .stride = kPictureSize * 4,
+        };
+        buffers_[1] = OH_NativeBuffer_Alloc(&config);
+        FATAL_IF(!buffers_[1], "OH_NativeBuffer_Alloc() failed");
+
+        window_buffers_[1] =
+            OH_NativeWindow_CreateNativeWindowBufferFromNativeBuffer(
+                buffers_[1]);
+        FATAL_IF(!window_buffers_[1],
+                 "OH_NativeWindow_CreateNativeWindowBufferFromNativeBuffer() "
+                 "failed");
+        gl_images_[1] = std::make_unique<GLImage>();
+        if (!gl_images_[1]->Initialize(window_buffers_[1])) {
+          FATAL("GLImage::Initialize() failed");
+        }
+        textures_[1] = gl_images_[0]->Bind();
+      }
+      break;
+    }
   }
 }
 
@@ -126,12 +210,39 @@ Compositor::~Compositor() = default;
 void Compositor::RenderFrame(int32_t width,
                              int32_t height,
                              uint64_t timestamp) {
-  if (kUseNativeWindow) {
-    UploadNativeWindows(width, height, timestamp);
-    RenderFrameWithTexture(width, height, timestamp);
-  } else {
-    UploadTextures(width, height, timestamp);
-    RenderFrameWithTexture(width, height, timestamp);
+  switch (kMode) {
+    case kTexture: {
+      UploadTextures(width, height, timestamp);
+      RenderFrameWithTexture(width, height, timestamp);
+      break;
+    }
+    case kNativeWindow: {
+      UploadNativeWindows(width, height, timestamp);
+      RenderFrameWithTexture(width, height, timestamp);
+      break;
+    }
+    case kNativeBuffer: {
+      UploadNativeBuffers(width, height, timestamp);
+      RenderFrameWithTexture(width, height, timestamp);
+      break;
+    }
+  }
+}
+
+void Compositor::UploadNativeBuffers(int32_t width,
+                                     int32_t height,
+                                     uint64_t timestamp) {
+  for (int i = 0; i < 2; ++i) {
+    auto* window_buffer = window_buffers_[i];
+    auto* buffer = buffers_[i];
+    OH_NativeBuffer_Config config;
+    OH_NativeBuffer_GetConfig(buffer, &config);
+    void* addr = nullptr;
+    int32_t retval = OH_NativeBuffer_Map(buffer, &addr);
+    FATAL_IF(retval != 0, "OH_NativeBuffer_Map() failed");
+    renderers_[i]->RenderPixels(addr, config.width, config.height, config.width,
+                                0);
+    OH_NativeBuffer_Unmap(buffer);
   }
 }
 
@@ -182,7 +293,8 @@ void Compositor::UploadTextures(int32_t width,
   target = textures_[0].target();
   glBindTexture(textures_[0].target(), textures_[0].id());
   DCHECK_GL_ERROR();
-  renderers_[0]->RenderPixels(width, height, timestamp, texture_upload);
+  renderers_[0]->RenderPixels(kWindowWidth, kWindowHeight, timestamp,
+                              texture_upload);
   DCHECK_GL_ERROR();
 
   target = textures_[0].target();
