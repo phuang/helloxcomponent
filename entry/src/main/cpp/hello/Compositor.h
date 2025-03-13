@@ -18,6 +18,7 @@ namespace hello {
 class BitmapRenderer;
 class NativeWindow;
 class TextureRenderer;
+class Thread;
 
 class Compositor : public XComponentNode::Delegate {
  public:
@@ -37,6 +38,11 @@ class Compositor : public XComponentNode::Delegate {
   std::unique_ptr<BitmapRenderer> renderers_[2];
   GLTexture textures_[2];
   std::unique_ptr<NativeWindow> native_windows_[2];
+  std::unique_ptr<NativeWindow> native_windows_for_upload_[2];
+
+  std::unique_ptr<Thread> upload_threads_[2];
+  int32_t pending_frames_[2] = {0, 0};
+  int32_t available_frames_[2] = {0, 0};
 };
 
 }  // namespace hello

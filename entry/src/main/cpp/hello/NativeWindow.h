@@ -7,7 +7,7 @@
 
 #include <deque>
 #include <memory>
-#include <optional>
+#include <string>
 
 #include "hello/GLImage.h"
 #include "hello/GLTexture.h"
@@ -24,7 +24,6 @@ class NativeWindow {
   //     NATIVEBUFFER_USAGE_ALIGNMENT_512 | NATIVEBUFFER_USAGE_MEM_DMA;
   static constexpr uint64_t kDefaultUsages = NATIVEBUFFER_USAGE_CPU_WRITE;
 
-
   static std::unique_ptr<NativeWindow> Create(int32_t width,
                                               int32_t height,
                                               int32_t format = kDefaultFormat,
@@ -33,6 +32,9 @@ class NativeWindow {
   static std::unique_ptr<NativeWindow> CreateFromNativeWindow(
       OHNativeWindow* window,
       uint64_t usage);
+
+  static std::unique_ptr<NativeWindow> CreateFromSurfaceId(uint64_t surrface_id,
+                                                           uint64_t usage);
 
   ~NativeWindow();
 
@@ -58,6 +60,7 @@ class NativeWindow {
                      void** addr);
   void FlushBuffer();
   OHNativeWindow* window() const { return window_; }
+  uint64_t surface_id() const { return surface_id_; }
 
  private:
   NativeWindow();
@@ -70,6 +73,7 @@ class NativeWindow {
 
   OH_NativeImage* image_ = nullptr;
   OHNativeWindow* window_ = nullptr;
+  uint64_t surface_id_ = 0;
   std::deque<OHNativeWindowBuffer*> window_buffers_;
   std::deque<OH_NativeBuffer*> buffers_;
 

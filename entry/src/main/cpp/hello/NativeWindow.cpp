@@ -31,14 +31,37 @@ std::unique_ptr<NativeWindow> NativeWindow::CreateFromNativeWindow(
         "OH_NativeWindow_NativeWindowHandleOpt(SET_USAGE) failed "
         "retval=%{public}d",
         retval);
+    return nullptr;
   }
   std::unique_ptr<NativeWindow> native_window(new NativeWindow(window));
   return native_window;
 }
 
+// static
+std::unique_ptr<NativeWindow> NativeWindow::CreateFromSurfaceId(
+    uint64_t surface_id,
+    uint64_t usage) {
+  OHNativeWindow* window = nullptr;
+  int retval =
+      OH_NativeWindow_CreateNativeWindowFromSurfaceId(surface_id, &window);
+  if (retval != 0) {
+    LOGE(
+        "OH_NativeWindow_CreateNativeWindowFromSurfaceId() failed "
+        "retval=%{public}d",
+        retval);
+    return nullptr;
+  }
+  return CreateFromNativeWindow(window, usage);
+}
+
 NativeWindow::NativeWindow() = default;
 
-NativeWindow::NativeWindow(OHNativeWindow* window) : window_(window) {}
+NativeWindow::NativeWindow(OHNativeWindow* window) : window_(window) {
+  int32_t retval = OH_NativeWindow_GetSurfaceId(window_, &surface_id_);
+  if (retval != 0) {
+    FATAL("OH_NativeWindow_GetSurfaceId() failed retval=%{public}d", retval);
+  }
+}
 
 NativeWindow::~NativeWindow() {
   if (image_) {
@@ -91,6 +114,12 @@ bool NativeWindow::Initialize(int32_t width,
         "OH_NativeWindow_NativeWindowHandleOpt(SET_FROMAT) failed "
         "retval=%{public}d",
         retval);
+    return false;
+  }
+
+  retval = OH_NativeWindow_GetSurfaceId(window_, &surface_id_);
+  if (retval != 0) {
+    LOGE("OH_NativeWindow_GetSurfaceId() failed retval=%{public}d", retval);
     return false;
   }
 

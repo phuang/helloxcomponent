@@ -10,9 +10,11 @@
 #include "hello/GLCore.h"
 #include "hello/Log.h"
 #include "hello/Matrix.h"
+#include "hello/NapiManager.h"
 #include "hello/NativeWindow.h"
 #include "hello/SyncFence.h"
 #include "hello/TextureRenderer.h"
+#include "hello/Thread.h"
 
 namespace hello {
 namespace {
@@ -145,10 +147,30 @@ Compositor::Compositor() {
       break;
     }
     case kNativeWindow: {
+      constexpr uint64_t kUsage = NATIVEBUFFER_USAGE_HW_RENDER |
+                                  NATIVEBUFFER_USAGE_HW_TEXTURE |
+                                  NATIVEBUFFER_USAGE_CPU_WRITE;
       native_windows_[0] = NativeWindow::Create(kWindowWidth, kWindowHeight);
       native_windows_[1] = NativeWindow::Create(kPictureSize, kPictureSize);
       textures_[0] = native_windows_[0]->BindTexture();
       textures_[1] = native_windows_[1]->BindTexture();
+
+      native_windows_for_upload_[0] = NativeWindow::CreateFromSurfaceId(
+          native_windows_[0]->surface_id(), kUsage);
+      native_windows_for_upload_[1] = NativeWindow::CreateFromSurfaceId(
+          native_windows_[1]->surface_id(), kUsage);
+      // If is surface with delegate_ for rendering, the xcomponent is
+      // rastered with CPU on a separated thread.
+      const auto& env = NapiManager::GetInstance()->env();
+      uv_loop_t* loop = nullptr;
+      napi_status status = napi_get_uv_event_loop(env, &loop);
+      FATAL_IF(status != napi_ok,
+               "napi_get_uv_event_loop() failed status=%{public}d", status);
+
+      upload_threads_[0] = std::make_unique<Thread>(loop);
+      upload_threads_[0]->Start();
+      upload_threads_[1] = std::make_unique<Thread>(loop);
+      upload_threads_[1]->Start();
       break;
     }
   }
@@ -166,8 +188,19 @@ void Compositor::RenderFrame(int32_t width,
       break;
     }
     case kNativeWindow: {
-      UploadNativeWindows(width, height, timestamp);
-      RenderFrameWithTexture(width, height, timestamp);
+      if (pending_frames_[0] < 3 && pending_frames_[1] < 3) {
+        UploadNativeWindows(width, height, timestamp);
+      }
+      if (available_frames_[0] && available_frames_[1]) {
+        for (int i = 0; i < 2; ++i) {
+          native_windows_[i]->UpdateSurfaceImage();
+          --available_frames_[i];
+          --pending_frames_[i];
+
+        }
+        RenderFrameWithTexture(width, height, timestamp);
+      }
+
       break;
     }
   }
@@ -177,15 +210,21 @@ void Compositor::UploadNativeWindows(int32_t width,
                                      int32_t height,
                                      uint64_t timestamp) {
   for (int i = 0; i < 2; ++i) {
-    int32_t w, h, stride;
-    ScopedFd fence_fd;
-    void* addr = nullptr;
-    native_windows_[i]->RequestBuffer(&w, &h, &stride, &fence_fd, &addr);
-    SyncFence sync_fence(std::move(fence_fd));
-    sync_fence.Wait(-1);
-    renderers_[i]->RenderPixels(static_cast<uint8_t*>(addr), w, h, stride, 0);
-    native_windows_[i]->FlushBuffer();
-    native_windows_[i]->UpdateSurfaceImage();
+    ++pending_frames_[i];
+    upload_threads_[i]->PostTask(
+        [this, i] {
+          int32_t w, h, stride;
+          ScopedFd fence_fd;
+          void* addr = nullptr;
+          native_windows_for_upload_[i]->RequestBuffer(&w, &h, &stride,
+                                                       &fence_fd, &addr);
+          SyncFence sync_fence(std::move(fence_fd));
+          sync_fence.Wait(-1);
+          renderers_[i]->RenderPixels(static_cast<uint8_t*>(addr), w, h, stride,
+                                      0);
+          native_windows_for_upload_[i]->FlushBuffer();
+        },
+        [this, i] { ++available_frames_[i]; });
   }
 }
 
