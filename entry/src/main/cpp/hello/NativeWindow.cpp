@@ -149,8 +149,6 @@ std::unique_ptr<GLImage> NativeWindow::AcquireGLImage() {
     --avaliable_frames_;
   }
 
-  CHECK(gl_image_);
-
   int fence_fd = -1;
   OHNativeWindowBuffer* window_buffer = nullptr;
   int32_t ret = OH_NativeImage_AcquireNativeWindowBuffer(image_, &window_buffer,
