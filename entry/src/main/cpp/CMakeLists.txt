@@ -19,7 +19,8 @@ include_directories(${NATIVERENDER_ROOT_PATH}
                     ${NATIVERENDER_ROOT_PATH}/include)
 
 add_library(helloxcomponent SHARED
-    hello/Log.h
+    hello/AVPlayer.cpp
+    hello/AVPlayer.h
     hello/BitmapRenderer.cpp
     hello/BitmapRenderer.h
     hello/Constants.cpp
@@ -61,10 +62,12 @@ target_link_libraries(helloxcomponent PUBLIC
     GLESv3
     ace_ndk.z
     ace_napi.z
+    avplayer
     hilog_ndk.z
     image_source
     native_buffer
     native_image
+    native_media_core
     native_window
     pixelmap
     uv

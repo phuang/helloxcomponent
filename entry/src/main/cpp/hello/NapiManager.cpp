@@ -7,6 +7,7 @@
 #include <cstdint>
 #include <string>
 
+#include "hello/AVPlayer.h"
 #include "hello/DelegatedNodeContent.h"
 #include "hello/GLCore.h"
 #include "hello/Log.h"
@@ -33,6 +34,7 @@ NapiManager::NapiManager(const Napi::Env& env) : env_(env) {
   std::srand(std::time({}));
   gl_core_ = std::make_unique<GLCore>();
   gl_core_->Init();
+  av_player_ = std::make_unique<AVPlayer>();
 }
 
 NapiManager::~NapiManager() {

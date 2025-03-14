@@ -5,6 +5,7 @@ namespace hello {
 
 extern const char kPictureSkyUri[];
 extern const char kPictureRiverUri[];
+extern const char kVideoURL[];
 
 constexpr int kFrameRate = 60;
 

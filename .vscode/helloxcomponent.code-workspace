@@ -8,6 +8,9 @@
 		},
 		{
 			"path": "../../openharmony/foundation/graphic"
+		},
+		{
+			"path": "../../openharmony/foundation/multimedia"
 		}
 	],
 	"settings": {
