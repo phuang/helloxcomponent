@@ -1,8 +1,19 @@
 #include "hello/Thread.h"
 
+#include <node_api.h>
+
+#include "hello/Log.h"
+#include "hello/NapiManager.h"
+
 namespace hello {
 
 Thread::Thread(uv_loop_t* loop) {
+  if (loop == nullptr) {
+    const auto& env = NapiManager::GetInstance()->env();
+    napi_status status = napi_get_uv_event_loop(env, &loop);
+    FATAL_IF(status != napi_ok, "napi_get_uv_event_loop() status:=%{public}d",
+             status);
+  }
   uv_async_init(loop, &uv_async_, [](uv_async_t* handle) {
     auto* self = reinterpret_cast<Thread*>(handle->data);
     self->CallDones();
@@ -38,7 +49,8 @@ void Thread::PostTask(const std::function<void()>& task) {
   cv_.notify_one();
 }
 
-void Thread::PostTask(const std::function<void()>& task, const std::function<void()>& done) {
+void Thread::PostTask(const std::function<void()>& task,
+                      const std::function<void()>& done) {
   // create napi thread safe function
 
   // Run task in this thread, and run done in the loop thread.

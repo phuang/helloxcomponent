@@ -14,7 +14,7 @@ namespace hello {
 
 class Thread {
  public:
-  Thread(uv_loop_t* loop);
+  explicit Thread(uv_loop_t* loop = nullptr);
   ~Thread();
 
   void Start();

@@ -168,15 +168,9 @@ Compositor::Compositor() {
           native_windows_[1]->surface_id(), kUsage);
       // If is surface with delegate_ for rendering, the xcomponent is
       // rastered with CPU on a separated thread.
-      const auto& env = NapiManager::GetInstance()->env();
-      uv_loop_t* loop = nullptr;
-      napi_status status = napi_get_uv_event_loop(env, &loop);
-      FATAL_IF(status != napi_ok,
-               "napi_get_uv_event_loop() failed status=%{public}d", status);
-
-      upload_threads_[0] = std::make_unique<Thread>(loop);
+      upload_threads_[0] = std::make_unique<Thread>();
       upload_threads_[0]->Start();
-      upload_threads_[1] = std::make_unique<Thread>(loop);
+      upload_threads_[1] = std::make_unique<Thread>();
       upload_threads_[1]->Start();
       break;
     }
@@ -195,13 +189,7 @@ Compositor::Compositor() {
           native_windows_[1]->surface_id(), kUsage);
       // If is surface with delegate_ for rendering, the xcomponent is
       // rastered with CPU on a separated thread.
-      const auto& env = NapiManager::GetInstance()->env();
-      uv_loop_t* loop = nullptr;
-      napi_status status = napi_get_uv_event_loop(env, &loop);
-      FATAL_IF(status != napi_ok,
-               "napi_get_uv_event_loop() failed status=%{public}d", status);
-
-      upload_threads_[0] = std::make_unique<Thread>(loop);
+      upload_threads_[0] = std::make_unique<Thread>();
       upload_threads_[0]->Start();
 
       av_player_ = std::make_unique<AVPlayer>(kVideoURL);

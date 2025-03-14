@@ -85,13 +85,7 @@ XComponentNode::XComponentNode(Delegate* delegate,
   if (is_software()) {
     // If is surface with delegate_ for rendering, the xcomponent is rastered
     // with CPU on a separated thread.
-    const auto& env = NapiManager::GetInstance()->env();
-    uv_loop_t* loop = nullptr;
-    napi_status status = napi_get_uv_event_loop(env, &loop);
-    FATAL_IF(status != napi_ok,
-             "napi_get_uv_event_loop() failed status=%{public}d", status);
-
-    renderer_thread_ = std::make_unique<Thread>(loop);
+    renderer_thread_ = std::make_unique<Thread>();
     renderer_thread_->Start();
   }
 }
