@@ -5,6 +5,7 @@
 
 #include <mutex>
 
+#include "hello/AVPlayer.h"
 #include "hello/BitmapRenderer.h"
 #include "hello/Constants.h"
 #include "hello/GLCore.h"
@@ -29,14 +30,19 @@ enum Mode {
   // At consumer side, OH_NativeImage_AttachContext() and
   // OH_NativeImage_UpdateSurfaceImage() are used.
   kNativeWindow,
+  kAVPlayer,
 };
 
-const Mode kMode = kNativeWindow;
+const Mode kMode = kAVPlayer;
 
 const int32_t kWindowWidth = 1260;
 const int32_t kWindowHeight = 2530;
 const int kPictureSize = 1040;
 const float kRootScale = 1.0f;
+
+constexpr uint64_t kUsage = NATIVEBUFFER_USAGE_HW_RENDER |
+                            NATIVEBUFFER_USAGE_HW_TEXTURE |
+                            NATIVEBUFFER_USAGE_CPU_WRITE;
 
 // clang-format off
 const GLfloat kQuadVertices[] = {
@@ -137,19 +143,20 @@ void SetupGL() {
 
 Compositor::Compositor() {
   SetupGL();
-  renderers_[0] = std::make_unique<BitmapRenderer>(kPictureSkyUri);
-  renderers_[1] = std::make_unique<BitmapRenderer>(kPictureRiverUri);
 
   switch (kMode) {
     case kTexture: {
+      renderers_[0] = std::make_unique<BitmapRenderer>(kPictureSkyUri);
+      renderers_[1] = std::make_unique<BitmapRenderer>(kPictureRiverUri);
+
       textures_[0] = GLTexture::Create();
       textures_[1] = GLTexture::Create();
       break;
     }
     case kNativeWindow: {
-      constexpr uint64_t kUsage = NATIVEBUFFER_USAGE_HW_RENDER |
-                                  NATIVEBUFFER_USAGE_HW_TEXTURE |
-                                  NATIVEBUFFER_USAGE_CPU_WRITE;
+      renderers_[0] = std::make_unique<BitmapRenderer>(kPictureSkyUri);
+      renderers_[1] = std::make_unique<BitmapRenderer>(kPictureRiverUri);
+
       native_windows_[0] = NativeWindow::Create(kWindowWidth, kWindowHeight);
       native_windows_[1] = NativeWindow::Create(kPictureSize, kPictureSize);
       textures_[0] = native_windows_[0]->BindTexture();
@@ -171,6 +178,34 @@ Compositor::Compositor() {
       upload_threads_[0]->Start();
       upload_threads_[1] = std::make_unique<Thread>(loop);
       upload_threads_[1]->Start();
+      break;
+    }
+    case kAVPlayer: {
+      renderers_[0] = std::make_unique<BitmapRenderer>(kPictureSkyUri);
+
+      native_windows_[0] = NativeWindow::Create(kWindowWidth, kWindowHeight);
+      native_windows_[1] = NativeWindow::Create(kPictureSize, kPictureSize);
+
+      textures_[0] = native_windows_[0]->BindTexture();
+      textures_[1] = native_windows_[1]->BindTexture();
+
+      native_windows_for_upload_[0] = NativeWindow::CreateFromSurfaceId(
+          native_windows_[0]->surface_id(), kUsage);
+      native_windows_for_upload_[1] = NativeWindow::CreateFromSurfaceId(
+          native_windows_[1]->surface_id(), kUsage);
+      // If is surface with delegate_ for rendering, the xcomponent is
+      // rastered with CPU on a separated thread.
+      const auto& env = NapiManager::GetInstance()->env();
+      uv_loop_t* loop = nullptr;
+      napi_status status = napi_get_uv_event_loop(env, &loop);
+      FATAL_IF(status != napi_ok,
+               "napi_get_uv_event_loop() failed status=%{public}d", status);
+
+      upload_threads_[0] = std::make_unique<Thread>(loop);
+      upload_threads_[0]->Start();
+
+      av_player_ = std::make_unique<AVPlayer>(kVideoURL);
+      av_player_->SetNativeWindow(native_windows_for_upload_[1].get());
       break;
     }
   }
@@ -196,20 +231,43 @@ void Compositor::RenderFrame(int32_t width,
           native_windows_[i]->UpdateSurfaceImage();
           --available_frames_[i];
           --pending_frames_[i];
-
         }
         RenderFrameWithTexture(width, height, timestamp);
       }
 
       break;
     }
+    case kAVPlayer: {
+      if (pending_frames_[0] < 3) {
+        UploadNativeWindows(width, height, timestamp);
+      }
+      if (available_frames_[0]) {
+        native_windows_[0]->UpdateSurfaceImage();
+        --available_frames_[0];
+        --pending_frames_[0];
+        native_windows_[1]->UpdateSurfaceImage();
+        RenderFrameWithTexture(width, height, timestamp);
+      }
+    }
+  }
+}
+
+void Compositor::StartDrawFrame() {
+  if (av_player_) {
+    av_player_->StartDrawFrame();
+  }
+}
+
+void Compositor::StopDrawFrame() {
+  if (av_player_) {
+    av_player_->StopDrawFrame();
   }
 }
 
 void Compositor::UploadNativeWindows(int32_t width,
                                      int32_t height,
                                      uint64_t timestamp) {
-  for (int i = 0; i < 2; ++i) {
+  for (int i = 0; i < (kMode == kAVPlayer ? 1 : 2); ++i) {
     ++pending_frames_[i];
     upload_threads_[i]->PostTask(
         [this, i] {

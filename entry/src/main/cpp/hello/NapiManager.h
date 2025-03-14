@@ -21,7 +21,6 @@ class NapiManager {
 
   const Napi::Env& env() const { return env_; }
   GLCore* gl_core() const { return gl_core_.get(); }
-  AVPlayer* av_player() const { return av_player_.get(); }
 
  private:
   NapiManager(const Napi::Env& env);
@@ -39,8 +38,6 @@ class NapiManager {
   Napi::Reference<Napi::Object> controller_;
 
   std::unique_ptr<GLCore> gl_core_;
-
-  std::unique_ptr<AVPlayer> av_player_;
 };
 
 }  // namespace hello

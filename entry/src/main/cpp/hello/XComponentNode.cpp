@@ -128,6 +128,12 @@ void XComponentNode::StartDrawFrame() {
   }
   draw_frame_ = true;
 
+  delegate_->StartDrawFrame();
+
+  if (using_native_window()) {
+    return;
+  }
+
   OH_NativeXComponent_ExpectedRateRange range = {
       .min = kFrameRate,
       .max = kFrameRate,
@@ -149,6 +155,13 @@ void XComponentNode::StopDrawFrame() {
   }
 
   draw_frame_ = false;
+
+  delegate_->StopDrawFrame();
+
+  if (using_native_window()) {
+    return;
+  }
+
   OH_NativeXComponent_UnregisterOnFrameCallback(component_);
 }
 
@@ -163,9 +176,11 @@ void XComponentNode::OnSurfaceCreated(void* window) {
 void XComponentNode::OnSurfaceChanged(void* window) {
   uint64_t usage = 0;
   if (is_software()) {
-    usage |= NATIVEBUFFER_USAGE_HW_RENDER | NATIVEBUFFER_USAGE_HW_TEXTURE | NATIVEBUFFER_USAGE_CPU_WRITE;
+    usage |= NATIVEBUFFER_USAGE_HW_RENDER | NATIVEBUFFER_USAGE_HW_TEXTURE |
+             NATIVEBUFFER_USAGE_CPU_WRITE;
   } else {
-    usage |= NATIVEBUFFER_USAGE_HW_RENDER | NATIVEBUFFER_USAGE_HW_TEXTURE | NATIVEBUFFER_USAGE_CPU_WRITE;
+    usage |= NATIVEBUFFER_USAGE_HW_RENDER | NATIVEBUFFER_USAGE_HW_TEXTURE |
+             NATIVEBUFFER_USAGE_CPU_WRITE;
   }
   window_ = NativeWindow::CreateFromNativeWindow(
       reinterpret_cast<OHNativeWindow*>(window), usage);
@@ -182,6 +197,8 @@ void XComponentNode::OnSurfaceChanged(void* window) {
     FATAL_IF(egl_surface_ == EGL_NO_SURFACE,
              "eglCreateWindowSurface() failed. EGL error: 0x%{public}x",
              eglGetError());
+  } else if (using_native_window()) {
+    delegate_->SetNativeWindow(window_.get());
   }
 }
 
@@ -204,6 +221,9 @@ void XComponentNode::OnFrame(uint64_t timestamp, uint64_t targetTimestamp) {
   if (!window_) {
     return;
   }
+
+  CHECK(!using_native_window());
+
   if (is_software()) {
     SoftwareDrawFrame();
   } else {

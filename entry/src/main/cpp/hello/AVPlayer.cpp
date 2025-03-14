@@ -1,6 +1,5 @@
 #include "hello/AVPlayer.h"
 
-#include "hello/Constants.h"
 #include "hello/Log.h"
 #include "hello/NativeWindow.h"
 
@@ -11,9 +10,7 @@ constexpr uint64_t kUsage = NATIVEBUFFER_USAGE_HW_RENDER |
                             NATIVEBUFFER_USAGE_CPU_WRITE;
 }
 
-AVPlayer::AVPlayer() {
-  Initialize();
-}
+AVPlayer::AVPlayer(const std::string& url) : url_(url) {}
 
 AVPlayer::~AVPlayer() {
   if (player_) {
@@ -21,10 +18,8 @@ AVPlayer::~AVPlayer() {
   }
 }
 
-bool AVPlayer::Initialize() {
-  native_window_ = NativeWindow::Create(512, 512);
-  native_window_player_ =
-      NativeWindow::CreateFromSurfaceId(native_window_->surface_id(), kUsage);
+bool AVPlayer::Initialize(NativeWindow* window) {
+  native_window_ = window;
 
   player_ = OH_AVPlayer_Create();
   FATAL_IF(player_ == nullptr, "OH_AVPlayer_Create()");
@@ -48,15 +43,8 @@ bool AVPlayer::Initialize() {
       },
       this);
 
-  ret = OH_AVPlayer_SetURLSource(player_, kVideoURL);
+  ret = OH_AVPlayer_SetURLSource(player_, url_.c_str());
   FATAL_IF(ret != AV_ERR_OK, "OH_AVPlayer_SetURLSource() ret:%{public}d", ret);
-
-  ret = OH_AVPlayer_GetVideoWidth(player_, &width_);
-  FATAL_IF(ret != AV_ERR_OK, "OH_AVPlayer_GetVideoWidth() ret:%{public}d", ret);
-
-  ret = OH_AVPlayer_GetVideoHeight(player_, &height_);
-  FATAL_IF(ret != AV_ERR_OK, "OH_AVPlayer_GetVideoHeight() ret:%{public}d",
-           ret);
 
   return true;
 }
@@ -78,12 +66,9 @@ void AVPlayer::OnInfo(AVPlayerOnInfoType type, OH_AVFormat* info) {
       ret = OH_AVPlayer_GetVideoHeight(player_, &height_);
       FATAL_IF(ret != AV_ERR_OK, "OH_AVPlayer_GetVideoHeight() ret:%{public}d",
                ret);
-
-      LOGE("EEEE video size = %{public}dx%{public}d", width_, height_);
       break;
     }
     default: {
-      // LOGE("EEEE OnInfo() type = %{public}d", type);
       break;
     }
   }
@@ -95,12 +80,12 @@ void AVPlayer::OnError(int32_t code, const char* message) {
 
 void AVPlayer::OnStateChange(AVPlayerState state) {
   OH_AVErrCode ret;
+  state_ = state;
   switch (state) {
     case AV_IDLE:
       break;
     case AV_INITIALIZED: {
-      ret =
-          OH_AVPlayer_SetVideoSurface(player_, native_window_player_->window());
+      ret = OH_AVPlayer_SetVideoSurface(player_, native_window_->window());
       FATAL_IF(ret != AV_ERR_OK, "OH_AVPlayer_SetVideoSurface() ret:%d", ret);
       ret = OH_AVPlayer_Prepare(player_);
       FATAL_IF(ret != AV_ERR_OK, "OH_AVPlayer_Prepare() ret:%{public}d", ret);
@@ -111,8 +96,10 @@ void AVPlayer::OnStateChange(AVPlayerState state) {
       FATAL_IF(ret != AV_ERR_OK, "OH_AVPlayer_SetLooping() ret:%{public}d",
                ret);
 
-      ret = OH_AVPlayer_Play(player_);
-      FATAL_IF(ret != AV_ERR_OK, "OH_AVPlayer_Play() ret:%{public}d", ret);
+      if (play_) {
+        ret = OH_AVPlayer_Play(player_);
+        FATAL_IF(ret != AV_ERR_OK, "OH_AVPlayer_Play() ret:%{public}d", ret);
+      }
       break;
     }
     case AV_PLAYING:
@@ -121,6 +108,37 @@ void AVPlayer::OnStateChange(AVPlayerState state) {
     case AV_COMPLETED:
     default:
       break;
+  }
+}
+
+void AVPlayer::SetNativeWindow(NativeWindow* window) {
+  Initialize(window);
+}
+
+void AVPlayer::StartDrawFrame() {
+  if (!play_) {
+    play_ = true;
+    switch (state_) {
+      case AV_PREPARED:
+      case AV_PAUSED:
+      case AV_STOPPED: {
+        int32_t ret = OH_AVPlayer_Play(player_);
+        FATAL_IF(ret != AV_ERR_OK, "OH_AVPlayer_Play() ret:%{public}d", ret);
+        break;
+      }
+      default:
+        break;
+    }
+  }
+}
+
+void AVPlayer::StopDrawFrame() {
+  if (play_) {
+    play_ = false;
+    if (state_ == AV_PLAYING) {
+      int32_t ret = OH_AVPlayer_Pause(player_);
+      FATAL_IF(ret != AV_ERR_OK, "OH_AVPlayer_Pause() ret:%{public}d", ret);
+    }
   }
 }
 

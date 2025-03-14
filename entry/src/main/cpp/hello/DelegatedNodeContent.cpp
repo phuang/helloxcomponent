@@ -6,6 +6,7 @@
 
 #include "hello/DelegatedNodeContent.h"
 
+#include "hello/AVPlayer.h"
 #include "hello/Constants.h"
 
 namespace hello {
@@ -53,10 +54,21 @@ DelegatedNodeContent::DelegatedNodeContent(
     child_nodes_.push_back(std::move(node));
   }
 #else
+  // {
+  //   auto renderer = std::make_unique<BitmapRenderer>(kPictureRiverUri);
+  //   auto node = XComponentNode::Create(renderer.get(), "child_2",
+  //                                      XComponentNode::kSoftware);
+  //   node->SetPosition(36, 250);
+  //   node->SetWidth(kBitmapNodeSize);
+  //   node->SetHeight(kBitmapNodeSize);
+  //   root_node_->AddChild(node.get());
+  //   child_renderers_.push_back(std::move(renderer));
+  //   child_nodes_.push_back(std::move(node));
+  // }
   {
-    auto renderer = std::make_unique<BitmapRenderer>(kPictureRiverUri);
+    auto renderer = std::make_unique<AVPlayer>(kVideoURL);
     auto node = XComponentNode::Create(renderer.get(), "child_2",
-                                       XComponentNode::kSoftware);
+                                       XComponentNode::kNativeWindow);
     node->SetPosition(36, 250);
     node->SetWidth(kBitmapNodeSize);
     node->SetHeight(kBitmapNodeSize);

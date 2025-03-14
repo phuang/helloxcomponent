@@ -21,22 +21,41 @@ class XComponentNode {
   class Delegate {
    public:
     virtual ~Delegate() = default;
+    // For kSoftware:
     virtual void RenderPixels(void* pixels,
                               int32_t width,
                               int32_t height,
                               int32_t stride,
                               uint64_t timestamp) {}
+    // For kEGLSurface:
+    virtual void RenderFrame(int32_t width,
+                             int32_t height,
+                             uint64_t timestamp) {}
+    // For kEGLImage:
     virtual void RenderTexture(GLenum target,
                                GLuint texture_id,
                                int32_t width,
                                int32_t height,
                                uint64_t timestamp) {}
-    virtual void RenderFrame(int32_t width,
-                             int32_t height,
-                             uint64_t timestamp) {}
+    // For kNativeWindow:
+    virtual void SetNativeWindow(NativeWindow* native_window) {}
+    virtual void StartDrawFrame() {}
+    virtual void StopDrawFrame() {}
   };
 
-  enum Type { kSoftware, kEGLSurface, kEGLImage };
+  enum Type {
+    // Delegate::RenderPixels() will be called with pixels address to be fixed
+    // with date.
+    kSoftware,
+    // Delegate::RenderFrame() will be called with GL framebuffer setup.
+    kEGLSurface,
+    // Delegate::RenderTextre() wiil be called with target and texture_id which
+    // EGLImage is bind to.
+    kEGLImage,
+    // Delegate::SetNativeWindow() will be called with a native window which is
+    // used for rendering to.
+    kNativeWindow
+  };
   static std::unique_ptr<XComponentNode> Create(Delegate* delegate,
                                                 const std::string& id,
                                                 Type type);
@@ -121,6 +140,7 @@ class XComponentNode {
   bool is_software() const { return type_ == kSoftware; }
   bool using_egl_surface() const { return type_ == kEGLSurface; }
   bool using_egl_image() const { return type_ == kEGLImage; }
+  bool using_native_window() const { return type_ == kNativeWindow; }
 
   void SetAttribute(ArkUI_NodeAttributeType attribute, const char* string) {
     ArkUI_AttributeItem item = {.string = string};

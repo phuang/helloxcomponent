@@ -24,13 +24,10 @@ std::unique_ptr<NativeWindow> NativeWindow::Create(int32_t width,
 std::unique_ptr<NativeWindow> NativeWindow::CreateFromNativeWindow(
     OHNativeWindow* window,
     uint64_t usage) {
-  int32_t retval =
-      OH_NativeWindow_NativeWindowHandleOpt(window, SET_USAGE, usage);
-  if (retval != 0) {
-    LOGE(
-        "OH_NativeWindow_NativeWindowHandleOpt(SET_USAGE) failed "
-        "retval=%{public}d",
-        retval);
+  int32_t ret = OH_NativeWindow_NativeWindowHandleOpt(window, SET_USAGE, usage);
+  if (ret != 0) {
+    LOGE("OH_NativeWindow_NativeWindowHandleOpt(SET_USAGE) ret:%{public}d",
+         ret);
     return nullptr;
   }
   std::unique_ptr<NativeWindow> native_window(new NativeWindow(window));
@@ -42,13 +39,11 @@ std::unique_ptr<NativeWindow> NativeWindow::CreateFromSurfaceId(
     uint64_t surface_id,
     uint64_t usage) {
   OHNativeWindow* window = nullptr;
-  int retval =
+  int ret =
       OH_NativeWindow_CreateNativeWindowFromSurfaceId(surface_id, &window);
-  if (retval != 0) {
-    LOGE(
-        "OH_NativeWindow_CreateNativeWindowFromSurfaceId() failed "
-        "retval=%{public}d",
-        retval);
+  if (ret != 0) {
+    LOGE("OH_NativeWindow_CreateNativeWindowFromSurfaceId() ret:%{public}d",
+         ret);
     return nullptr;
   }
   return CreateFromNativeWindow(window, usage);
@@ -57,9 +52,9 @@ std::unique_ptr<NativeWindow> NativeWindow::CreateFromSurfaceId(
 NativeWindow::NativeWindow() = default;
 
 NativeWindow::NativeWindow(OHNativeWindow* window) : window_(window) {
-  int32_t retval = OH_NativeWindow_GetSurfaceId(window_, &surface_id_);
-  if (retval != 0) {
-    FATAL("OH_NativeWindow_GetSurfaceId() failed retval=%{public}d", retval);
+  int32_t ret = OH_NativeWindow_GetSurfaceId(window_, &surface_id_);
+  if (ret != 0) {
+    FATAL("OH_NativeWindow_GetSurfaceId() ret:%{public}d", ret);
   }
 }
 
@@ -79,17 +74,16 @@ bool NativeWindow::Initialize(int32_t width,
     return false;
   }
 
-  int32_t retval = OH_ConsumerSurface_SetDefaultUsage(image_, usage);
-  if (retval != 0) {
-    LOGE("OH_ConsumerSurface_SetDefaultUsage() failed retval=%{public}d",
-         retval);
+  int32_t ret;
+  ret = OH_ConsumerSurface_SetDefaultUsage(image_, usage);
+  if (ret != 0) {
+    LOGE("OH_ConsumerSurface_SetDefaultUsage() ret:%{public}d", ret);
     return false;
   }
 
-  retval = OH_ConsumerSurface_SetDefaultSize(image_, width, height);
-  if (retval != 0) {
-    LOGE("OH_ConsumerSurface_SetDefaultSize() failed retval=%{public}d",
-         retval);
+  ret = OH_ConsumerSurface_SetDefaultSize(image_, width, height);
+  if (ret != 0) {
+    LOGE("OH_ConsumerSurface_SetDefaultSize() ret:%{public}d", ret);
     return false;
   }
 
@@ -99,27 +93,35 @@ bool NativeWindow::Initialize(int32_t width,
     return false;
   }
 
-  // retval = OH_NativeWindow_NativeWindowHandleOpt(window_, SET_USAGE, usages);
-  // if (retval != 0) {
+  // ret = OH_NativeWindow_NativeWindowHandleOpt(window_, SET_USAGE, usages);
+  // if (ret != 0) {
   //   LOGE(
   //       "OH_NativeWindow_NativeWindowHandleOpt(SET_USAGE) failed "
-  //       "retval=%{public}d",
-  //       retval);
+  //       "ret=%{public}d",
+  //       ret);
   //   return false;
   // }
 
-  retval = OH_NativeWindow_NativeWindowHandleOpt(window_, SET_FORMAT, format);
-  if (retval != 0) {
-    LOGE(
-        "OH_NativeWindow_NativeWindowHandleOpt(SET_FROMAT) failed "
-        "retval=%{public}d",
-        retval);
+  ret = OH_NativeWindow_NativeWindowHandleOpt(window_, SET_FORMAT, format);
+  if (ret != 0) {
+    LOGE("OH_NativeWindow_NativeWindowHandleOpt(SET_FROMAT) ret:%{public}d",
+         ret);
     return false;
   }
 
-  retval = OH_NativeWindow_GetSurfaceId(window_, &surface_id_);
-  if (retval != 0) {
-    LOGE("OH_NativeWindow_GetSurfaceId() failed retval=%{public}d", retval);
+  ret = OH_NativeWindow_GetSurfaceId(window_, &surface_id_);
+  if (ret != 0) {
+    LOGE("OH_NativeWindow_GetSurfaceId() ret:%{public}d", ret);
+    return false;
+  }
+
+  OH_OnFrameAvailableListener listener = {
+      this, [](void* context) {
+        reinterpret_cast<NativeWindow*>(context)->OnFrameAvailable();
+      }};
+  ret = OH_NativeImage_SetOnFrameAvailableListener(image_, listener);
+  if (ret != 0) {
+    LOGE("OH_NativeImage_SetOnFrameAvailableListener() ret:%{public}d", ret);
     return false;
   }
 
@@ -129,9 +131,9 @@ bool NativeWindow::Initialize(int32_t width,
 GLTexture NativeWindow::BindTexture() {
   GLTexture texture = GLTexture::Create(GL_TEXTURE_EXTERNAL_OES);
 
-  int32_t retval = OH_NativeImage_AttachContext(image_, texture.id());
-  if (retval != 0) {
-    LOGE("OH_NativeImage_AttachContext() failed retval=%{public}d", retval);
+  int32_t ret = OH_NativeImage_AttachContext(image_, texture.id());
+  if (ret != 0) {
+    LOGE("OH_NativeImage_AttachContext() ret:%{public}d", ret);
     texture.reset();
   }
 
@@ -139,13 +141,22 @@ GLTexture NativeWindow::BindTexture() {
 }
 
 std::unique_ptr<GLImage> NativeWindow::AcquireGLImage() {
+  {
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (avaliable_frames_ == 0) {
+      return nullptr;
+    }
+    --avaliable_frames_;
+  }
+
+  CHECK(gl_image_);
+
   int fence_fd = -1;
   OHNativeWindowBuffer* window_buffer = nullptr;
-  int32_t retval = OH_NativeImage_AcquireNativeWindowBuffer(
-      image_, &window_buffer, &fence_fd);
-  if (retval != 0) {
-    FATAL("OH_NativeImage_AcquireNativeWindowBuffer() failed retval=%{public}d",
-          retval);
+  int32_t ret = OH_NativeImage_AcquireNativeWindowBuffer(image_, &window_buffer,
+                                                         &fence_fd);
+  if (ret != 0) {
+    FATAL("OH_NativeImage_AcquireNativeWindowBuffer() ret:%{public}d", ret);
   }
 
   auto gl_image = std::make_unique<GLImage>();
@@ -166,23 +177,31 @@ void NativeWindow::ReleaseGLImage(std::unique_ptr<GLImage> gl_image) {
 
   auto fence = GLFence::Create();
 
-  int32_t retval = OH_NativeImage_ReleaseNativeWindowBuffer(
+  int32_t ret = OH_NativeImage_ReleaseNativeWindowBuffer(
       image_, acquired_window_buffers_.front(), fence->GetFd().release());
-  if (retval != 0) {
-    FATAL("OH_NativeImage_ReleaseNativeWindowBuffer() failed retval=%{public}d",
-          retval);
+  if (ret != 0) {
+    FATAL("OH_NativeImage_ReleaseNativeWindowBuffer() ret:%{public}d", ret);
   }
   acquired_window_buffers_.pop_front();
 }
 
-void NativeWindow::UpdateSurfaceImage() {
-  CHECK(image_);
-  DCHECK_GL_ERROR();
-  int32_t retval = OH_NativeImage_UpdateSurfaceImage(image_);
-  if (retval != 0) {
-    FATAL("OH_NativeImage_UpdateSurfaceImage() failed retval=%{public}d",
-          retval);
+bool NativeWindow::UpdateSurfaceImage() {
+  {
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (avaliable_frames_ == 0) {
+      return false;
+    }
+    --avaliable_frames_;
   }
+
+  CHECK(image_);
+
+  DCHECK_GL_ERROR();
+  int32_t ret = OH_NativeImage_UpdateSurfaceImage(image_);
+  if (ret != 0) {
+    FATAL("OH_NativeImage_UpdateSurfaceImage() ret:%{public}d", ret);
+  }
+  return true;
 }
 
 bool NativeWindow::RequestBuffer(int32_t* width,
@@ -194,26 +213,22 @@ bool NativeWindow::RequestBuffer(int32_t* width,
   OH_NativeBuffer* buffer = nullptr;
 
   int fd = -1;
-  int32_t retval =
+  int32_t ret =
       OH_NativeWindow_NativeWindowRequestBuffer(window_, &window_buffer, &fd);
-  FATAL_IF(
-      retval != 0,
-      "OH_NativeWindow_NativeWindowRequestBuffer() failed retval=%{public}d",
-      retval);
+  FATAL_IF(ret != 0,
+           "OH_NativeWindow_NativeWindowRequestBuffer() ret:%{public}d", ret);
 
   fence_fd->reset(fd);
 
-  retval = OH_NativeBuffer_FromNativeWindowBuffer(window_buffer, &buffer);
-  FATAL_IF(retval != 0,
-           "OH_NativeBuffer_FromNativeWindowBuffer() failed retval=%{public}d",
-           retval);
+  ret = OH_NativeBuffer_FromNativeWindowBuffer(window_buffer, &buffer);
+  FATAL_IF(ret != 0, "OH_NativeBuffer_FromNativeWindowBuffer() ret:%{public}d",
+           ret);
 
   OH_NativeBuffer_Config config;
   OH_NativeBuffer_GetConfig(buffer, &config);
 
-  retval = OH_NativeBuffer_Map(buffer, addr);
-  FATAL_IF(retval != 0, "OH_NativeBuffer_Map() failed retval=%{public}d",
-           retval);
+  ret = OH_NativeBuffer_Map(buffer, addr);
+  FATAL_IF(ret != 0, "OH_NativeBuffer_Map() ret:%{public}d", ret);
   *width = config.width;
   *height = config.height;
   *stride = config.stride;
@@ -229,17 +244,19 @@ void NativeWindow::FlushBuffer() {
   FATAL_IF(window_buffers_.empty(), "There is no pending buffer");
 
   OH_NativeBuffer_Unmap(buffers_.front());
-  int32_t retval = OH_NativeWindow_NativeWindowFlushBuffer(
+  int32_t ret = OH_NativeWindow_NativeWindowFlushBuffer(
       window_, window_buffers_.front(), -1, {});
-  FATAL_IF(retval != 0,
-           "OH_NativeWindow_NativeWindowFlushBuffer() failed "
-           "retval=%{public}d",
-           retval);
-  // LOGE("EEEE FlushBuffer() window_buffer=%{public}p",
-  // window_buffers_.front());
+  FATAL_IF(ret != 0, "OH_NativeWindow_NativeWindowFlushBuffer() ret:%{public}d",
+           ret);
 
   buffers_.pop_front();
   window_buffers_.pop_front();
+}
+
+void NativeWindow::OnFrameAvailable() {
+  std::lock_guard<std::mutex> lock(mutex_);
+  CHECK(image_);
+  ++avaliable_frames_;
 }
 
 }  // namespace hello

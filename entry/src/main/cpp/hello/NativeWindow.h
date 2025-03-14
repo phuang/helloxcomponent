@@ -7,6 +7,7 @@
 
 #include <deque>
 #include <memory>
+#include <mutex>
 #include <string>
 
 #include "hello/GLImage.h"
@@ -48,7 +49,7 @@ class NativeWindow {
 
   // Create GLTexture for comsuming image content.
   GLTexture BindTexture();
-  void UpdateSurfaceImage();
+  bool UpdateSurfaceImage();
 
   std::unique_ptr<GLImage> AcquireGLImage();
   void ReleaseGLImage(std::unique_ptr<GLImage> gl_image);
@@ -71,6 +72,8 @@ class NativeWindow {
                   int32_t format,
                   uint64_t usages);
 
+  void OnFrameAvailable();
+
   OH_NativeImage* image_ = nullptr;
   OHNativeWindow* window_ = nullptr;
   uint64_t surface_id_ = 0;
@@ -78,6 +81,8 @@ class NativeWindow {
   std::deque<OH_NativeBuffer*> buffers_;
 
   std::deque<OHNativeWindowBuffer*> acquired_window_buffers_;
+  std::mutex mutex_;
+  int32_t avaliable_frames_ = 0;
 };
 
 }  // namespace hello

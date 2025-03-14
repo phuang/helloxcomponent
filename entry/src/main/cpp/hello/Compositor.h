@@ -15,6 +15,7 @@
 
 namespace hello {
 
+class AVPlayer;
 class BitmapRenderer;
 class NativeWindow;
 class TextureRenderer;
@@ -26,6 +27,8 @@ class Compositor : public XComponentNode::Delegate {
   ~Compositor() override;
 
   void RenderFrame(int32_t width, int32_t height, uint64_t timestamp) override;
+  void StartDrawFrame() override;
+  void StopDrawFrame() override;
 
  private:
   void RenderFrameWithTexture(int32_t width,
@@ -36,6 +39,7 @@ class Compositor : public XComponentNode::Delegate {
   void UploadNativeBuffers(int32_t width, int32_t height, uint64_t timestamp);
 
   std::unique_ptr<BitmapRenderer> renderers_[2];
+  std::unique_ptr<AVPlayer> av_player_;
   GLTexture textures_[2];
   std::unique_ptr<NativeWindow> native_windows_[2];
   std::unique_ptr<NativeWindow> native_windows_for_upload_[2];
