@@ -93,6 +93,20 @@ Napi::Value NapiManager::NapiSetDelegatedCompositing(
   return env.Null();
 }
 
+// static
+Napi::Value NapiManager::NapiOnPageShow(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+  GetInstance()->OnPageShow();
+  return env.Null();
+}
+
+// static
+Napi::Value NapiManager::NapiOnPageHide(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+  GetInstance()->OnPageHide();
+  return env.Null();
+}
+
 void NapiManager::CreateNativeNode(ArkUI_NodeContentHandle content_handle,
                                    bool delegated) {
   if (delegated) {
@@ -105,13 +119,24 @@ void NapiManager::CreateNativeNode(ArkUI_NodeContentHandle content_handle,
 }
 
 void NapiManager::SetDelegatedCompositing(bool enable) {
-  if (enable) {
-    delegated_node_content_->SetVisible(true);
-    non_delegated_node_content_->SetVisible(false);
-  } else {
-    delegated_node_content_->SetVisible(false);
-    non_delegated_node_content_->SetVisible(true);
-  }
+  is_delegated_compositing_ = enable;
+  Update();
+}
+
+void NapiManager::OnPageShow() {
+  is_visible_ = true;
+  Update();
+}
+
+void NapiManager::OnPageHide() {
+  is_visible_ = false;
+  Update();
+}
+
+void NapiManager::Update() {
+  delegated_node_content_->SetVisible(is_visible_ && is_delegated_compositing_);
+  non_delegated_node_content_->SetVisible(is_visible_ &&
+                                          !is_delegated_compositing_);
 }
 
 }  // namespace hello

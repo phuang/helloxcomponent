@@ -21,6 +21,21 @@ struct Index {
     helloxcomponent.setDelegatedCompositing(kDelegatedCompositingByDefault);
   }
 
+  aboutToDisappear(): void {}
+
+  onPageShow(): void {
+    helloxcomponent.onPageShow();
+  }
+
+  onPageHide(): void {
+    helloxcomponent.onPageHide();
+  }
+
+  onBackPress(): void {}
+  aboutToReuse(): void {}
+  aboutToRecycle(): void {}
+  onWillApplyTheme(theme: Theme): void {}
+
   build() {
     Row() {
       if (kUseTabs) {
