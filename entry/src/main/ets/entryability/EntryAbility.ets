@@ -3,7 +3,7 @@ import { hilog } from '@kit.PerformanceAnalysisKit';
 import { window } from '@kit.ArkUI';
 
 const DOMAIN = 0x0000;
-const kFullscreen = true;
+const kFullscreen = false;
 
 export default class EntryAbility extends UIAbility {
 

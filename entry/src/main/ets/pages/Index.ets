@@ -37,7 +37,7 @@ struct Index {
   onWillApplyTheme(theme: Theme): void {}
 
   build() {
-    Row() {
+    Column() {
       if (kUseTabs) {
         Tabs({barPosition: BarPosition.End,
               index: kDelegatedCompositingByDefault ? 0 : 1}) {
@@ -53,7 +53,11 @@ struct Index {
         .width('100%')
       } else {
         Column() {
-          ContentSlot(this.nodeContentDelegated)
+          if (kDelegatedCompositingByDefault) {
+            ContentSlot(this.nodeContentDelegated)
+          } else {
+            ContentSlot(this.nodeContentNonDelegated)
+          }
         }
       }
     }

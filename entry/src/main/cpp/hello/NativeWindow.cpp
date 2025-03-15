@@ -24,12 +24,12 @@ std::unique_ptr<NativeWindow> NativeWindow::Create(int32_t width,
 std::unique_ptr<NativeWindow> NativeWindow::CreateFromNativeWindow(
     OHNativeWindow* window,
     uint64_t usage) {
-  int32_t ret = OH_NativeWindow_NativeWindowHandleOpt(window, SET_USAGE, usage);
-  if (ret != 0) {
-    LOGE("OH_NativeWindow_NativeWindowHandleOpt(SET_USAGE) ret:%{public}d",
-         ret);
-    return nullptr;
-  }
+  // int32_t ret = OH_NativeWindow_NativeWindowHandleOpt(window, SET_USAGE, usage);
+  // if (ret != 0) {
+  //   LOGE("OH_NativeWindow_NativeWindowHandleOpt(SET_USAGE) ret:%{public}d",
+  //        ret);
+  //   return nullptr;
+  // }
   std::unique_ptr<NativeWindow> native_window(new NativeWindow(window));
   return native_window;
 }
