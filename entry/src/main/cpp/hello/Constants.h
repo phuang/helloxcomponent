@@ -19,6 +19,12 @@ constexpr int kBitmapNodeX = 38;
 constexpr int kBitmapNodeY = 340;
 constexpr int kBitmapNodeSize = 320;
 
+constexpr int kVideoNodeWidth = 640;
+constexpr int kVideoNodeHeight = 360;
+
+constexpr int kWindowWidth = 1260;
+constexpr int kWindowHeight = 2324;
+
 }  // namespace hello
 
 #endif
