@@ -11,6 +11,7 @@
 #include "hello/GLCore.h"
 #include "hello/Log.h"
 #include "hello/NonDelegatedNodeContent.h"
+#include "hello/DisplayManager.h"
 
 namespace hello {
 namespace {
@@ -33,6 +34,7 @@ NapiManager::NapiManager(const Napi::Env& env) : env_(env) {
   std::srand(std::time({}));
   gl_core_ = std::make_unique<GLCore>();
   gl_core_->Init();
+  display_manager_ = std::make_unique<DisplayManager>();
 }
 
 NapiManager::~NapiManager() {

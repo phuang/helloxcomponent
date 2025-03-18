@@ -29,6 +29,8 @@ add_library(helloxcomponent SHARED
     hello/Compositor.h
     hello/DelegatedNodeContent.cpp
     hello/DelegatedNodeContent.h
+    hello/DisplayManager.cpp
+    hello/DisplayManager.h
     hello/GLCore.cpp
     hello/GLCore.h
     hello/GLFence.cpp
@@ -66,6 +68,7 @@ target_link_libraries(helloxcomponent PUBLIC
     hilog_ndk.z
     image_source
     native_buffer
+    native_display_manager
     native_image
     native_media_core
     native_window

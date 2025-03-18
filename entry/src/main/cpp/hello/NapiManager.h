@@ -8,8 +8,8 @@
 
 namespace hello {
 
+class DisplayManager;
 class GLCore;
-class AVPlayer;
 
 class NapiManager {
  public:
@@ -23,6 +23,7 @@ class NapiManager {
 
   const Napi::Env& env() const { return env_; }
   GLCore* gl_core() const { return gl_core_.get(); }
+  DisplayManager* display_manager() const { return display_manager_.get(); }
 
  private:
   NapiManager(const Napi::Env& env);
@@ -46,6 +47,7 @@ class NapiManager {
   Napi::Reference<Napi::Object> controller_;
 
   std::unique_ptr<GLCore> gl_core_;
+  std::unique_ptr<DisplayManager> display_manager_;
 };
 
 }  // namespace hello
