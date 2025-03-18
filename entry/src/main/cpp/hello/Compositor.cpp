@@ -35,8 +35,6 @@ enum Mode {
 
 const Mode kMode = kAVPlayer;
 
-const int32_t kWindowWidth = 1260;
-const int32_t kWindowHeight = 2530;
 const int kPictureSize = 1040;
 const float kRootScale = 1.0f;
 
@@ -178,7 +176,8 @@ Compositor::Compositor() {
       renderers_[0] = std::make_unique<BitmapRenderer>(kPictureSkyUri);
 
       native_windows_[0] = NativeWindow::Create(kWindowWidth, kWindowHeight);
-      native_windows_[1] = NativeWindow::Create(kPictureSize, kPictureSize);
+      native_windows_[1] =
+          NativeWindow::Create(kVideoNodeWidth, kVideoNodeHeight);
 
       textures_[0] = native_windows_[0]->BindTexture();
       textures_[1] = native_windows_[1]->BindTexture();
@@ -226,6 +225,7 @@ void Compositor::RenderFrame(int32_t width,
       break;
     }
     case kAVPlayer: {
+#if 0
       if (pending_frames_[0] < 3) {
         UploadNativeWindows(width, height, timestamp);
       }
@@ -236,6 +236,9 @@ void Compositor::RenderFrame(int32_t width,
         native_windows_[1]->UpdateSurfaceImage();
         RenderFrameWithTexture(width, height, timestamp);
       }
+#endif
+      native_windows_[1]->UpdateSurfaceImage();
+      RenderFrameWithTexture(width, height, timestamp);
     }
   }
 }
@@ -317,6 +320,7 @@ void Compositor::RenderFrameWithTexture(int32_t width,
   glBindVertexArray(vao_);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo_);
 
+#if 0
   {
     // Rotate the triangle by angle{X,Y,Z}
     Matrix4x4 transfrom_matrix = Matrix4x4::Scale(kRootScale, kRootScale, 1.0f);
@@ -333,11 +337,10 @@ void Compositor::RenderFrameWithTexture(int32_t width,
 
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
   }
+#endif
 
   {
-    Matrix4x4 transfrom_matrix = Matrix4x4::Scale(
-        1.0f * kPictureSize / width, 1.0f * kPictureSize / height, 1);
-
+    Matrix4x4 transfrom_matrix = Matrix4x4::RotateZ(M_PI / 2);
     GLint u_transform_location = glGetUniformLocation(program_, "u_transform");
     glUniformMatrix4fv(u_transform_location, 1, GL_FALSE,
                        transfrom_matrix.data);

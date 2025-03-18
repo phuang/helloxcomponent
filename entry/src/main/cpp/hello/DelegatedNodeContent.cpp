@@ -8,6 +8,8 @@
 
 #include "hello/AVPlayer.h"
 #include "hello/Constants.h"
+#include "hello/DisplayManager.h"
+#include "hello/NapiManager.h"
 
 namespace hello {
 
@@ -15,12 +17,15 @@ DelegatedNodeContent::DelegatedNodeContent(
     ArkUI_NodeContentHandle content_handle)
     : NodeContent(content_handle) {
   {
-    auto renderer = std::make_unique<BitmapRenderer>(kPictureSkyUri);
-    root_node_ = XComponentNode::Create(renderer.get(), "root_view",
+    XComponentNode::Delegate* delegate = nullptr;
+    // auto renderer = std::make_unique<BitmapRenderer>(kPictureSkyUri);
+    // delegate = renderer.get();
+    // child_renderers_.push_back(std::move(renderer));
+
+    root_node_ = XComponentNode::Create(delegate, "root_view",
                                         XComponentNode::kSoftware);
     root_node_->SetWidthPercent(1);
     root_node_->SetHeightPercent(1);
-    child_renderers_.push_back(std::move(renderer));
   }
 
 #if 0
@@ -66,12 +71,26 @@ DelegatedNodeContent::DelegatedNodeContent(
   //   child_nodes_.push_back(std::move(node));
   // }
   {
+    float scaled_density =
+        NapiManager::GetInstance()->display_manager()->scaled_density();
+    float video_width = kVideoNodeWidth;
+    float video_height = kVideoNodeHeight;
+    float scaled_video_width = scaled_density * video_width;
+    float scaled_video_height = scaled_density * video_height;
+
     auto renderer = std::make_unique<AVPlayer>(kVideoURL);
-    auto node = XComponentNode::Create(renderer.get(), "child_2",
+    auto node = XComponentNode::Create(renderer.get(), "child_video",
                                        XComponentNode::kNativeWindow);
-    node->SetPosition(36, 250);
-    node->SetWidth(kBitmapNodeSize);
-    node->SetHeight(kBitmapNodeSize);
+    node->SetPosition(0, 0);
+    node->SetWidth(kVideoNodeWidth);
+    node->SetHeight(kVideoNodeHeight);
+    node->SetRotate(0, 0, 1, 90, 0);
+    float scale_x = kWindowHeight / scaled_video_width;
+    float scale_y = kWindowWidth / scaled_video_height;
+    node->SetScale(scale_x, scale_y);
+    node->SetTranslate(-video_width / 2 + kWindowWidth / scaled_density / 2,
+                       -video_height / 2 + kWindowHeight / scaled_density / 2,
+                       0);
     root_node_->AddChild(node.get());
     child_renderers_.push_back(std::move(renderer));
     child_nodes_.push_back(std::move(node));

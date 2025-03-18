@@ -11,6 +11,9 @@
 		},
 		{
 			"path": "../../openharmony/foundation/multimedia"
+		},
+		{
+			"path": "../../openharmony/foundation/arkui"
 		}
 	],
 	"settings": {
