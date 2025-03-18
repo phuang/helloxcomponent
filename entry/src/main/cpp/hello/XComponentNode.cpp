@@ -185,7 +185,7 @@ void XComponentNode::OnSurfaceChanged(void* window) {
            retval);
   LOGE(
       "EEEE XComponentNode::OnSurfaceChanged() id=%{public}s "
-      "size=%{public}dx%{public}d xcomp_size=%{public}dx%{public}d",
+      "size=%{public}dx%{public}d xcomp_size=%{public}lux%{public}lu",
       id_.c_str(), window_->width(), window_->height(), surface_width_,
       surface_height_);
   if (using_egl_surface()) {

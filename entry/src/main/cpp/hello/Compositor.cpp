@@ -35,8 +35,6 @@ enum Mode {
 
 const Mode kMode = kAVPlayer;
 
-const int32_t kWindowWidth = 1260;
-const int32_t kWindowHeight = 2530;
 const int kPictureSize = 1040;
 const float kRootScale = 1.0f;
 
