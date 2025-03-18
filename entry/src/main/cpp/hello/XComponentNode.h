@@ -73,7 +73,13 @@ class XComponentNode {
   void SetHeightPercent(float height) {
     SetAttribute(NODE_HEIGHT_PERCENT, height);
   }
+  void SetTranslate(float x, float y, float z) {
+    SetAttribute(NODE_TRANSLATE, x, y, z);
+  }
   void SetScale(float x, float y) { SetAttribute(NODE_SCALE, x, y); }
+  void SetRotate(float x, float y, float z, float angle, float depth) {
+    SetAttribute(NODE_ROTATE, x, y, z, angle, depth);
+  }
   void SetBackgroundColor(uint32_t argb) {
     SetAttribute(NODE_BACKGROUND_COLOR, argb);
   }
@@ -134,6 +140,24 @@ class XComponentNode {
   void SetAttribute(ArkUI_NodeAttributeType attribute, float f1, float f2) {
     ArkUI_NumberValue values[2] = {{.f32 = f1}, {.f32 = f2}};
     ArkUI_AttributeItem item = {values, 2};
+    api()->setAttribute(handle_, attribute, &item);
+  }
+
+  void SetAttribute(ArkUI_NodeAttributeType attribute, float f1, float f2, float f3) {
+    ArkUI_NumberValue values[3] = {{.f32 = f1}, {.f32 = f2}, {.f32 = f3}};
+    ArkUI_AttributeItem item = {values, 3};
+    api()->setAttribute(handle_, attribute, &item);
+  }
+
+  void SetAttribute(ArkUI_NodeAttributeType attribute,
+                    float f1,
+                    float f2,
+                    float f3,
+                    float f4,
+                    float f5) {
+    ArkUI_NumberValue values[5] = {
+        {.f32 = f1}, {.f32 = f2}, {.f32 = f3}, {.f32 = f4}, {.f32 = f5}};
+    ArkUI_AttributeItem item = {values, 5};
     api()->setAttribute(handle_, attribute, &item);
   }
 
