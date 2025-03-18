@@ -24,8 +24,8 @@ std::unique_ptr<NativeWindow> NativeWindow::Create(int32_t width,
 std::unique_ptr<NativeWindow> NativeWindow::CreateFromNativeWindow(
     OHNativeWindow* window,
     uint64_t usage) {
-  // int32_t ret = OH_NativeWindow_NativeWindowHandleOpt(window, SET_USAGE, usage);
-  // if (ret != 0) {
+  // int32_t ret = OH_NativeWindow_NativeWindowHandleOpt(window, SET_USAGE,
+  // usage); if (ret != 0) {
   //   LOGE("OH_NativeWindow_NativeWindowHandleOpt(SET_USAGE) ret:%{public}d",
   //        ret);
   //   return nullptr;
@@ -52,9 +52,16 @@ std::unique_ptr<NativeWindow> NativeWindow::CreateFromSurfaceId(
 NativeWindow::NativeWindow() = default;
 
 NativeWindow::NativeWindow(OHNativeWindow* window) : window_(window) {
-  int32_t ret = OH_NativeWindow_GetSurfaceId(window_, &surface_id_);
+  int32_t ret;
+  ret = OH_NativeWindow_GetSurfaceId(window_, &surface_id_);
   if (ret != 0) {
     FATAL("OH_NativeWindow_GetSurfaceId() ret:%{public}d", ret);
+  }
+
+  ret = OH_NativeWindow_NativeWindowHandleOpt(window, GET_BUFFER_GEOMETRY,
+                                              &height_, &width_);
+  if (ret != 0) {
+    FATAL("OH_NativeWindow_NativeWindowHandleOpt() ret:%{public}d", ret);
   }
 }
 
@@ -86,6 +93,8 @@ bool NativeWindow::Initialize(int32_t width,
     LOGE("OH_ConsumerSurface_SetDefaultSize() ret:%{public}d", ret);
     return false;
   }
+  width_ = width;
+  height_ = height;
 
   window_ = OH_NativeImage_AcquireNativeWindow(image_);
   if (!window_) {

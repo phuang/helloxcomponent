@@ -62,6 +62,8 @@ class NativeWindow {
   void FlushBuffer();
   OHNativeWindow* window() const { return window_; }
   uint64_t surface_id() const { return surface_id_; }
+  int32_t width() const { return width_; }
+  int32_t height() const { return height_; }
 
  private:
   NativeWindow();
@@ -79,6 +81,8 @@ class NativeWindow {
   uint64_t surface_id_ = 0;
   std::deque<OHNativeWindowBuffer*> window_buffers_;
   std::deque<OH_NativeBuffer*> buffers_;
+  int32_t width_ = 0;
+  int32_t height_ = 0;
 
   std::deque<OHNativeWindowBuffer*> acquired_window_buffers_;
   std::mutex mutex_;
