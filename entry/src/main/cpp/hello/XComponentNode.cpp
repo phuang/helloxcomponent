@@ -183,6 +183,11 @@ void XComponentNode::OnSurfaceChanged(void* window) {
   FATAL_IF(retval != 0,
            "OH_NativeXComponent_GetXComponentSize() failed retval=%{public}d",
            retval);
+  LOGE(
+      "EEEE XComponentNode::OnSurfaceChanged() id=%{public}s "
+      "size=%{public}dx%{public}d xcomp_size=%{public}dx%{public}d",
+      id_.c_str(), window_->width(), window_->height(), surface_width_,
+      surface_height_);
   if (using_egl_surface()) {
     const auto* gl_core = NapiManager::GetInstance()->gl_core();
     EGLDisplay display = gl_core->display();
