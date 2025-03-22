@@ -98,7 +98,7 @@ void GLCore::Init() {
   InitializeFunctions();
 
   display_ = eglGetDisplay(EGL_DEFAULT_DISPLAY);
-  LOGE("EEEE display_ = 0x%{public}x", display_);
+  LOGE("EEEE display_ = %{public}p", display_);
   FATAL_IF(display_ == EGL_NO_DISPLAY, "eglGetDisplay() failed");
 
   // display_ = this->eglGetPlatformDisplayEXT(EGL_PLATFORM_OHOS_KHR,
