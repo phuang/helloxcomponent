@@ -49,6 +49,8 @@ add_library(surface_control SHARED
     surface_control/surface_control_element.h
     surface_control/surface_control_render_node.cpp
     surface_control/surface_control_render_node.h
+    surface_control/ng/surface_control_pattern.cpp
+    surface_control/ng/surface_control_pattern.h
 )
 
 target_include_directories(surface_control PUBLIC
