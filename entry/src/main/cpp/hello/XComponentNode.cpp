@@ -24,6 +24,7 @@
 #include "hello/NativeWindow.h"
 #include "hello/SyncFence.h"
 #include "hello/Thread.h"
+#include "surface_control/surface_control_component.h"
 
 namespace hello {
 namespace {
