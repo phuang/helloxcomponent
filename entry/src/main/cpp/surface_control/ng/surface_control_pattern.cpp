@@ -1,5 +1,9 @@
 #include "surface_control/ng/surface_control_pattern.h"
 
+#include "surface_control/ng/surface_control_layout_algorithm.h"
+#include "surface_control/ng/surface_control_layout_property.h"
+#include "surface_control/ng/surface_control_paint_method.h"
+
 namespace OHOS::Ace::NG {
 
 SurfaceControlPattern::SurfaceControlPattern() = default;
@@ -11,8 +15,7 @@ bool SurfaceControlPattern::IsAtomicNode() const {
 }
 
 RefPtr<LayoutProperty> SurfaceControlPattern::CreateLayoutProperty() {
-  // return MakeRefPtr<XComponentLayoutProperty>();
-  return nullptr;
+  return MakeRefPtr<SurfaceControlLayoutProperty>();
 }
 
 RefPtr<EventHub> SurfaceControlPattern::CreateEventHub() {
@@ -21,16 +24,12 @@ RefPtr<EventHub> SurfaceControlPattern::CreateEventHub() {
 }
 
 RefPtr<LayoutAlgorithm> SurfaceControlPattern::CreateLayoutAlgorithm() {
-  // return MakeRefPtr<XComponentLayoutAlgorithm>();
-  return nullptr;
+  return MakeRefPtr<SurfaceControlLayoutAlgorithm>();
 }
 
 RefPtr<NodePaintMethod> SurfaceControlPattern::CreateNodePaintMethod() {
-  // auto paint =
-  //     MakeRefPtr<XComponentPaintMethod>(renderSurface_,
-  //     AceType::Claim(this));
-  // return paint;
-  return nullptr;
+  auto paint = MakeRefPtr<SurfaceControlPaintMethod>(AceType::Claim(this));
+  return paint;
 }
 
 FocusPattern SurfaceControlPattern::GetFocusPattern() const {
