@@ -3,12 +3,17 @@
 #include "surface_control/ng/surface_control_layout_algorithm.h"
 #include "surface_control/ng/surface_control_layout_property.h"
 #include "surface_control/ng/surface_control_paint_method.h"
+#include "surface_control/log.h"
 
 namespace OHOS::Ace::NG {
 
-SurfaceControlPattern::SurfaceControlPattern() = default;
+SurfaceControlPattern::SurfaceControlPattern() {
+  LOGE("EEEE SurfaceControlPattern::SurfaceControlPattern");
+}
 
-SurfaceControlPattern::~SurfaceControlPattern() = default;
+SurfaceControlPattern::~SurfaceControlPattern()  {
+  LOGE("EEEE SurfaceControlPattern::~SurfaceControlPattern");
+}
 
 bool SurfaceControlPattern::IsAtomicNode() const {
   return true;

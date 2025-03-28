@@ -16,6 +16,7 @@ add_definitions(-DOHOS_PLATFORM)
 add_definitions(-DNDEBUG=1)
 
 add_compile_options(
+
     # disable rtti
     -fno-rtti
 
@@ -67,9 +68,11 @@ target_include_directories(surface_control PUBLIC
     ${OHOS_ROOT_PATH}/third_party/skia
     ${OHOS_ROOT_PATH}/third_party/mindspore/mindspore-src/source/third_party/securec/include
     ${FOUNDATION_ROOT_PATH}
+    ${FOUNDATION_ROOT_PATH}/arkui
     ${FOUNDATION_ROOT_PATH}/arkui/ace_engine
     ${FOUNDATION_ROOT_PATH}/arkui/ace_engine/frameworks
     ${FOUNDATION_ROOT_PATH}/arkui/ace_engine/interfaces/inner_api/ace_kit/include
+    ${FOUNDATION_ROOT_PATH}/arkui/ace_engine/interfaces/native
     ${FOUNDATION_ROOT_PATH}/graphic/graphic_2d/rosen/modules
     ${FOUNDATION_ROOT_PATH}/graphic/graphic_2d/rosen/modules/2d_graphics/include
     ${FOUNDATION_ROOT_PATH}/graphic/graphic_2d/rosen/modules/2d_graphics/src
@@ -94,10 +97,10 @@ target_link_directories(surface_control PUBLIC
 
 target_link_libraries(surface_control PUBLIC
     ace_compatible.z
-    # ace_napi.z
-    # ace_ndk.z
+    ace_ndk.z
     # ace_uicontent.z
     # ace_xcomponent_controller.z
+    hilog_ndk.z
     render_service_base.z
     render_service_client.z
 )
