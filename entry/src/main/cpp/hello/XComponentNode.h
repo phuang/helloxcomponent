@@ -63,6 +63,7 @@ class XComponentNode {
   ~XComponentNode();
 
   void AddChild(XComponentNode* child);
+  void AddChild(ArkUI_NodeHandle child);
   void StartDrawFrame();
   void StopDrawFrame();
 

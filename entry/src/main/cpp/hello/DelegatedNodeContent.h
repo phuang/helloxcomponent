@@ -29,6 +29,8 @@ class DelegatedNodeContent : public NodeContent {
   void OnRootNodeAttached() override;
   void OnRootNodeDetached() override;
 
+  static ArkUI_NativeNodeAPI_1* api();
+
   bool visible_ = false;
   std::unique_ptr<XComponentNode> root_node_;
   std::vector<std::unique_ptr<XComponentNode>> child_nodes_;

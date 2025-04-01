@@ -5,6 +5,9 @@
 
 namespace OHOS::Ace::NG {
 
+class RenderContext;
+class RenderSurface;
+
 class SurfaceControlPattern : public Pattern {
   DECLARE_ACE_TYPE(SurfaceControlPattern, Pattern);
 
@@ -12,6 +15,7 @@ class SurfaceControlPattern : public Pattern {
   SurfaceControlPattern();
   ~SurfaceControlPattern() override;
 
+ private:
   bool IsAtomicNode() const override;
   RefPtr<LayoutProperty> CreateLayoutProperty() override;
   RefPtr<EventHub> CreateEventHub() override;
@@ -19,6 +23,24 @@ class SurfaceControlPattern : public Pattern {
   RefPtr<NodePaintMethod> CreateNodePaintMethod() override;
   FocusPattern GetFocusPattern() const override;
   bool NeedSoftKeyboard() const override;
+
+  void OnAttachToFrameNode() override;
+  void OnAttachToMainTree() override;
+  void BeforeSyncGeometryProperties(const DirtySwapConfig& config) override;
+  void OnDetachFromMainTree() override;
+  void OnDetachFromFrameNode(FrameNode* frameNode) override;
+  void OnRebuildFrame() override;
+  void OnAreaChangedInner() override;
+  void OnWindowHide() override;
+  void OnWindowShow() override;
+
+  void Initialize();
+  void InitializeRenderSurface();
+  void InitializeRenderContext();
+
+  const std::string id_;
+  RefPtr<RenderSurface> renderSurface_;
+  RefPtr<RenderContext> renderContext_;
 };
 
 }  // namespace OHOS::Ace::NG

@@ -14,6 +14,7 @@ add_definitions(-DOHOS_PLATFORM)
 
 # add_definitions(-DEGL_EGLEXT_PROTOTYPES=1)
 add_definitions(-DNDEBUG=1)
+# add_definitions(-DRENDER_EXTRACT_SUPPORTED=1)
 
 add_compile_options(
 
@@ -34,7 +35,6 @@ if(DEFINED PACKAGE_FIND_FILE)
 endif()
 
 set(OHOS_ROOT_PATH "/home/penghuang/sources/roms/ohos")
-set(FOUNDATION_ROOT_PATH "${OHOS_ROOT_PATH}/foundation")
 set(FOUNDATION_ROOT_PATH "${OHOS_ROOT_PATH}/foundation")
 
 include_directories(

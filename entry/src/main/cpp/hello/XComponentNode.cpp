@@ -24,7 +24,6 @@
 #include "hello/NativeWindow.h"
 #include "hello/SyncFence.h"
 #include "hello/Thread.h"
-#include "surface_control/surface_control_component.h"
 
 namespace hello {
 namespace {
@@ -109,7 +108,11 @@ ArkUI_NativeNodeAPI_1* XComponentNode::api() {
 }
 
 void XComponentNode::AddChild(XComponentNode* child) {
-  api()->addChild(handle(), child->handle());
+  AddChild(child->handle());
+}
+
+void XComponentNode::AddChild(ArkUI_NodeHandle child) {
+  api()->addChild(handle(), child);
 }
 
 void XComponentNode::StartDrawFrame() {

@@ -3,6 +3,7 @@
 #include "base/log/dump_log.h"
 #include "render_service_client/core/ui/rs_surface_node.h"
 #include "surface_control/surface_control_component.h"
+#include "surface_control/log.h"
 
 #include <list>
 
@@ -50,6 +51,7 @@ void SurfaceControlRenderNode::Update(const RefPtr<Component>& component) {
 }
 
 void SurfaceControlRenderNode::SyncGeometryProperties() {
+  LOGE("EEEE SurfaceControlRenderNode::SyncGeometryProperties()");
   //     if (!IsTailRenderNode()) {
   //         return;
   //     }
@@ -64,6 +66,7 @@ void SurfaceControlRenderNode::SyncGeometryProperties() {
 }
 
 void SurfaceControlRenderNode::PerformLayout() {
+  LOGE("EEEE SurfaceControlRenderNode::PerformLayout()");
   // if (!NeedLayout()) {
   //   return;
   // }
@@ -81,6 +84,7 @@ void SurfaceControlRenderNode::PerformLayout() {
 
 void SurfaceControlRenderNode::Paint(RenderContext& context,
                                      const Offset& offset) {
+  LOGE("EEEE SurfaceControlRenderNode::Paint()");
   // position_ = GetGlobalOffset();
   // if (!isSurfaceInit_) {
   //   prePosition_ = position_;
@@ -134,6 +138,7 @@ void SurfaceControlRenderNode::Paint(RenderContext& context,
 }
 
 std::shared_ptr<RSNode> SurfaceControlRenderNode::CreateRSNode() const {
+  LOGE("EEEE SurfaceControlRenderNode::CreateRSNode()");
   std::string surfaceNodeName = std::string("SurfaceControlRenderNode") + id_;
   struct Rosen::RSSurfaceNodeConfig surfaceNodeConfig = {.SurfaceNodeName =
                                                              surfaceNodeName};

@@ -8,6 +8,7 @@
 
 #include "hello/AVPlayer.h"
 #include "hello/Constants.h"
+#include "hello/Log.h"
 
 namespace hello {
 
@@ -76,6 +77,13 @@ DelegatedNodeContent::DelegatedNodeContent(
     child_renderers_.push_back(std::move(renderer));
     child_nodes_.push_back(std::move(node));
   }
+  {
+    auto test_handle = api()->createNode(
+        static_cast<ArkUI_NodeType>(ARKUI_NODE_CUSTOM_SPAN + 88));
+    FATAL_IF(test_handle == nullptr,
+             "createNode(ARKUI_NODE_CUSTOM_SPAN + 80) failed!");
+    root_node_->AddChild(test_handle);
+  }asd
 #endif
 }
 
@@ -109,5 +117,10 @@ XComponentNode* DelegatedNodeContent::GetRootNode() {
 void DelegatedNodeContent::OnRootNodeAttached() {}
 
 void DelegatedNodeContent::OnRootNodeDetached() {}
+
+// static
+ArkUI_NativeNodeAPI_1* DelegatedNodeContent::api() {
+  return XComponentNode::api();
+}
 
 }  // namespace hello

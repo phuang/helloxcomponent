@@ -7,10 +7,7 @@
 			"path": "../../command-line-tools/sdk/default/openharmony/native/sysroot/usr/include"
 		},
 		{
-			"path": "../../openharmony/foundation/graphic"
-		},
-		{
-			"path": "../../openharmony/foundation/multimedia"
+			"path": "../../roms/ohos"
 		}
 	],
 	"settings": {
@@ -77,7 +74,10 @@
 			"span": "cpp",
 			"future": "cpp",
 			"cerrno": "cpp",
-			"iostream": "cpp"
+			"iostream": "cpp",
+			"*.hpp11": "cpp",
+			"*.inc": "cpp",
+			"list": "cpp"
 		}
 	}
 }
