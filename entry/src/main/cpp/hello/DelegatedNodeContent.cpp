@@ -83,7 +83,7 @@ DelegatedNodeContent::DelegatedNodeContent(
     FATAL_IF(test_handle == nullptr,
              "createNode(ARKUI_NODE_CUSTOM_SPAN + 80) failed!");
     root_node_->AddChild(test_handle);
-  }asd
+  }
 #endif
 }
 
