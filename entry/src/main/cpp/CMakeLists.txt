@@ -4,9 +4,9 @@ project(HelloXComponent)
 
 set(NATIVERENDER_ROOT_PATH ${CMAKE_CURRENT_SOURCE_DIR})
 
-set(PREBUILT_CLANG_PATH "/home/penghuang/sources/roms/ohos/prebuilts/clang_linux-x86_64-c5b0b3-20240320")
-set(CMAKE_C_COMPILER ${PREBUILT_CLANG_PATH}/bin/clang)
-set(CMAKE_CXX_COMPILER ${PREBUILT_CLANG_PATH}/bin/clang++)
+# set(PREBUILT_CLANG_PATH "/home/penghuang/sources/roms/ohos/prebuilts/clang_linux-x86_64-c5b0b3-20240320")
+# set(CMAKE_C_COMPILER ${PREBUILT_CLANG_PATH}/bin/clang)
+# set(CMAKE_CXX_COMPILER ${PREBUILT_CLANG_PATH}/bin/clang++)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
@@ -34,7 +34,7 @@ if(DEFINED PACKAGE_FIND_FILE)
     include(${PACKAGE_FIND_FILE})
 endif()
 
-set(OHOS_ROOT_PATH "/home/penghuang/sources/roms/ohos")
+set(OHOS_ROOT_PATH "/home/penghuang/sources/ohos")
 set(FOUNDATION_ROOT_PATH "${OHOS_ROOT_PATH}/foundation")
 
 include_directories(
@@ -44,22 +44,6 @@ include_directories(
 
 add_library(surface_control SHARED
     surface_control/LogWrapper.cpp
-    surface_control/surface_control_component.cpp
-    surface_control/surface_control_component.h
-    surface_control/surface_control_element.cpp
-    surface_control/surface_control_element.h
-    surface_control/surface_control_render_node.cpp
-    surface_control/surface_control_render_node.h
-    surface_control/ng/surface_control_layout_algorithm.cpp
-    surface_control/ng/surface_control_layout_algorithm.h
-    surface_control/ng/surface_control_layout_property.cpp
-    surface_control/ng/surface_control_layout_property.h
-    surface_control/ng/surface_control_model.cpp
-    surface_control/ng/surface_control_model.h
-    surface_control/ng/surface_control_paint_method.cpp
-    surface_control/ng/surface_control_paint_method.h
-    surface_control/ng/surface_control_pattern.cpp
-    surface_control/ng/surface_control_pattern.h
 )
 
 target_include_directories(surface_control PUBLIC
@@ -68,11 +52,6 @@ target_include_directories(surface_control PUBLIC
     ${OHOS_ROOT_PATH}/third_party/skia
     ${OHOS_ROOT_PATH}/third_party/mindspore/mindspore-src/source/third_party/securec/include
     ${FOUNDATION_ROOT_PATH}
-    ${FOUNDATION_ROOT_PATH}/arkui
-    ${FOUNDATION_ROOT_PATH}/arkui/ace_engine
-    ${FOUNDATION_ROOT_PATH}/arkui/ace_engine/frameworks
-    ${FOUNDATION_ROOT_PATH}/arkui/ace_engine/interfaces/inner_api/ace_kit/include
-    ${FOUNDATION_ROOT_PATH}/arkui/ace_engine/interfaces/native
     ${FOUNDATION_ROOT_PATH}/graphic/graphic_2d/rosen/modules
     ${FOUNDATION_ROOT_PATH}/graphic/graphic_2d/rosen/modules/2d_graphics/include
     ${FOUNDATION_ROOT_PATH}/graphic/graphic_2d/rosen/modules/2d_graphics/src

@@ -13,7 +13,7 @@
 #include "hello/NonDelegatedNodeContent.h"
 #include "hello/DisplayManager.h"
 
-#include "surface_control/ng/surface_control_model.h"
+// #include "surface_control/ng/surface_control_model.h"
 
 namespace hello {
 namespace {
@@ -24,7 +24,6 @@ NapiManager* napi_manager_ = nullptr;
 void NapiManager::Init(const Napi::Env& env) {
   CHECK(!napi_manager_);
   napi_manager_ = new NapiManager(env);
-  OHOS::Ace::NG::SurfaceControlModel::SetNodeCreator();
 }
 
 // static
