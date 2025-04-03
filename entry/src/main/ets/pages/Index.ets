@@ -2,8 +2,8 @@ import helloxcomponent from 'libhelloxcomponent.so';
 import { Logger } from '../utils/Logger';
 import { NodeContent } from '@kit.ArkUI';
 
-const kUseTabs = true;
-const kModeByDefault = 0;
+const kUseTabs : boolean = false;
+const kModeByDefault : number = 2;
 
 @Entry
 @Component
@@ -62,7 +62,7 @@ struct Index {
             ContentSlot(this.nodeContentDelegated)
           } else if (kModeByDefault == 1) {
             ContentSlot(this.nodeContentNonDelegated)
-          } else {
+          } else if (kModeByDefault == 2) {
             ContentSlot(this.nodeContentSurfaceControl)
           }
         }

@@ -9,6 +9,7 @@
 #include "hello/AVPlayer.h"
 #include "hello/Constants.h"
 #include "hello/Log.h"
+#include "hello/NativeWindow.h"
 
 namespace hello {
 
@@ -21,7 +22,7 @@ SurfaceControlNodeContent::SurfaceControlNodeContent(
                                         XComponentNode::kSoftware);
     root_node_->SetWidthPercent(1);
     root_node_->SetHeightPercent(1);
-    child_renderers_.push_back(std::move(renderer));
+    // child_renderers_.push_back(std::move(renderer));
   }
 
 #if 0
@@ -54,7 +55,6 @@ SurfaceControlNodeContent::SurfaceControlNodeContent(
     child_renderers_.push_back(std::move(renderer));
     child_nodes_.push_back(std::move(node));
   }
-#else
   // {
   //   auto renderer = std::make_unique<BitmapRenderer>(kPictureRiverUri);
   //   auto node = XComponentNode::Create(renderer.get(), "child_2",
@@ -82,6 +82,9 @@ SurfaceControlNodeContent::SurfaceControlNodeContent(
 
 SurfaceControlNodeContent::~SurfaceControlNodeContent() {
   DetachRootNode();
+  if (root_surface_) {
+    OH_SurfaceControl_Release(root_surface_);
+  }
 }
 
 void SurfaceControlNodeContent::SetVisible(bool visible) {
@@ -90,17 +93,17 @@ void SurfaceControlNodeContent::SetVisible(bool visible) {
   }
 
   visible_ = visible;
-  if (visible_) {
-    root_node_->StartDrawFrame();
-    for (auto& node : child_nodes_) {
-      node->StartDrawFrame();
-    }
-  } else {
-    root_node_->StopDrawFrame();
-    for (auto& node : child_nodes_) {
-      node->StopDrawFrame();
-    }
-  }
+  // if (visible_) {
+  //   root_node_->StartDrawFrame();
+  //   for (auto& node : child_nodes_) {
+  //     node->StartDrawFrame();
+  //   }
+  // } else {
+  //   root_node_->StopDrawFrame();
+  //   for (auto& node : child_nodes_) {
+  //     node->StopDrawFrame();
+  //   }
+  // }
 }
 
 XComponentNode* SurfaceControlNodeContent::GetRootNode() {
@@ -110,6 +113,16 @@ XComponentNode* SurfaceControlNodeContent::GetRootNode() {
 void SurfaceControlNodeContent::OnRootNodeAttached() {}
 
 void SurfaceControlNodeContent::OnRootNodeDetached() {}
+
+void SurfaceControlNodeContent::SetNativeWindow(NativeWindow* native_window) {
+  FATAL_IF(root_surface_, "root_surface_ has been created!");
+  root_surface_ = OH_SurfaceControl_FromNativeWindow(native_window->window(),
+                                                     "root_surface");
+}
+
+void SurfaceControlNodeContent::StartDrawFrame() {}
+
+void SurfaceControlNodeContent::StopDrawFrame() {}
 
 // static
 ArkUI_NativeNodeAPI_1* SurfaceControlNodeContent::api() {
