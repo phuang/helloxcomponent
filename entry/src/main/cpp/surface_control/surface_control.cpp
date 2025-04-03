@@ -48,7 +48,9 @@ sptr<SurfaceControl> SurfaceControl::CreateFromWindow(NativeWindow* window,
   }
 
   auto node = CreateSurfaceNode(debug_name);
-  parent->AddChild(node, -1);
+  // RSProxyNode::AddChild() doesn't allow add child, has to call
+  // RSNode::AddChild() instead.
+  parent->RSNode::AddChild(node, -1);
   return sptr<SurfaceControl>::MakeSptr(std::move(node), std::move(parent));
 }
 
@@ -57,8 +59,10 @@ SurfaceControl::SurfaceControl(std::shared_ptr<RSSurfaceNode> node,
     : node_(std::move(node)), parent_(std::move(parent)) {}
 
 SurfaceControl::~SurfaceControl() {
+  // RSProxyNode::RemoveChild() does nothing, has to call RSNode::RemoveChild()
+  // instead.
   if (parent_) {
-    parent_->RemoveChild(node_);
+    parent_->RSNode::RemoveChild(node_);
   }
 }
 

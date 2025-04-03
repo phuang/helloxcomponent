@@ -12,8 +12,10 @@
 
 namespace hello {
 
-class SurfaceControlNodeContent : public NodeContent
-    ,public XComponentNode::Delegate {
+class SurfaceControl;
+
+class SurfaceControlNodeContent : public NodeContent,
+                                  public XComponentNode::Delegate {
  public:
   SurfaceControlNodeContent(ArkUI_NodeContentHandle content_handle);
   ~SurfaceControlNodeContent() override;
@@ -36,7 +38,7 @@ class SurfaceControlNodeContent : public NodeContent
   std::unique_ptr<XComponentNode> root_node_;
   // std::vector<std::unique_ptr<XComponentNode>> child_nodes_;
   // std::vector<std::unique_ptr<XComponentNode::Delegate>> child_renderers_;
-  OH_SurfaceControl* root_surface_ = nullptr;
+  std::unique_ptr<SurfaceControl> root_surface_;
 };
 
 }  // namespace hello

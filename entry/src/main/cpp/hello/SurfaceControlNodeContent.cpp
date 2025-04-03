@@ -4,6 +4,7 @@
 #include "hello/Constants.h"
 #include "hello/Log.h"
 #include "hello/NativeWindow.h"
+#include "hello/SurfaceControl.h"
 
 namespace hello {
 
@@ -76,9 +77,6 @@ SurfaceControlNodeContent::SurfaceControlNodeContent(
 
 SurfaceControlNodeContent::~SurfaceControlNodeContent() {
   DetachRootNode();
-  if (root_surface_) {
-    OH_SurfaceControl_Release(root_surface_);
-  }
 }
 
 void SurfaceControlNodeContent::SetVisible(bool visible) {
@@ -110,8 +108,7 @@ void SurfaceControlNodeContent::OnRootNodeDetached() {}
 
 void SurfaceControlNodeContent::SetNativeWindow(NativeWindow* native_window) {
   FATAL_IF(root_surface_, "root_surface_ has been created!");
-  root_surface_ = OH_SurfaceControl_FromNativeWindow(native_window->window(),
-                                                     "root_surface");
+  root_surface_ = SurfaceControl::Create(native_window, "root_surface");
 }
 
 void SurfaceControlNodeContent::StartDrawFrame() {}
