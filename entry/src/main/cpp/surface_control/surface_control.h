@@ -27,7 +27,7 @@ class SurfaceControl : public RefBase {
  public:
   using BufferReleaseCallback = std::function<void(int release_fence_fd)>;
 
-  SurfaceControl(std::shared_ptr<OHOS::Rosen::RSSurfaceNode> node,
+  SurfaceControl(std::shared_ptr<OHOS::Rosen::RSSurfaceNode> surface_node,
                  std::shared_ptr<OHOS::Rosen::RSNode> parent = {});
   ~SurfaceControl() override;
 
@@ -71,8 +71,8 @@ class SurfaceControl : public RefBase {
   SurfaceControl(SurfaceControl&&) = delete;
   SurfaceControl& operator=(SurfaceControl&&) = delete;
 
-  std::shared_ptr<OHOS::Rosen::RSSurfaceNode> node_;
-  std::shared_ptr<OHOS::Rosen::RSNode> parent_;
+  std::shared_ptr<OHOS::Rosen::RSSurfaceNode> surface_node_;
+  std::shared_ptr<OHOS::Rosen::RSNode> parent_node_;
   sptr<SurfaceBuffer> buffer_;
   UniqueFd fence_fd_;
   BufferReleaseCallback release_callback_;

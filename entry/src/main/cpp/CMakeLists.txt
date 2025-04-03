@@ -115,6 +115,8 @@ add_library(helloxcomponent SHARED
     hello/Log.h
     hello/NapiManager.cpp
     hello/NapiManager.h
+    hello/NativeBuffer.cpp
+    hello/NativeBuffer.h
     hello/NativeWindow.cpp
     hello/NativeWindow.h
     hello/NodeContent.cpp

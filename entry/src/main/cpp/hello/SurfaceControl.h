@@ -12,6 +12,7 @@
 
 namespace hello {
 
+class NativeBuffer;
 class SurfaceControl {
  public:
   static std::unique_ptr<SurfaceControl> Create(NativeWindow* parent,
@@ -28,7 +29,11 @@ class SurfaceControl {
 
   explicit SurfaceControl(OH_SurfaceControl* surface);
 
+  static void OnBufferReleaseStub(void* context, int release_fence_fd);
+  void OnBufferRelease(int release_fence_fd);
+
   OH_SurfaceControl* surface_ = nullptr;
+  std::unique_ptr<NativeBuffer> buffer_;
 };
 
 }  // namespace hello

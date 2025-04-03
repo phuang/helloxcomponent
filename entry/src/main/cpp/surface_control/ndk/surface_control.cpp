@@ -124,7 +124,7 @@ void OH_SurfaceTransaction_SetZOrder(OH_SurfaceTransaction* transaction,
   txn->SetZOrder(surface, z_order);
 }
 
-void OH_SurfaceTransaction_setBufferWithRelease(
+void OH_SurfaceTransaction_SetBuffer(
     OH_SurfaceTransaction* transaction,
     OH_SurfaceControl* surface_control,
     OH_NativeBuffer* buffer,

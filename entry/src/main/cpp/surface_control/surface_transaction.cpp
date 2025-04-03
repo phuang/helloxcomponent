@@ -1,6 +1,7 @@
 #include "surface_control/surface_transaction.h"
 
 #include "commonlibrary/c_utils/base/include/unique_fd.h"
+#include "foundation/graphic/graphic_2d/rosen/modules/render_service_client/core/transaction/rs_transaction.h"
 #include "foundation/graphic/graphic_surface/interfaces/inner_api/surface/surface_buffer.h"
 #include "surface_control/ndk/surface_control.h"
 
@@ -19,6 +20,8 @@ void SurfaceTransaction::Commit() {
     surface->SyncBufferToNodeIfNecessary();
   }
   surface_controls_.clear();
+
+  OHOS::Rosen::RSTransaction::FlushImplicitTransaction();
 }
 
 void SurfaceTransaction::SetOnComplete(const OnCompleteCallback& callback) {

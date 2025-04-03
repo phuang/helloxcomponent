@@ -234,7 +234,7 @@ void OH_SurfaceTransaction_SetZOrder(OH_SurfaceTransaction* transaction,
  * OH_SurfaceTransaction_OnBufferRelease callback will be invoked. If the buffer
  * is null, the callback will not be invoked.
  */
-void OH_SurfaceTransaction_setBufferWithRelease(
+void OH_SurfaceTransaction_SetBuffer(
     OH_SurfaceTransaction* transaction,
     OH_SurfaceControl* surface_control,
     OH_NativeBuffer* buffer,
@@ -327,8 +327,8 @@ void OH_SurfaceTransaction_SetDamageRegion(OH_SurfaceTransaction* transaction,
                                            const OH_Rect* rects,
                                            uint32_t count);
 /**
- * Specifies a desired_presentTime for the transaction. The framework will try to
- * present the transaction at or after the time specified.
+ * Specifies a desired_presentTime for the transaction. The framework will try
+ * to present the transaction at or after the time specified.
  *
  * Transactions will not be presented until all of their acquire fences have
  * signaled even if the app requests an earlier present time.

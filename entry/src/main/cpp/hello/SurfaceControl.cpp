@@ -2,6 +2,7 @@
 
 #include "hello/Constants.h"
 #include "hello/Log.h"
+#include "hello/NativeBuffer.h"
 #include "hello/NativeWindow.h"
 
 namespace hello {
@@ -24,8 +25,29 @@ std::unique_ptr<SurfaceControl> SurfaceControl::Create(const char* name) {
   return {};
 }
 
-SurfaceControl::SurfaceControl(OH_SurfaceControl* surface)
-    : surface_(surface) {}
+SurfaceControl::SurfaceControl(OH_SurfaceControl* surface) : surface_(surface) {
+  buffer_ = NativeBuffer::Create(512, 512);
+
+  void* addr = buffer_->Map();
+  if (addr) {
+    memset(addr, 0xFF, buffer_->width() * buffer_->height() * 4);
+  }
+  buffer_->Unmap();
+
+  auto* txn = OH_SurfaceTransaction_Create();
+
+  OH_SurfaceTransaction_SetBuffer(txn, surface_, buffer_->buffer(), -1, this,
+                                  SurfaceControl::OnBufferReleaseStub);
+  OH_Rect crop = {
+      .x = 0,
+      .y = 0,
+      .w = buffer_->width(),
+      .h = buffer_->height(),
+  };
+  OH_SurfaceTransaction_setCrop(txn, surface_, &crop);
+  OH_SurfaceTransaction_Commit(txn);
+  OH_SurfaceTransaction_Delete(txn);
+}
 
 SurfaceControl::~SurfaceControl() {
   if (surface_) {
@@ -33,4 +55,18 @@ SurfaceControl::~SurfaceControl() {
   }
 }
 
+void SurfaceControl::OnBufferRelease(int release_fence_fd) {
+  LOGE("EEEE Buffer released");
+}
+
+// static
+void SurfaceControl::OnBufferReleaseStub(void* context, int release_fence_fd) {
+  if (context) {
+    auto* self = static_cast<SurfaceControl*>(context);
+    self->OnBufferRelease(release_fence_fd);
+  }
+  if (release_fence_fd >= 0) {
+    close(release_fence_fd);
+  }
+}
 }  // namespace hello

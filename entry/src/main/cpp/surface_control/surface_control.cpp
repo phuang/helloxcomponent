@@ -37,32 +37,32 @@ sptr<SurfaceControl> SurfaceControl::CreateFromWindow(NativeWindow* window,
     return {};
   }
 
-  auto parent = RSNodeMap::Instance().GetNode(window->nodeId);
-  if (!parent) {
-    parent = RSProxyNode::Create(window->nodeId, "root_proxy");
+  auto parent_node = RSNodeMap::Instance().GetNode(window->nodeId);
+  if (!parent_node) {
+    parent_node = RSProxyNode::Create(window->nodeId, "root_proxy");
   }
 
-  if (!parent) {
+  if (!parent_node) {
     LOGE("RSProxyNode::Create() failed: nodeId=%{public}lu", window->nodeId);
     return {};
   }
 
-  auto node = CreateSurfaceNode(debug_name);
+  auto surface_node = CreateSurfaceNode(debug_name);
   // RSProxyNode::AddChild() doesn't allow add child, has to call
   // RSNode::AddChild() instead.
-  parent->RSNode::AddChild(node, -1);
-  return sptr<SurfaceControl>::MakeSptr(std::move(node), std::move(parent));
+  parent_node->RSNode::AddChild(surface_node, -1);
+  return sptr<SurfaceControl>::MakeSptr(std::move(surface_node), std::move(parent_node));
 }
 
-SurfaceControl::SurfaceControl(std::shared_ptr<RSSurfaceNode> node,
-                               std::shared_ptr<RSNode> parent)
-    : node_(std::move(node)), parent_(std::move(parent)) {}
+SurfaceControl::SurfaceControl(std::shared_ptr<RSSurfaceNode> surface_node,
+                               std::shared_ptr<RSNode> parent_node)
+    : surface_node_(std::move(surface_node)), parent_node_(std::move(parent_node)) {}
 
 SurfaceControl::~SurfaceControl() {
   // RSProxyNode::RemoveChild() does nothing, has to call RSNode::RemoveChild()
   // instead.
-  if (parent_) {
-    parent_->RSNode::RemoveChild(node_);
+  if (parent_node_) {
+    parent_node_->RSNode::RemoveChild(surface_node_);
   }
 }
 
@@ -75,16 +75,17 @@ void SurfaceControl::Release() {
 }
 
 void SurfaceControl::SetParent(SurfaceControl* new_parent) {
-  new_parent->node_->AddChild(node_, /*index=*/-1);
+  FATAL_IF(parent_node_, "SetParent() cannot be called with root surface");
+  new_parent->surface_node_->AddChild(surface_node_, /*index=*/-1);
 }
 
 void SurfaceControl::SetVisibility(bool visibility) {
-  node_->SetVisible(visibility);
+  surface_node_->SetVisible(visibility);
 }
 
 void SurfaceControl::SetZOrder(int32_t z_order) {
-  if (auto parent = node_->GetParent()) {
-    parent->MoveChild(node_, z_order);
+  if (auto parent = surface_node_->GetParent()) {
+    parent->MoveChild(surface_node_, z_order);
   }
 }
 
@@ -101,11 +102,12 @@ void SurfaceControl::SetBuffer(sptr<SurfaceBuffer> buffer,
 }
 
 void SurfaceControl::SetCrop(const Rect* crop) {
-  node_->SetFrame(crop->x, crop->y, crop->w, crop->h);
+  surface_node_->SetFrame(crop->x, crop->y, crop->w, crop->h);
+  surface_node_->SetBounds(crop->x, crop->y, crop->w, crop->h);
 }
 
 void SurfaceControl::SetPosition(int32_t x, int32_t y) {
-  node_->SetTranslate(static_cast<float>(x), static_cast<float>(y), 0);
+  surface_node_->SetTranslate(static_cast<float>(x), static_cast<float>(y), 0);
 }
 
 void SurfaceControl::SetBufferTransform(int32_t transform) {
@@ -116,7 +118,7 @@ void SurfaceControl::SetBufferTransform(int32_t transform) {
 }
 
 void SurfaceControl::SetScale(float x_scale, float y_scale) {
-  node_->SetScale(x_scale, y_scale);
+  surface_node_->SetScale(x_scale, y_scale);
 }
 
 void SurfaceControl::SetBufferTransparency(int32_t transparency) {}
@@ -156,7 +158,7 @@ void SurfaceControl::SyncBufferToNodeIfNecessary() {
     params.damages = std::move(damage_region_);
     params.timestamp = desired_present_time_;
     // TODO: set HDR related fields.
-    node_->SetBuffer(std::move(params), {});
+    surface_node_->SetBuffer(std::move(params), {});
     need_sync_buffer_to_node_ = false;
   }
 }

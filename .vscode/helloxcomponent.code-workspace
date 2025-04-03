@@ -83,7 +83,9 @@
 			"__node_handle": "cpp",
 			"unordered_set": "cpp",
 			"charconv": "cpp",
-			"expected": "cpp"
+			"expected": "cpp",
+			"valarray": "cpp",
+			"ranges": "cpp"
 		}
 	}
 }
