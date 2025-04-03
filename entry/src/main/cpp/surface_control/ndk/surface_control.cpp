@@ -2,7 +2,7 @@
 
 #include <memory>
 
-#include "interfaces/inner_api/surface/surface_buffer.h"
+#include "foundation/graphic/graphic_surface/interfaces/inner_api/surface/surface_buffer.h"
 #include "surface_control/surface_control.h"
 #include "surface_control/surface_transaction.h"
 
