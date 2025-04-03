@@ -11,10 +11,8 @@ Napi::Object Init(Napi::Env env, Napi::Object exports) {
   exports.Set(
       "createNativeNode",
       Napi::Function::New<hello::NapiManager::NapiCreateNativeNode>(env));
-  exports.Set(
-      "setDelegatedCompositing",
-      Napi::Function::New<hello::NapiManager::NapiSetDelegatedCompositing>(
-          env));
+  exports.Set("setCurrentMode",
+              Napi::Function::New<hello::NapiManager::NapiSetCurrentMode>(env));
   exports.Set("onPageShow",
               Napi::Function::New<hello::NapiManager::NapiOnPageShow>(env));
   exports.Set("onPageHide",

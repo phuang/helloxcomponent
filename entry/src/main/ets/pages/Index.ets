@@ -3,7 +3,7 @@ import { Logger } from '../utils/Logger';
 import { NodeContent } from '@kit.ArkUI';
 
 const kUseTabs = true;
-const kDelegatedCompositingByDefault = true;
+const kModeByDefault = 0;
 
 @Entry
 @Component
@@ -11,14 +11,16 @@ struct Index {
   @State message: string = 'Hello World';
   private nodeContentDelegated: NodeContent = new NodeContent();
   private nodeContentNonDelegated: NodeContent = new NodeContent();
+  private nodeContentSurfaceControl: NodeContent = new NodeContent();
 
   aboutToAppear(): void {
-    helloxcomponent.createNativeNode(this.nodeContentDelegated, true);
-    helloxcomponent.createNativeNode(this.nodeContentNonDelegated, false);
+    helloxcomponent.createNativeNode(this.nodeContentDelegated, 0);
+    helloxcomponent.createNativeNode(this.nodeContentNonDelegated, 1);
+    helloxcomponent.createNativeNode(this.nodeContentSurfaceControl, 2);
   }
 
   onDidBuild(): void {
-    helloxcomponent.setDelegatedCompositing(kDelegatedCompositingByDefault);
+    helloxcomponent.setCurrentMode(kModeByDefault);
   }
 
   aboutToDisappear(): void {}
@@ -40,23 +42,28 @@ struct Index {
     Column() {
       if (kUseTabs) {
         Tabs({barPosition: BarPosition.End,
-              index: kDelegatedCompositingByDefault ? 0 : 1}) {
+              index: kModeByDefault}) {
           TabContent() {
             ContentSlot(this.nodeContentDelegated)
-          }.tabBar("Delegated Compositing")
+          }.tabBar("代理合成")
           TabContent() {
             ContentSlot(this.nodeContentNonDelegated)
-          }.tabBar("Self Composting")
+          }.tabBar("自合成")
+          TabContent() {
+            ContentSlot(this.nodeContentSurfaceControl)
+          }.tabBar("代理合成New")
         }.onChange((index: number) => {
-          helloxcomponent.setDelegatedCompositing(index == 0);
+          helloxcomponent.setCurrentMode(index);
         })
         .width('100%')
       } else {
         Column() {
-          if (kDelegatedCompositingByDefault) {
+          if (kModeByDefault == 0) {
             ContentSlot(this.nodeContentDelegated)
-          } else {
+          } else if (kModeByDefault == 1) {
             ContentSlot(this.nodeContentNonDelegated)
+          } else {
+            ContentSlot(this.nodeContentSurfaceControl)
           }
         }
       }

@@ -7,6 +7,7 @@
 #include "hello/NonDelegatedNodeContent.h"
 
 #include "hello/Compositor.h"
+#include "hello/Log.h"
 #include "hello/XComponentNode.h"
 
 namespace hello {
@@ -32,6 +33,7 @@ void NonDelegatedNodeContent::SetVisible(bool visible) {
   }
 
   visible_ = visible;
+
   if (visible_) {
     root_node_->StartDrawFrame();
   } else {

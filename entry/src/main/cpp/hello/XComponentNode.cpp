@@ -167,7 +167,6 @@ void XComponentNode::StopDrawFrame() {
 void XComponentNode::OnSurfaceCreated(void* window) {
   OH_SurfaceControl* surface_control = OH_SurfaceControl_FromNativeWindow(
       reinterpret_cast<OHNativeWindow*>(window), "root_surface");
-  // OH_SurfaceControl* surface_control = OH_SurfaceControl_Create("root_surface");
   OH_SurfaceControl_Release(surface_control);
   OnSurfaceChanged(window);
 

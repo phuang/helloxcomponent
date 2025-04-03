@@ -121,6 +121,8 @@ add_library(helloxcomponent SHARED
     hello/NodeContent.h
     hello/NonDelegatedNodeContent.cpp
     hello/NonDelegatedNodeContent.h
+    hello/SurfaceControlNodeContent.cpp
+    hello/SurfaceControlNodeContent.h
     hello/TextureRenderer.cpp
     hello/TextureRenderer.h
     hello/Thread.cpp

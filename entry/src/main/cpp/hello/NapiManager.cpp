@@ -8,10 +8,11 @@
 #include <string>
 
 #include "hello/DelegatedNodeContent.h"
+#include "hello/DisplayManager.h"
 #include "hello/GLCore.h"
 #include "hello/Log.h"
 #include "hello/NonDelegatedNodeContent.h"
-#include "hello/DisplayManager.h"
+#include "hello/SurfaceControlNodeContent.h"
 
 // #include "surface_control/ng/surface_control_model.h"
 
@@ -62,20 +63,18 @@ Napi::Value NapiManager::NapiCreateNativeNode(const Napi::CallbackInfo& info) {
     return env.Null();
   }
 
-  if (!info[1].IsBoolean()) {
-    Napi::Error::New(env, "Arg 1 is not a boolean")
-        .ThrowAsJavaScriptException();
+  if (!info[1].IsNumber()) {
+    Napi::Error::New(env, "Arg 1 is not a number").ThrowAsJavaScriptException();
     return env.Null();
   }
-  bool delegated = info[1].As<Napi::Boolean>().Value();
-  GetInstance()->CreateNativeNode(content_handle, delegated);
+  int mode = info[1].As<Napi::Number>().Int32Value();
+  GetInstance()->CreateNativeNode(content_handle, mode);
 
   return env.Null();
 }
 
 // static
-Napi::Value NapiManager::NapiSetDelegatedCompositing(
-    const Napi::CallbackInfo& info) {
+Napi::Value NapiManager::NapiSetCurrentMode(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
 
   if (info.Length() != 1) {
@@ -84,15 +83,14 @@ Napi::Value NapiManager::NapiSetDelegatedCompositing(
     return env.Null();
   }
 
-  if (!info[0].IsBoolean()) {
-    Napi::Error::New(env, "Arg 0 is not a boolean")
-        .ThrowAsJavaScriptException();
+  if (!info[0].IsNumber()) {
+    Napi::Error::New(env, "Arg 0 is not a number").ThrowAsJavaScriptException();
     return env.Null();
   }
 
-  bool enable = info[0].As<Napi::Boolean>().Value();
+  int mode = info[0].As<Napi::Number>().Int32Value();
 
-  GetInstance()->SetDelegatedCompositing(enable);
+  GetInstance()->SetCurrentMode(mode);
 
   return env.Null();
 }
@@ -112,18 +110,21 @@ Napi::Value NapiManager::NapiOnPageHide(const Napi::CallbackInfo& info) {
 }
 
 void NapiManager::CreateNativeNode(ArkUI_NodeContentHandle content_handle,
-                                   bool delegated) {
-  if (delegated) {
+                                   int mode) {
+  if (mode == 0) {
     delegated_node_content_ =
         std::make_unique<DelegatedNodeContent>(content_handle);
-  } else {
+  } else if (mode == 1) {
     non_delegated_node_content_ =
         std::make_unique<NonDelegatedNodeContent>(content_handle);
+  } else {
+    surface_control_node_content_ =
+        std::make_unique<SurfaceControlNodeContent>(content_handle);
   }
 }
 
-void NapiManager::SetDelegatedCompositing(bool enable) {
-  is_delegated_compositing_ = enable;
+void NapiManager::SetCurrentMode(int mode) {
+  current_mode_ = mode;
   Update();
 }
 
@@ -138,9 +139,9 @@ void NapiManager::OnPageHide() {
 }
 
 void NapiManager::Update() {
-  delegated_node_content_->SetVisible(is_visible_ && is_delegated_compositing_);
-  non_delegated_node_content_->SetVisible(is_visible_ &&
-                                          !is_delegated_compositing_);
+  delegated_node_content_->SetVisible(is_visible_ && current_mode_ == 0);
+  non_delegated_node_content_->SetVisible(is_visible_ && current_mode_ == 1);
+  surface_control_node_content_->SetVisible(is_visible_ && current_mode_ == 2);
 }
 
 }  // namespace hello
