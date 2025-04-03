@@ -29,6 +29,11 @@ class NapiManager {
   NapiManager(const Napi::Env& env);
   ~NapiManager();
 
+  NapiManager(const NapiManager&) = delete;
+  NapiManager& operator=(const NapiManager&) = delete;
+  NapiManager(NapiManager&&) = delete;
+  NapiManager& operator=(NapiManager&&) = delete;
+
   void CreateNativeNode(ArkUI_NodeContentHandle content_handle, int mode);
   void SetCurrentMode(int mode);
   void OnPageShow();

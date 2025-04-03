@@ -11,13 +11,10 @@ namespace hello {
 
 class ScopedFd {
  public:
- ScopedFd() : ScopedFd(-1) {}
- explicit ScopedFd(int fd) : fd_(fd) {}
+  ScopedFd() : ScopedFd(-1) {}
+  explicit ScopedFd(int fd) : fd_(fd) {}
 
- ~ScopedFd() { reset(); }
-
-  ScopedFd(const ScopedFd&) = delete;
-  ScopedFd& operator=(const ScopedFd&) = delete;
+  ~ScopedFd() { reset(); }
 
   ScopedFd(ScopedFd&& other) noexcept : ScopedFd(other.fd_) { other.fd_ = -1; }
 
@@ -53,6 +50,9 @@ class ScopedFd {
   }
 
  private:
+  ScopedFd(const ScopedFd&) = delete;
+  ScopedFd& operator=(const ScopedFd&) = delete;
+
   int fd_;
 };
 }  // namespace hello

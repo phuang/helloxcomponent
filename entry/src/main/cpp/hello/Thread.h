@@ -24,6 +24,11 @@ class Thread {
                 const std::function<void()>& done);
 
  private:
+  Thread(const Thread&) = delete;
+  Thread& operator=(const Thread&) = delete;
+  Thread(Thread&&) = delete;
+  Thread& operator=(Thread&&) = delete;
+
   void Loop();
   void CallDones();
 

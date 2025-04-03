@@ -27,6 +27,11 @@ class GLImage {
   EGLImageKHR egl_image() const { return egl_image_; }
 
  private:
+  GLImage(const GLImage&) = delete;
+  GLImage& operator=(const GLImage&) = delete;
+  GLImage(GLImage&&) = delete;
+  GLImage& operator=(GLImage&&) = delete;
+
   EGLImageKHR egl_image_ = EGL_NO_IMAGE_KHR;
 };
 

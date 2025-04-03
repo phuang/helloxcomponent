@@ -22,6 +22,10 @@ class SurfaceTransactionStats {
   void ReleaseSurfaceControls(SurfaceControl** surface_controls) const;
 
  private:
+  SurfaceTransactionStats(const SurfaceTransactionStats&) = delete;
+  SurfaceTransactionStats& operator=(const SurfaceTransactionStats&) = delete;
+  SurfaceTransactionStats(SurfaceTransactionStats&&) = delete;
+  SurfaceTransactionStats& operator=(SurfaceTransactionStats&&) = delete;
 };
 
 class SurfaceTransaction {
@@ -65,6 +69,10 @@ class SurfaceTransaction {
                              bool enable_back_pressure);
 
  private:
+  SurfaceTransaction(const SurfaceTransaction&) = delete;
+  SurfaceTransaction& operator=(const SurfaceTransaction&) = delete;
+  SurfaceTransaction(SurfaceTransaction&&) = delete;
+  SurfaceTransaction& operator=(SurfaceTransaction&&) = delete;
   OnCompleteCallback on_complete_callback_;
   OnCommitCallback on_commit_callback_;
   int64_t desired_present_time_ = 0;

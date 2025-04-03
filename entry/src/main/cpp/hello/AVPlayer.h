@@ -21,6 +21,11 @@ class AVPlayer : public XComponentNode::Delegate {
   void StopDrawFrame() override;
 
  private:
+  AVPlayer(const AVPlayer&) = delete;
+  AVPlayer& operator=(const AVPlayer&) = delete;
+  AVPlayer(AVPlayer&&) = delete;
+  AVPlayer& operator=(AVPlayer&&) = delete;
+
   bool Initialize(NativeWindow* window);
   void OnInfo(AVPlayerOnInfoType type, OH_AVFormat* info);
   void OnError(int32_t code, const char* message);

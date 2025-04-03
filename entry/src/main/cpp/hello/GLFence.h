@@ -21,6 +21,11 @@ class GLFence : public std::enable_shared_from_this<GLFence> {
   ScopedFd GetFd();
 
  private:
+  GLFence(const GLFence&) = delete;
+  GLFence& operator=(const GLFence&) = delete;
+  GLFence(GLFence&&) = delete;
+  GLFence& operator=(GLFence&&) = delete;
+
   bool init(EGLint type, const EGLint* attribs);
 
   EGLSyncKHR sync_ = EGL_NO_SYNC_KHR;

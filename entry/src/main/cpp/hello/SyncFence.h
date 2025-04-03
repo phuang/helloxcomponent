@@ -15,6 +15,11 @@ class SyncFence {
   int32_t Wait(int32_t timeout);
 
  private:
+  SyncFence(const SyncFence&) = delete;
+  SyncFence& operator=(const SyncFence&) = delete;
+  SyncFence(SyncFence&&) = delete;
+  SyncFence& operator=(SyncFence&&) = delete;
+
   ScopedFd fd_;
 };
 

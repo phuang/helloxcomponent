@@ -66,6 +66,11 @@ class SurfaceControl : public RefBase {
   void SyncBufferToNodeIfNecessary();
 
  private:
+  SurfaceControl(const SurfaceControl&) = delete;
+  SurfaceControl& operator=(const SurfaceControl&) = delete;
+  SurfaceControl(SurfaceControl&&) = delete;
+  SurfaceControl& operator=(SurfaceControl&&) = delete;
+
   std::shared_ptr<OHOS::Rosen::RSSurfaceNode> node_;
   std::shared_ptr<OHOS::Rosen::RSNode> parent_;
   sptr<SurfaceBuffer> buffer_;

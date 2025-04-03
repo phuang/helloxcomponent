@@ -31,6 +31,11 @@ class Compositor : public XComponentNode::Delegate {
   void StopDrawFrame() override;
 
  private:
+  Compositor(const Compositor&) = delete;
+  Compositor& operator=(const Compositor&) = delete;
+  Compositor(Compositor&&) = delete;
+  Compositor& operator=(Compositor&&) = delete;
+
   void RenderFrameWithTexture(int32_t width,
                               int32_t height,
                               uint64_t timestamp);

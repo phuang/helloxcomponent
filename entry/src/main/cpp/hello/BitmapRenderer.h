@@ -4,9 +4,9 @@
 #include <multimedia/image_framework/image/image_source_native.h>
 
 #include <cstdint>
+#include <functional>
 #include <string>
 #include <vector>
-#include <functional>
 
 #include "hello/XComponentNode.h"
 
@@ -17,8 +17,10 @@ class BitmapRenderer : public XComponentNode::Delegate {
   explicit BitmapRenderer(const std::string& uri);
   ~BitmapRenderer() override = default;
 
-  using RenderPixelsCallback = std::function<
-      void(const uint8_t* data, uint32_t width, uint32_t height, uint32_t stride)>;
+  using RenderPixelsCallback = std::function<void(const uint8_t* data,
+                                                  uint32_t width,
+                                                  uint32_t height,
+                                                  uint32_t stride)>;
   void RenderPixels(int32_t width,
                     int32_t height,
                     uint64_t timestamp,
@@ -37,6 +39,11 @@ class BitmapRenderer : public XComponentNode::Delegate {
   int32_t picture_format() const { return picture_format_; }
 
  private:
+  BitmapRenderer(const BitmapRenderer&) = delete;
+  BitmapRenderer& operator=(const BitmapRenderer&) = delete;
+  BitmapRenderer(BitmapRenderer&&) = delete;
+  BitmapRenderer& operator=(BitmapRenderer&&) = delete;
+
   void LoadPicture(const std::string& uri);
 
   std::vector<uint8_t> picture_pixels_;

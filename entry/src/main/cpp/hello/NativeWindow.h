@@ -39,14 +39,6 @@ class NativeWindow {
 
   ~NativeWindow();
 
-  // Delete copy constructor and copy assignment operator
-  NativeWindow(const NativeWindow&) = delete;
-  NativeWindow& operator=(const NativeWindow&) = delete;
-
-  // Delete move constructor and move assignment operator
-  NativeWindow(NativeWindow&&) = delete;
-  NativeWindow& operator=(NativeWindow&&) = delete;
-
   // Create GLTexture for comsuming image content.
   GLTexture BindTexture();
   bool UpdateSurfaceImage();
@@ -68,6 +60,11 @@ class NativeWindow {
  private:
   NativeWindow();
   explicit NativeWindow(OHNativeWindow* window);
+
+  NativeWindow(const NativeWindow&) = delete;
+  NativeWindow& operator=(const NativeWindow&) = delete;
+  NativeWindow(NativeWindow&&) = delete;
+  NativeWindow& operator=(NativeWindow&&) = delete;
 
   bool Initialize(int32_t width,
                   int32_t height,

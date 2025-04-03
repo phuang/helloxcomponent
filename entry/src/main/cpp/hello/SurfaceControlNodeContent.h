@@ -21,6 +21,12 @@ class SurfaceControlNodeContent : public NodeContent,
   ~SurfaceControlNodeContent() override;
 
  private:
+  SurfaceControlNodeContent(const SurfaceControlNodeContent&) = delete;
+  SurfaceControlNodeContent& operator=(const SurfaceControlNodeContent&) =
+      delete;
+  SurfaceControlNodeContent(SurfaceControlNodeContent&&) = delete;
+  SurfaceControlNodeContent& operator=(SurfaceControlNodeContent&&) = delete;
+
   // NodeContent override:
   void SetVisible(bool visible) override;
   XComponentNode* GetRootNode() override;

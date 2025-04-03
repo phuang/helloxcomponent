@@ -18,6 +18,12 @@ class NodeContent {
   void DetachRootNode();
 
  private:
+  NodeContent(const NodeContent&) = delete;
+  NodeContent& operator=(const NodeContent&) = delete;
+  NodeContent(NodeContent&&) = delete;
+  NodeContent& operator=(NodeContent&&) = delete;
+
+  // virtual methods:
   virtual XComponentNode* GetRootNode() = 0;
   virtual void OnRootNodeAttached() = 0;
   virtual void OnRootNodeDetached() = 0;

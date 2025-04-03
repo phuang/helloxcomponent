@@ -19,6 +19,11 @@ class DelegatedNodeContent : public NodeContent {
   void SetVisible(bool visible) override;
 
  private:
+  DelegatedNodeContent(const DelegatedNodeContent&) = delete;
+  DelegatedNodeContent& operator=(const DelegatedNodeContent&) = delete;
+  DelegatedNodeContent(DelegatedNodeContent&&) = delete;
+  DelegatedNodeContent& operator=(DelegatedNodeContent&&) = delete;
+
   XComponentNode* GetRootNode() override;
   void OnRootNodeAttached() override;
   void OnRootNodeDetached() override;

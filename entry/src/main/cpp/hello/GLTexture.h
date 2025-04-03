@@ -19,15 +19,15 @@ class GLTexture {
   // Move assignment operator
   GLTexture& operator=(GLTexture&& other);
 
-  GLTexture(const GLTexture& other) = delete;
-  GLTexture& operator=(const GLTexture& other) = delete;
-
   GLenum target() const { return target_; }
   GLuint id() const { return id_; }
 
   void reset();
 
  private:
+  GLTexture(const GLTexture& other) = delete;
+  GLTexture& operator=(const GLTexture& other) = delete;
+
   GLenum target_ = GL_NONE;
   GLuint id_ = 0;
 };

@@ -20,6 +20,11 @@ class TextureRenderer : public XComponentNode::Delegate {
   void RenderFrame(int32_t width, int32_t height, uint64_t timestamp) override;
 
  private:
+  TextureRenderer(const TextureRenderer&) = delete;
+  TextureRenderer& operator=(const TextureRenderer&) = delete;
+  TextureRenderer(TextureRenderer&&) = delete;
+  TextureRenderer& operator=(TextureRenderer&&) = delete;
+
   const uint64_t delta_;
 };
 

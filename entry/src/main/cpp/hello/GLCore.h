@@ -89,6 +89,11 @@ class GLCore {
   }
 
  private:
+  GLCore(const GLCore&) = delete;
+  GLCore& operator=(const GLCore&) = delete;
+  GLCore(GLCore&&) = delete;
+  GLCore& operator=(GLCore&&) = delete;
+
   void InitializeFunctions();
 
   EGLDisplay display_ = EGL_NO_DISPLAY;

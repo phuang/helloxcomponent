@@ -22,6 +22,11 @@ class DisplayManager {
   float y_dpi() const { return info_->yDPI; }
 
  private:
+  DisplayManager(const DisplayManager&) = delete;
+  DisplayManager& operator=(const DisplayManager&) = delete;
+  DisplayManager(DisplayManager&&) = delete;
+  DisplayManager& operator=(DisplayManager&&) = delete;
+
   NativeDisplayManager_DisplayInfo* info_ = nullptr;
 };
 }  // namespace hello

@@ -107,6 +107,12 @@ class XComponentNode {
                  const std::string& id,
                  Type type);
 
+  // Disable copy and move
+  XComponentNode(const XComponentNode&) = delete;
+  XComponentNode& operator=(const XComponentNode&) = delete;
+  XComponentNode(XComponentNode&&) = delete;
+  XComponentNode& operator=(XComponentNode&&) = delete;
+
   static XComponentNode* GetInstance(OH_NativeXComponent* component);
 
   void SoftwareDrawFrame();
@@ -144,7 +150,10 @@ class XComponentNode {
     api()->setAttribute(handle_, attribute, &item);
   }
 
-  void SetAttribute(ArkUI_NodeAttributeType attribute, float f1, float f2, float f3) {
+  void SetAttribute(ArkUI_NodeAttributeType attribute,
+                    float f1,
+                    float f2,
+                    float f3) {
     ArkUI_NumberValue values[3] = {{.f32 = f1}, {.f32 = f2}, {.f32 = f3}};
     ArkUI_AttributeItem item = {values, 3};
     api()->setAttribute(handle_, attribute, &item);
