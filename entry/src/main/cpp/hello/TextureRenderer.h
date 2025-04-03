@@ -1,13 +1,13 @@
 #ifndef HELLO_TEXTURE_RENDERER_H
 #define HELLO_TEXTURE_RENDERER_H
 
-#include "hello/XComponentNode.h"
+#include "hello/Renderer.h"
 
 #include <GLES3/gl3.h>
 
 namespace hello {
 
-class TextureRenderer : public XComponentNode::Delegate {
+class TextureRenderer : public Renderer {
  public:
   TextureRenderer();
   ~TextureRenderer() override;

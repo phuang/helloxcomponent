@@ -33,7 +33,7 @@ class DelegatedNodeContent : public NodeContent {
   bool visible_ = false;
   std::unique_ptr<XComponentNode> root_node_;
   std::vector<std::unique_ptr<XComponentNode>> child_nodes_;
-  std::vector<std::unique_ptr<XComponentNode::Delegate>> child_renderers_;
+  std::vector<std::unique_ptr<Renderer>> child_renderers_;
 };
 
 }  // namespace hello

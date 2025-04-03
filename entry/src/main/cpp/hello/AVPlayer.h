@@ -4,14 +4,15 @@
 #include <multimedia/player_framework/avplayer.h>
 
 #include <memory>
+#include <string>
 
-#include "hello/XComponentNode.h"
+#include "hello/Renderer.h"
 
 namespace hello {
 
 class NativeWindow;
 
-class AVPlayer : public XComponentNode::Delegate {
+class AVPlayer : public Renderer {
  public:
   explicit AVPlayer(const std::string& url);
   ~AVPlayer() override;

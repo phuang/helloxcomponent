@@ -8,11 +8,11 @@
 #include <string>
 #include <vector>
 
-#include "hello/XComponentNode.h"
+#include "hello/Renderer.h"
 
 namespace hello {
 
-class BitmapRenderer : public XComponentNode::Delegate {
+class BitmapRenderer : public Renderer {
  public:
   explicit BitmapRenderer(const std::string& uri);
   ~BitmapRenderer() override = default;

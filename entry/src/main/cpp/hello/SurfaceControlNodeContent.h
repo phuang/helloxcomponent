@@ -15,7 +15,7 @@ namespace hello {
 class SurfaceControl;
 
 class SurfaceControlNodeContent : public NodeContent,
-                                  public XComponentNode::Delegate {
+                                  public Renderer {
  public:
   SurfaceControlNodeContent(ArkUI_NodeContentHandle content_handle);
   ~SurfaceControlNodeContent() override;
@@ -33,7 +33,7 @@ class SurfaceControlNodeContent : public NodeContent,
   void OnRootNodeAttached() override;
   void OnRootNodeDetached() override;
 
-  // XComponentNode::Delegate override:
+  // Renderer override:
   void SetNativeWindow(NativeWindow* native_window) override;
   void StartDrawFrame() override;
   void StopDrawFrame() override;
@@ -43,7 +43,7 @@ class SurfaceControlNodeContent : public NodeContent,
   bool visible_ = false;
   std::unique_ptr<XComponentNode> root_node_;
   // std::vector<std::unique_ptr<XComponentNode>> child_nodes_;
-  // std::vector<std::unique_ptr<XComponentNode::Delegate>> child_renderers_;
+  // std::vector<std::unique_ptr<Renderer>> child_renderers_;
   std::unique_ptr<SurfaceControl> root_surface_;
 };
 

@@ -21,12 +21,12 @@ class SurfaceControl {
   ~SurfaceControl();
 
  private:
-  explicit SurfaceControl(OH_SurfaceControl* surface);
-
   SurfaceControl(const SurfaceControl&) = delete;
   SurfaceControl(SurfaceControl&&) = delete;
   SurfaceControl& operator=(const SurfaceControl&) = delete;
   SurfaceControl& operator=(SurfaceControl&&) = delete;
+
+  explicit SurfaceControl(OH_SurfaceControl* surface);
 
   OH_SurfaceControl* surface_ = nullptr;
 };

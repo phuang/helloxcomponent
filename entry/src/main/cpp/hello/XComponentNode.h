@@ -2,7 +2,6 @@
 #define HELLOXCOMPONENT_XCOMPONENTNODE_H
 
 #include <EGL/egl.h>
-#include <GLES2/gl2.h>
 #include <ace/xcomponent/native_interface_xcomponent.h>
 #include <arkui/native_node.h>
 #include <native_window/external_window.h>
@@ -14,35 +13,11 @@
 namespace hello {
 
 class NativeWindow;
+class Renderer;
 class Thread;
 
 class XComponentNode {
  public:
-  class Delegate {
-   public:
-    virtual ~Delegate() = default;
-    // For kSoftware:
-    virtual void RenderPixels(void* pixels,
-                              int32_t width,
-                              int32_t height,
-                              int32_t stride,
-                              uint64_t timestamp) {}
-    // For kEGLSurface:
-    virtual void RenderFrame(int32_t width,
-                             int32_t height,
-                             uint64_t timestamp) {}
-    // For kEGLImage:
-    virtual void RenderTexture(GLenum target,
-                               GLuint texture_id,
-                               int32_t width,
-                               int32_t height,
-                               uint64_t timestamp) {}
-    // For kNativeWindow:
-    virtual void SetNativeWindow(NativeWindow* native_window) {}
-    virtual void StartDrawFrame() {}
-    virtual void StopDrawFrame() {}
-  };
-
   enum Type {
     // Delegate::RenderPixels() will be called with pixels address to be fixed
     // with date.
@@ -56,7 +31,8 @@ class XComponentNode {
     // used for rendering to.
     kNativeWindow
   };
-  static std::unique_ptr<XComponentNode> Create(Delegate* delegate,
+
+  static std::unique_ptr<XComponentNode> Create(Renderer* delegate,
                                                 const std::string& id,
                                                 Type type);
 
@@ -102,7 +78,7 @@ class XComponentNode {
   virtual void OnFrame(uint64_t timestamp, uint64_t target_timestamp);
 
  private:
-  XComponentNode(Delegate* delegate,
+  XComponentNode(Renderer* renderer,
                  ArkUI_NodeHandle handle,
                  const std::string& id,
                  Type type);
@@ -181,7 +157,7 @@ class XComponentNode {
     api()->setAttribute(handle_, attribute, &item);
   }
 
-  Delegate* const delegate_;
+  Renderer* const renderer_;
   const ArkUI_NodeHandle handle_;
   const std::string id_;
   const Type type_;

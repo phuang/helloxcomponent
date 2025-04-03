@@ -23,6 +23,7 @@
 #include "hello/NapiManager.h"
 #include "hello/NativeWindow.h"
 #include "hello/SyncFence.h"
+#include "hello/Renderer.h"
 #include "hello/Thread.h"
 #include "surface_control/ndk/surface_control.h"
 
@@ -32,23 +33,23 @@ std::map<OH_NativeXComponent*, XComponentNode*> xcomponent_nodes_;
 }  // namespace
 
 // static
-std::unique_ptr<XComponentNode> XComponentNode::Create(Delegate* delegate,
+std::unique_ptr<XComponentNode> XComponentNode::Create(Renderer* renderer,
                                                        const std::string& id,
                                                        Type type) {
   ArkUI_NodeHandle handle = api()->createNode(ARKUI_NODE_XCOMPONENT);
   FATAL_IF(handle == nullptr, "createNode(ARKUI_NODE_XCOMPONENT) failed!");
 
   std::unique_ptr<XComponentNode> component(
-      new XComponentNode(delegate, handle, id, type));
+      new XComponentNode(renderer, handle, id, type));
 
   return component;
 }
 
-XComponentNode::XComponentNode(Delegate* delegate,
+XComponentNode::XComponentNode(Renderer* renderer,
                                ArkUI_NodeHandle handle,
                                const std::string& id,
                                Type type)
-    : delegate_(delegate),
+    : renderer_(renderer),
       handle_(handle),
       id_(id),
       type_(type),
@@ -78,13 +79,13 @@ XComponentNode::XComponentNode(Delegate* delegate,
            "OH_NativeXComponent_RegisterCallback() failed retval=%{public}d",
            retval);
 
-  if (!delegate_) {
-    // If delegate_ is null, no need to draw.
+  if (!renderer_) {
+    // If renderer_ is null, no need to draw.
     return;
   }
 
   if (is_software()) {
-    // If is surface with delegate_ for rendering, the xcomponent is rastered
+    // If is surface with renderer_ for rendering, the xcomponent is rastered
     // with CPU on a separated thread.
     renderer_thread_ = std::make_unique<Thread>();
     renderer_thread_->Start();
@@ -117,8 +118,8 @@ void XComponentNode::AddChild(ArkUI_NodeHandle child) {
 }
 
 void XComponentNode::StartDrawFrame() {
-  if (!delegate_) {
-    // If delegate_ is nullptr, no need to draw.
+  if (!renderer_) {
+    // If renderer_ is nullptr, no need to draw.
     return;
   }
 
@@ -127,7 +128,7 @@ void XComponentNode::StartDrawFrame() {
   }
   draw_frame_ = true;
 
-  delegate_->StartDrawFrame();
+  renderer_->StartDrawFrame();
 
   if (using_native_window()) {
     return;
@@ -148,14 +149,14 @@ void XComponentNode::StartDrawFrame() {
 }
 
 void XComponentNode::StopDrawFrame() {
-  if (!delegate_) {
+  if (!renderer_) {
     CHECK(!draw_frame_);
     return;
   }
 
   draw_frame_ = false;
 
-  delegate_->StopDrawFrame();
+  renderer_->StopDrawFrame();
 
   if (using_native_window()) {
     return;
@@ -171,7 +172,7 @@ void XComponentNode::OnSurfaceCreated(void* window) {
   OnSurfaceChanged(window);
 
   if (draw_frame_) {
-    CHECK(delegate_);
+    CHECK(renderer_);
   }
 }
 
@@ -205,7 +206,7 @@ void XComponentNode::OnSurfaceChanged(void* window) {
              "eglCreateWindowSurface() failed. EGL error: 0x%{public}x",
              eglGetError());
   } else if (using_native_window()) {
-    delegate_->SetNativeWindow(window_.get());
+    renderer_->SetNativeWindow(window_.get());
   }
 }
 
@@ -248,7 +249,7 @@ void XComponentNode::SoftwareDrawFrame() {
       [this, width, height, stride, fd = fence_fd.release(), addr] {
         SyncFence sync_fence((ScopedFd(fd)));
         sync_fence.Wait(-1);
-        delegate_->RenderPixels(addr, width, height, stride, 0);
+        renderer_->RenderPixels(addr, width, height, stride, 0);
       },
       [this] { window_->FlushBuffer(); });
 }
@@ -265,7 +266,7 @@ void XComponentNode::HardwareDrawFrame() {
     if (!eglMakeCurrent(display, egl_surface_, egl_surface_, context)) {
       FATAL("eglMakeCurrent() failed. EGL error: 0x%{public}x", eglGetError());
     }
-    delegate_->RenderFrame(surface_width_, surface_height_, 0);
+    renderer_->RenderFrame(surface_width_, surface_height_, 0);
     eglSwapBuffers(display, egl_surface_);
     return;
   }
@@ -298,7 +299,7 @@ void XComponentNode::HardwareDrawFrame() {
     }
 
     GLTexture texture = image.Bind();
-    delegate_->RenderTexture(texture.target(), texture.id(), surface_width_,
+    renderer_->RenderTexture(texture.target(), texture.id(), surface_width_,
                              surface_height_, 0);
   }
 

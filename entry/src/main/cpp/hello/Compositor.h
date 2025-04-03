@@ -12,6 +12,7 @@
 #include "hello/GLImage.h"
 #include "hello/GLTexture.h"
 #include "hello/NativeWindow.h"
+#include "hello/Renderer.h"
 
 namespace hello {
 
@@ -21,7 +22,7 @@ class NativeWindow;
 class TextureRenderer;
 class Thread;
 
-class Compositor : public XComponentNode::Delegate {
+class Compositor : public Renderer {
  public:
   Compositor();
   ~Compositor() override;
