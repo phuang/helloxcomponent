@@ -4,9 +4,9 @@ project(HelloXComponent)
 
 set(NATIVERENDER_ROOT_PATH ${CMAKE_CURRENT_SOURCE_DIR})
 
-# set(PREBUILT_CLANG_PATH "/home/penghuang/sources/roms/ohos/prebuilts/clang_linux-x86_64-c5b0b3-20240320")
-# set(CMAKE_C_COMPILER ${PREBUILT_CLANG_PATH}/bin/clang)
-# set(CMAKE_CXX_COMPILER ${PREBUILT_CLANG_PATH}/bin/clang++)
+set(PREBUILT_CLANG_PATH "/home/penghuang/sources/roms/ohos/prebuilts/clang_linux-x86_64-c5b0b3-20240320")
+set(CMAKE_C_COMPILER ${PREBUILT_CLANG_PATH}/bin/clang)
+set(CMAKE_CXX_COMPILER ${PREBUILT_CLANG_PATH}/bin/clang++)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
@@ -14,8 +14,8 @@ add_definitions(-DOHOS_PLATFORM)
 
 # add_definitions(-DEGL_EGLEXT_PROTOTYPES=1)
 add_definitions(-DNDEBUG=1)
-# add_definitions(-DRENDER_EXTRACT_SUPPORTED=1)
 
+# add_definitions(-DRENDER_EXTRACT_SUPPORTED=1)
 add_compile_options(
 
     # disable rtti
@@ -34,7 +34,7 @@ if(DEFINED PACKAGE_FIND_FILE)
     include(${PACKAGE_FIND_FILE})
 endif()
 
-set(OHOS_ROOT_PATH "/home/penghuang/sources/ohos")
+set(OHOS_ROOT_PATH "/home/penghuang/sources/roms/ohos")
 set(FOUNDATION_ROOT_PATH "${OHOS_ROOT_PATH}/foundation")
 
 include_directories(
@@ -44,14 +44,23 @@ include_directories(
 
 add_library(surface_control SHARED
     surface_control/LogWrapper.cpp
+    surface_control/surface_control.cpp
+    surface_control/surface_control.h
+    surface_control/surface_transaction.cpp
+    surface_control/surface_transaction.h
+    surface_control/ndk/surface_control.cpp
+    surface_control/ndk/surface_control.h
+
 )
 
 target_include_directories(surface_control PUBLIC
     ${OHOS_ROOT_PATH}
+    ${OHOS_ROOT_PATH}/commonlibrary/c_utils
     ${OHOS_ROOT_PATH}/commonlibrary/c_utils/base/include
     ${OHOS_ROOT_PATH}/third_party/skia
     ${OHOS_ROOT_PATH}/third_party/mindspore/mindspore-src/source/third_party/securec/include
     ${FOUNDATION_ROOT_PATH}
+    ${FOUNDATION_ROOT_PATH}/graphic/graphic_2d
     ${FOUNDATION_ROOT_PATH}/graphic/graphic_2d/rosen/modules
     ${FOUNDATION_ROOT_PATH}/graphic/graphic_2d/rosen/modules/2d_graphics/include
     ${FOUNDATION_ROOT_PATH}/graphic/graphic_2d/rosen/modules/2d_graphics/src
@@ -63,11 +72,12 @@ target_include_directories(surface_control PUBLIC
     ${FOUNDATION_ROOT_PATH}/graphic/graphic_2d/rosen/modules/render_service_base/include
     ${FOUNDATION_ROOT_PATH}/graphic/graphic_2d/rosen/modules/render_service_client/core
     ${FOUNDATION_ROOT_PATH}/graphic/graphic_2d/rosen/modules/2d_engine/rosen_text/export/rosen_text/
+    ${FOUNDATION_ROOT_PATH}/graphic/graphic_2d/interfaces/inner_api/composer
+    ${FOUNDATION_ROOT_PATH}/graphic/graphic_2d/rosen/modules/composer/vsync/include
+    ${FOUNDATION_ROOT_PATH}/graphic/graphic_surface
     ${FOUNDATION_ROOT_PATH}/graphic/graphic_surface/interfaces/inner_api/common
     ${FOUNDATION_ROOT_PATH}/graphic/graphic_surface/interfaces/inner_api/surface
     ${FOUNDATION_ROOT_PATH}/graphic/graphic_surface/interfaces/inner_api/utils
-    ${FOUNDATION_ROOT_PATH}/graphic/graphic_2d/interfaces/inner_api/composer
-    ${FOUNDATION_ROOT_PATH}/graphic/graphic_2d/rosen/modules/composer/vsync/include
 )
 
 target_link_directories(surface_control PUBLIC
@@ -75,13 +85,10 @@ target_link_directories(surface_control PUBLIC
 )
 
 target_link_libraries(surface_control PUBLIC
-    ace_compatible.z
-    ace_ndk.z
-    # ace_uicontent.z
-    # ace_xcomponent_controller.z
     hilog_ndk.z
     render_service_base.z
     render_service_client.z
+    sync_fence.z
 )
 
 add_library(helloxcomponent SHARED
