@@ -29,12 +29,12 @@ OH_SurfaceControl* OH_SurfaceControl_FromNativeWindow(OHNativeWindow* parent,
                                                       const char* debug_name);
 
 // Create a surface which is not attached to surface tree.
-OH_SurfaceControl* OH_SurfaceControl_create(const char* debug_name);
+OH_SurfaceControl* OH_SurfaceControl_Create(const char* debug_name);
 
 // Increase a ref for a surface
-void OH_SurfaceControl_acquire(OH_SurfaceControl* surface_control);
+void OH_SurfaceControl_Acquire(OH_SurfaceControl* surface_control);
 // Decrease a ref for a surface
-void OH_SurfaceControl_release(OH_SurfaceControl* surface_control);
+void OH_SurfaceControl_Release(OH_SurfaceControl* surface_control);
 
 struct OH_SurfaceTransaction;
 typedef struct OH_SurfaceTransaction OH_SurfaceTransaction;

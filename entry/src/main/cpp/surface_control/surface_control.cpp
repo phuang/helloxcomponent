@@ -1,55 +1,66 @@
 #include "surface_control/surface_control.h"
 
-#include "foundation/graphic/graphic_2d/rosen/modules/platform/utils/parcel.h"
+#include "foundation/graphic/graphic_2d/rosen/modules/render_service_client/core/pipeline/rs_node_map.h"
+#include "foundation/graphic/graphic_2d/rosen/modules/render_service_client/core/ui/rs_proxy_node.h"
 #include "foundation/graphic/graphic_2d/rosen/modules/render_service_client/core/ui/rs_surface_node.h"
 #include "foundation/graphic/graphic_surface/interfaces/inner_api/surface/surface_buffer.h"
+#include "foundation/graphic/graphic_surface/surface/include/native_window.h"
+#include "surface_control/log.h"
 #include "surface_control/ndk/surface_control.h"
 
 namespace OHOS::surface_control {
 namespace {
+using OHOS::Rosen::RSNode;
+using OHOS::Rosen::RSNodeMap;
+using OHOS::Rosen::RSProxyNode;
 using OHOS::Rosen::RSSurfaceNode;
 using OHOS::Rosen::RSSurfaceNodeConfig;
 
-class Helper : public RSSurfaceNode {
- public:
-  static std::shared_ptr<RSSurfaceNode> CreateProxy(NativeWindow* window,
-                                                    const char* debug_name) {
-    RSSurfaceNodeConfig config = {
-        .SurfaceNodeName = debug_name,
-    };
-    auto node = RSSurfaceNode::Create(config, /*isWindow=*/false,
-                                      /*rsUIContext=*/nullptr);
-    // node->skipDestroyCommandInDestructor_ = true;
-    return node;
-  }
-};
-
-}  // namespace
-
-sptr<SurfaceControl> SurfaceControl::Create(const char* debug_name) {
+std::shared_ptr<RSSurfaceNode> CreateSurfaceNode(const char* debug_name) {
   RSSurfaceNodeConfig config = {
       .SurfaceNodeName = debug_name,
   };
   auto node = RSSurfaceNode::Create(config, /*isWindow=*/false,
                                     /*rsUIContext=*/nullptr);
-  return sptr<SurfaceControl>::MakeSptr(std::move(node));
+  return node;
+}
+
+}  // namespace
+
+sptr<SurfaceControl> SurfaceControl::Create(const char* debug_name) {
+  return sptr<SurfaceControl>::MakeSptr(CreateSurfaceNode(debug_name));
 }
 
 sptr<SurfaceControl> SurfaceControl::CreateFromWindow(NativeWindow* window,
                                                       const char* debug_name) {
-  Parcel parcel;
-  uint64_t id = 0;
-  parcel.WriteUint64(id);
-  parcel.WriteString(debug_name);
-  parcel.WriteBool(/*isRenderServiceNode=*/false);
-  auto node = RSSurfaceNode::Unmarshalling(parcel);
-  return sptr<SurfaceControl>::MakeSptr(std::move(node));
+  if (window->nodeId == 0) {
+    return {};
+  }
+
+  auto parent = RSNodeMap::Instance().GetNode(window->nodeId);
+  if (!parent) {
+    parent = RSProxyNode::Create(window->nodeId, "root_proxy");
+  }
+
+  if (!parent) {
+    LOGE("RSProxyNode::Create() failed: nodeId=%{public}lu", window->nodeId);
+    return {};
+  }
+
+  auto node = CreateSurfaceNode(debug_name);
+  parent->AddChild(node, -1);
+  return sptr<SurfaceControl>::MakeSptr(std::move(node), std::move(parent));
 }
 
-SurfaceControl::SurfaceControl(std::shared_ptr<RSSurfaceNode> node)
-    : node_(std::move(node)) {}
+SurfaceControl::SurfaceControl(std::shared_ptr<RSSurfaceNode> node,
+                               std::shared_ptr<RSNode> parent)
+    : node_(std::move(node)), parent_(std::move(parent)) {}
 
-SurfaceControl::~SurfaceControl() = default;
+SurfaceControl::~SurfaceControl() {
+  if (parent_) {
+    parent_->RemoveChild(node_);
+  }
+}
 
 void SurfaceControl::Acquire() {
   RefBase::IncStrongRef(this);
@@ -115,21 +126,21 @@ void SurfaceControl::SetDesiredPresentTime(int64_t desired_present_time) {
 }
 
 void SurfaceControl::SetBufferAlpha(float alpha) {
-  // Implementation to set the buffer alpha
+  LOGE("SetBufferAlpha() is not implemented");
 }
 
 void SurfaceControl::SetFrameRateWithChangeStrategy(float frame_rate,
                                                     int8_t compatibility,
                                                     int32_t strategy) {
-  // Implementation to set the frame rate with a change strategy
+  LOGE("SetFrameRateWithChangeStrategy() is not implemented");
 }
 
 void SurfaceControl::ClearFrameRate() {
-  // Implementation to clear the frame rate
+  LOGE("ClearFrameRate() is not implemented");
 }
 
 void SurfaceControl::SetEnableBackPressure(bool enable_back_pressure) {
-  // Implementation to enable or disable back pressure
+  LOGE("SetEnableBackPressure() is not implemented");
 }
 
 void SurfaceControl::SyncBufferToNodeIfNecessary() {

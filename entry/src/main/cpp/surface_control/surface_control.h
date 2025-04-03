@@ -16,6 +16,8 @@ class SurfaceBuffer;
 }  // namespace OHOS
 
 namespace OHOS::Rosen {
+class RSNode;
+class RSProxyNode;
 class RSSurfaceNode;
 };  // namespace OHOS::Rosen
 
@@ -25,7 +27,8 @@ class SurfaceControl : public RefBase {
  public:
   using BufferReleaseCallback = std::function<void(int release_fence_fd)>;
 
-  SurfaceControl(std::shared_ptr<OHOS::Rosen::RSSurfaceNode> node);
+  SurfaceControl(std::shared_ptr<OHOS::Rosen::RSSurfaceNode> node,
+                 std::shared_ptr<OHOS::Rosen::RSNode> parent = {});
   ~SurfaceControl() override;
 
   // Create a surface which is not attached to surface tree.
@@ -64,6 +67,7 @@ class SurfaceControl : public RefBase {
 
  private:
   std::shared_ptr<OHOS::Rosen::RSSurfaceNode> node_;
+  std::shared_ptr<OHOS::Rosen::RSNode> parent_;
   sptr<SurfaceBuffer> buffer_;
   UniqueFd fence_fd_;
   BufferReleaseCallback release_callback_;

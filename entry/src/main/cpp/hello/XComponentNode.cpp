@@ -24,6 +24,7 @@
 #include "hello/NativeWindow.h"
 #include "hello/SyncFence.h"
 #include "hello/Thread.h"
+#include "surface_control/ndk/surface_control.h"
 
 namespace hello {
 namespace {
@@ -164,6 +165,10 @@ void XComponentNode::StopDrawFrame() {
 }
 
 void XComponentNode::OnSurfaceCreated(void* window) {
+  OH_SurfaceControl* surface_control = OH_SurfaceControl_FromNativeWindow(
+      reinterpret_cast<OHNativeWindow*>(window), "root_surface");
+  // OH_SurfaceControl* surface_control = OH_SurfaceControl_Create("root_surface");
+  OH_SurfaceControl_Release(surface_control);
   OnSurfaceChanged(window);
 
   if (draw_frame_) {

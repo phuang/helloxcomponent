@@ -14,16 +14,28 @@ using namespace OHOS::surface_control;
 
 OH_SurfaceControl* OH_SurfaceControl_FromNativeWindow(OHNativeWindow* parent,
                                                       const char* debug_name) {
-  return nullptr;
+  auto surface = SurfaceControl::CreateFromWindow(parent, debug_name);
+  if (surface) {
+    surface->IncStrongRef(nullptr);
+  }
+  return reinterpret_cast<OH_SurfaceControl*>(surface.GetRefPtr());
 }
 
-OH_SurfaceControl* OH_SurfaceControl_create(const char* debug_name) {
-  return nullptr;
+OH_SurfaceControl* OH_SurfaceControl_Create(const char* debug_name) {
+  auto surface = SurfaceControl::Create(debug_name);
+  surface->IncStrongRef(nullptr);
+  return reinterpret_cast<OH_SurfaceControl*>(surface.GetRefPtr());
 }
 
-void OH_SurfaceControl_acquire(OH_SurfaceControl* surface_control) {}
+void OH_SurfaceControl_Acquire(OH_SurfaceControl* surface_control) {
+  auto* surface = reinterpret_cast<SurfaceControl*>(surface_control);
+  surface->IncStrongRef(nullptr);
+}
 
-void OH_SurfaceControl_release(OH_SurfaceControl* surface_control) {}
+void OH_SurfaceControl_Release(OH_SurfaceControl* surface_control) {
+  auto* surface = reinterpret_cast<SurfaceControl*>(surface_control);
+  surface->DecStrongRef(nullptr);
+}
 
 OH_SurfaceTransaction* OH_SurfaceTransaction_Create() {
   auto* txn = new SurfaceTransaction();
