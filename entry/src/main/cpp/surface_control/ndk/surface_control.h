@@ -250,7 +250,7 @@ void OH_SurfaceTransaction_SetBuffer(
  *
  * \param crop The bounds of the crop to apply.
  */
-void OH_SurfaceTransaction_setCrop(OH_SurfaceTransaction* transaction,
+void OH_SurfaceTransaction_SetCrop(OH_SurfaceTransaction* transaction,
                                    OH_SurfaceControl* surface_control,
                                    const OH_Rect* crop);
 /**

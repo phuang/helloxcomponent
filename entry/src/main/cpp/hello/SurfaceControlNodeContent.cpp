@@ -12,9 +12,9 @@ SurfaceControlNodeContent::SurfaceControlNodeContent(
     ArkUI_NodeContentHandle content_handle)
     : NodeContent(content_handle) {
   {
-    auto renderer = std::make_unique<BitmapRenderer>(kPictureSkyUri);
-    root_node_ = XComponentNode::Create(renderer.get(), "root_view",
-                                        XComponentNode::kSoftware);
+    // auto renderer = std::make_unique<BitmapRenderer>(kPictureSkyUri);
+    root_node_ = XComponentNode::Create(this, "root_view",
+                                        XComponentNode::kNativeWindow);
     root_node_->SetWidthPercent(1);
     root_node_->SetHeightPercent(1);
     // child_renderers_.push_back(std::move(renderer));

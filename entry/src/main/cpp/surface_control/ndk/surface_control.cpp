@@ -141,7 +141,7 @@ void OH_SurfaceTransaction_SetBuffer(
       [context, func](int releaseFenceFd) { func(context, releaseFenceFd); });
 }
 
-void OH_SurfaceTransaction_setCrop(OH_SurfaceTransaction* transaction,
+void OH_SurfaceTransaction_SetCrop(OH_SurfaceTransaction* transaction,
                                    OH_SurfaceControl* surface_control,
                                    const OH_Rect* crop) {
   auto* txn = reinterpret_cast<SurfaceTransaction*>(transaction);

@@ -10,6 +10,8 @@ namespace hello {
 // static
 std::unique_ptr<SurfaceControl> SurfaceControl::Create(NativeWindow* parent,
                                                        const char* name) {
+  LOGE("EEEE SurfaceControl::Create() parent=%{public}p name=%{public}s",
+       parent, name);
   if (auto* surface =
           OH_SurfaceControl_FromNativeWindow(parent->window(), name)) {
     return std::unique_ptr<SurfaceControl>(new SurfaceControl(surface));
@@ -44,7 +46,9 @@ SurfaceControl::SurfaceControl(OH_SurfaceControl* surface) : surface_(surface) {
       .w = buffer_->width(),
       .h = buffer_->height(),
   };
-  OH_SurfaceTransaction_setCrop(txn, surface_, &crop);
+  OH_SurfaceTransaction_SetCrop(txn, surface_, &crop);
+  OH_SurfaceTransaction_SetVisibility(txn, surface_,
+                                      OH_SURFACE_TRANSACTION_VISIBILITY_SHOW);
   OH_SurfaceTransaction_Commit(txn);
   OH_SurfaceTransaction_Delete(txn);
 }

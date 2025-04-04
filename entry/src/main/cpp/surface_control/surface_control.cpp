@@ -51,12 +51,14 @@ sptr<SurfaceControl> SurfaceControl::CreateFromWindow(NativeWindow* window,
   // RSProxyNode::AddChild() doesn't allow add child, has to call
   // RSNode::AddChild() instead.
   parent_node->RSNode::AddChild(surface_node, -1);
-  return sptr<SurfaceControl>::MakeSptr(std::move(surface_node), std::move(parent_node));
+  return sptr<SurfaceControl>::MakeSptr(std::move(surface_node),
+                                        std::move(parent_node));
 }
 
 SurfaceControl::SurfaceControl(std::shared_ptr<RSSurfaceNode> surface_node,
                                std::shared_ptr<RSNode> parent_node)
-    : surface_node_(std::move(surface_node)), parent_node_(std::move(parent_node)) {}
+    : surface_node_(std::move(surface_node)),
+      parent_node_(std::move(parent_node)) {}
 
 SurfaceControl::~SurfaceControl() {
   // RSProxyNode::RemoveChild() does nothing, has to call RSNode::RemoveChild()
@@ -99,6 +101,8 @@ void SurfaceControl::SetBuffer(sptr<SurfaceBuffer> buffer,
   fence_fd_ = std::move(fence_fd);
   release_callback_ = callback;
   need_sync_buffer_to_node_ = true;
+  LOGE("EEEE SetBuffer() buffer=%{public}p, fence_fd=%{public}d",
+       buffer_.GetRefPtr(), fence_fd_.Get());
 }
 
 void SurfaceControl::SetCrop(const Rect* crop) {
@@ -158,8 +162,12 @@ void SurfaceControl::SyncBufferToNodeIfNecessary() {
     params.damages = std::move(damage_region_);
     params.timestamp = desired_present_time_;
     // TODO: set HDR related fields.
-    surface_node_->SetBuffer(std::move(params), {});
+    surface_node_->SetBuffer(
+        std::move(params),
+        [cb = release_callback_](sptr<SyncFence> fence) { cb(fence->Get()); });
     need_sync_buffer_to_node_ = false;
+    LOGE("SyncBufferToNodeIfNecessary() buffer=%{public}p, fence_fd=%{public}d",
+         buffer_.GetRefPtr(), fence_fd_.Get());
   }
 }
 

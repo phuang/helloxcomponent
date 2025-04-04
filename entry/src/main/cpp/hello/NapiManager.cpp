@@ -117,7 +117,7 @@ void NapiManager::CreateNativeNode(ArkUI_NodeContentHandle content_handle,
   } else if (mode == 1) {
     non_delegated_node_content_ =
         std::make_unique<NonDelegatedNodeContent>(content_handle);
-  } else {
+  } else if (mode == 2) {
     surface_control_node_content_ =
         std::make_unique<SurfaceControlNodeContent>(content_handle);
   }
