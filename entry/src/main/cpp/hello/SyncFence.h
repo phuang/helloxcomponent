@@ -12,7 +12,7 @@ class SyncFence {
   explicit SyncFence(ScopedFd fd);
   ~SyncFence();
 
-  int32_t Wait(int32_t timeout);
+  int32_t Wait(int32_t timeout = -1);
 
  private:
   SyncFence(const SyncFence&) = delete;

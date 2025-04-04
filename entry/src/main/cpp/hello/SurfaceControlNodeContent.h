@@ -6,8 +6,8 @@
 #include <memory>
 #include <vector>
 
-#include "hello/BitmapRenderer.h"
-#include "hello/TextureRenderer.h"
+
+#include "hello/Renderer.h"
 #include "surface_control/ndk/surface_control.h"
 
 namespace hello {
@@ -42,8 +42,9 @@ class SurfaceControlNodeContent : public NodeContent,
   bool visible_ = false;
   std::unique_ptr<XComponentNode> root_node_;
   // std::vector<std::unique_ptr<XComponentNode>> child_nodes_;
-  // std::vector<std::unique_ptr<Renderer>> child_renderers_;
+  std::vector<std::unique_ptr<Renderer>> renderers_;
   std::unique_ptr<SurfaceControl> root_surface_;
+  std::vector<std::unique_ptr<SurfaceControl>> child_surfaces_;
 };
 
 }  // namespace hello

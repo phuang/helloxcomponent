@@ -38,6 +38,13 @@ class NativeBuffer : public std::enable_shared_from_this<NativeBuffer> {
     return OH_NativeBuffer_GetSeqNum(buffer_);
   }
 
+  ScopedFd TakeFenceFd() {
+    return std::move(fence_fd_);
+  }
+  void SetFenceFd(int fence_fd) {
+    fence_fd_ = ScopedFd(fence_fd);
+  }
+
  private:
   NativeBuffer(const NativeBuffer&) = delete;
   NativeBuffer(NativeBuffer&&) = delete;

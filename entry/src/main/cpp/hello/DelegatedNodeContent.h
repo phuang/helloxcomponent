@@ -6,10 +6,9 @@
 #include <memory>
 #include <vector>
 
-#include "hello/BitmapRenderer.h"
-#include "hello/TextureRenderer.h"
-
 namespace hello {
+
+class Renderer;
 
 class DelegatedNodeContent : public NodeContent {
  public:

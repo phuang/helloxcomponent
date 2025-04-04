@@ -57,7 +57,6 @@ void BufferQueue::Destroy() {
   buffers_.clear();
   avaliable_buffers_.clear();
   produced_buffers_.clear();
-  in_present_buffers_.clear();
 
   // Buffer queue is being destroyed, notify all waiting threads to wake up.
   produced_condition_.notify_all();
@@ -105,7 +104,7 @@ void BufferQueue::FlushBuffer(std::shared_ptr<NativeBuffer> buffer) {
   produced_condition_.notify_one();
 }
 
-std::shared_ptr<NativeBuffer> BufferQueue::ConsumeBuffer() {
+std::shared_ptr<NativeBuffer> BufferQueue::ConsumeBuffer(bool wait) {
   std::unique_lock<std::mutex> lock(mutex_);
 
   do {
@@ -117,26 +116,24 @@ std::shared_ptr<NativeBuffer> BufferQueue::ConsumeBuffer() {
     if (!produced_buffers_.empty()) {
       auto buffer = std::move(produced_buffers_.front());
       produced_buffers_.pop_front();
-      in_present_buffers_[buffer->GetSeqNum()] = buffer;
       return buffer;
     }
+
+    if (!wait) {
+      return nullptr;
+    }
+
     produced_condition_.wait(lock);
   } while (true);
 }
 
-void BufferQueue::ReturnBuffer(uint32_t seq_num) {
+void BufferQueue::ReturnBuffer(std::shared_ptr<NativeBuffer> buffer) {
   std::unique_lock<std::mutex> lock(mutex_);
 
   if (is_destroyed_) {
     LOGE("BufferQueue::ReturnBuffer() BufferQueue is destroyed");
     return;
   }
-
-  auto it = in_present_buffers_.find(seq_num);
-  FATAL_IF(it == in_present_buffers_.end(),
-           "BufferQueue::ReturnBuffer() Buffer not found in present buffers");
-  auto buffer = std::move(it->second);
-  in_present_buffers_.erase(it);
 
   // size has been changed, free buffers which are not in the same size.
   if (buffer->width() != width_ || buffer->height() != height_) {

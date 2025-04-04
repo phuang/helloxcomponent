@@ -38,8 +38,8 @@ class BufferQueue : public std::enable_shared_from_this<BufferQueue> {
   void FlushBuffer(std::shared_ptr<NativeBuffer> buffer);
 
   // Consumer a buffer from the queue.
-  std::shared_ptr<NativeBuffer> ConsumeBuffer();
-  void ReturnBuffer(uint32_t seq_num);
+  std::shared_ptr<NativeBuffer> ConsumeBuffer(bool wait = true);
+  void ReturnBuffer(std::shared_ptr<NativeBuffer> buffer);
 
   bool IsDestroyed() const;
 
@@ -65,8 +65,6 @@ class BufferQueue : public std::enable_shared_from_this<BufferQueue> {
   std::condition_variable avaliable_condition_;
   std::deque<std::shared_ptr<NativeBuffer>> produced_buffers_;
   std::condition_variable produced_condition_;
-
-  std::map<uint32_t, std::shared_ptr<NativeBuffer>> in_present_buffers_;
 };
 
 }  // namespace hello

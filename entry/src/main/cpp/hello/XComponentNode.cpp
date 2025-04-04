@@ -251,7 +251,7 @@ void XComponentNode::SoftwareDrawFrame() {
   renderer_thread_->PostTask(
       [this, width, height, stride, fd = fence_fd.release(), addr] {
         SyncFence sync_fence((ScopedFd(fd)));
-        sync_fence.Wait(-1);
+        sync_fence.Wait();
         renderer_->RenderPixels(addr, width, height, stride, 0);
       },
       [this] { window_->FlushBuffer(); });

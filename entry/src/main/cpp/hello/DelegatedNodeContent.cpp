@@ -1,8 +1,10 @@
 #include "hello/DelegatedNodeContent.h"
 
 #include "hello/AVPlayer.h"
+#include "hello/BitmapRenderer.h"
 #include "hello/Constants.h"
 #include "hello/Log.h"
+#include "hello/TextureRenderer.h"
 
 namespace hello {
 

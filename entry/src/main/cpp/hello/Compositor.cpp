@@ -263,7 +263,7 @@ void Compositor::UploadNativeWindows(int32_t width,
           native_windows_for_upload_[i]->RequestBuffer(&w, &h, &stride,
                                                        &fence_fd, &addr);
           SyncFence sync_fence(std::move(fence_fd));
-          sync_fence.Wait(-1);
+          sync_fence.Wait();
           renderers_[i]->RenderPixels(static_cast<uint8_t*>(addr), w, h, stride,
                                       0);
           native_windows_for_upload_[i]->FlushBuffer();

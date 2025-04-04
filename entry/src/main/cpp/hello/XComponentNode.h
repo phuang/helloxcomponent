@@ -35,7 +35,7 @@ class XComponentNode {
     kSurfaceControl,
   };
 
-  static std::unique_ptr<XComponentNode> Create(Renderer* delegate,
+  static std::unique_ptr<XComponentNode> Create(Renderer* renderer,
                                                 const std::string& id,
                                                 Type type);
 
