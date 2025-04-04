@@ -107,6 +107,15 @@ void SurfaceTransaction::SetScale(SurfaceControl* surface_control,
       });
 }
 
+void SurfaceTransaction::SetRotation(SurfaceControl* surface_control,
+                                     float degree_x,
+                                     float degree_y,
+                                     float degree_z) {
+  transaction_commands_.push_back(
+      [surface = sptr<SurfaceControl>(surface_control), degree_x, degree_y,
+       degree_z] { surface->SetRotation(degree_x, degree_y, degree_z); });
+}
+
 void SurfaceTransaction::SetBufferTransparency(SurfaceControl* surface_control,
                                                int32_t transparency) {
   transaction_commands_.push_back(

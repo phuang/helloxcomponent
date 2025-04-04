@@ -169,11 +169,21 @@ void OH_SurfaceTransaction_SetBufferTransform(
 
 void OH_SurfaceTransaction_SetScale(OH_SurfaceTransaction* transaction,
                                     OH_SurfaceControl* surface_control,
-                                    float xScale,
-                                    float yScale) {
+                                    float scaleX,
+                                    float scaleY) {
   auto* txn = reinterpret_cast<SurfaceTransaction*>(transaction);
   auto* surface = reinterpret_cast<SurfaceControl*>(surface_control);
-  txn->SetScale(surface, xScale, yScale);
+  txn->SetScale(surface, scaleX, scaleY);
+}
+
+void OH_SurfaceTransaction_SetRotation(OH_SurfaceTransaction* transaction,
+                                       OH_SurfaceControl* surface_control,
+                                       float degreeX,
+                                       float degreeY,
+                                       float degreeZ) {
+  auto* txn = reinterpret_cast<SurfaceTransaction*>(transaction);
+  auto* surface = reinterpret_cast<SurfaceControl*>(surface_control);
+  txn->SetRotation(surface, degreeX, degreeY, degreeZ);
 }
 
 void OH_SurfaceTransaction_SetBufferTransparency(

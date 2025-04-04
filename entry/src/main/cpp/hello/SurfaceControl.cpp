@@ -32,7 +32,16 @@ SurfaceControl::SurfaceControl(OH_SurfaceControl* surface) : surface_(surface) {
 
   void* addr = buffer_->Map();
   if (addr) {
-    memset(addr, 0xFF, buffer_->width() * buffer_->height() * 4);
+    uint8_t* addr8 = static_cast<uint8_t*>(addr);
+    for (int i = 0; i < buffer_->height(); i++) {
+      for (int j = 0; j < buffer_->width(); j++) {
+        addr8[j * 4 + 0] = i;
+        addr8[j * 4 + 1] = 0;
+        addr8[j * 4 + 2] = 0x00;
+        addr8[j * 4 + 3] = 0xFF;
+      }
+      addr8 += buffer_->stride();
+    }
   }
   buffer_->Unmap();
 
@@ -49,6 +58,8 @@ SurfaceControl::SurfaceControl(OH_SurfaceControl* surface) : surface_(surface) {
   OH_SurfaceTransaction_SetCrop(txn, surface_, &crop);
   OH_SurfaceTransaction_SetVisibility(txn, surface_,
                                       OH_SURFACE_TRANSACTION_VISIBILITY_SHOW);
+  OH_SurfaceTransaction_SetScale(txn, surface_, 1.0, 1.0);
+  OH_SurfaceTransaction_SetPosition(txn, surface_, 100, 400);
   OH_SurfaceTransaction_Commit(txn);
   OH_SurfaceTransaction_Delete(txn);
 }

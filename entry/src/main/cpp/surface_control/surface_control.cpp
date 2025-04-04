@@ -107,7 +107,7 @@ void SurfaceControl::SetBuffer(sptr<SurfaceBuffer> buffer,
 
 void SurfaceControl::SetCrop(const Rect* crop) {
   surface_node_->SetFrame(crop->x, crop->y, crop->w, crop->h);
-  surface_node_->SetBounds(crop->x, crop->y, crop->w, crop->h);
+  // surface_node_->SetBounds(crop->x, crop->y, crop->w, crop->h);
 }
 
 void SurfaceControl::SetPosition(int32_t x, int32_t y) {
@@ -121,8 +121,14 @@ void SurfaceControl::SetBufferTransform(int32_t transform) {
   }
 }
 
-void SurfaceControl::SetScale(float x_scale, float y_scale) {
-  surface_node_->SetScale(x_scale, y_scale);
+void SurfaceControl::SetScale(float scale_x, float scale_y) {
+  surface_node_->SetScale(scale_x, scale_y);
+}
+
+void SurfaceControl::SetRotation(float degree_x,
+                                 float degree_y,
+                                 float degree_z) {
+  surface_node_->SetRotation(degree_x, degree_y, degree_z);
 }
 
 void SurfaceControl::SetBufferTransparency(int32_t transparency) {}
@@ -136,7 +142,7 @@ void SurfaceControl::SetDesiredPresentTime(int64_t desired_present_time) {
 }
 
 void SurfaceControl::SetBufferAlpha(float alpha) {
-  LOGE("SetBufferAlpha() is not implemented");
+  surface_node_->SetAlpha(alpha);
 }
 
 void SurfaceControl::SetFrameRateWithChangeStrategy(float frame_rate,

@@ -54,6 +54,10 @@ class SurfaceTransaction {
   void SetPosition(SurfaceControl* surface_control, int32_t x, int32_t y);
   void SetBufferTransform(SurfaceControl* surface_control, int32_t transform);
   void SetScale(SurfaceControl* surface_control, float x_scale, float y_scale);
+  void SetRotation(SurfaceControl* surface_control,
+                   float degree_x,
+                   float degree_y,
+                   float degree_z);
   void SetBufferTransparency(SurfaceControl* surface_control,
                              int32_t transparency);
   void SetDamageRegion(SurfaceControl* surface_control,

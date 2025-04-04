@@ -296,8 +296,22 @@ void OH_SurfaceTransaction_SetBufferTransform(
  */
 void OH_SurfaceTransaction_SetScale(OH_SurfaceTransaction* transaction,
                                     OH_SurfaceControl* surface_control,
-                                    float xScale,
-                                    float yScale);
+                                    float scaleX,
+                                    float scaleY);
+
+/**
+ * Sets an x and y scale of a surface with (0, 0) as the centerpoint of the
+ * scale.
+ *
+ * \param xScale The scale in the x direction. Must be greater than 0.
+ * \param yScale The scale in the y direction. Must be greater than 0.
+ */
+void OH_SurfaceTransaction_SetRotation(OH_SurfaceTransaction* transaction,
+                                       OH_SurfaceControl* surface_control,
+                                       float degreeX,
+                                       float degreeY,
+                                       float degreeZ);
+
 /**
  * Parameter for OH_SurfaceTransaction_setBufferTransparency().
  */
