@@ -5,11 +5,11 @@
 namespace hello {
 
 // static
-std::unique_ptr<NativeBuffer> NativeBuffer::Create(int32_t width,
-                                                     int32_t height,
-                                                     int32_t format,
-                                                     int32_t usage,
-                                                     int32_t stride) {
+std::shared_ptr<NativeBuffer> NativeBuffer::Create(int32_t width,
+                                                   int32_t height,
+                                                   int32_t format,
+                                                   int32_t usage,
+                                                   int32_t stride) {
   OH_NativeBuffer_Config config = {
       .width = width,
       .height = height,
@@ -18,7 +18,7 @@ std::unique_ptr<NativeBuffer> NativeBuffer::Create(int32_t width,
       .stride = stride,
   };
   if (auto* buffer = OH_NativeBuffer_Alloc(&config)) {
-    return std::unique_ptr<NativeBuffer>(new NativeBuffer(buffer));
+    return std::shared_ptr<NativeBuffer>(new NativeBuffer(buffer));
   }
   return {};
 }

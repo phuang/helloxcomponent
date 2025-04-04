@@ -33,7 +33,7 @@ class SurfaceControl {
   void OnBufferRelease(int release_fence_fd);
 
   OH_SurfaceControl* surface_ = nullptr;
-  std::unique_ptr<NativeBuffer> buffer_;
+  std::shared_ptr<NativeBuffer> buffer_;
 };
 
 }  // namespace hello

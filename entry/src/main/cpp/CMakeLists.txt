@@ -96,6 +96,8 @@ add_library(helloxcomponent SHARED
     hello/AVPlayer.h
     hello/BitmapRenderer.cpp
     hello/BitmapRenderer.h
+    hello/BufferQueue.cpp
+    hello/BufferQueue.h
     hello/Constants.cpp
     hello/Constants.h
     hello/Compositor.cpp

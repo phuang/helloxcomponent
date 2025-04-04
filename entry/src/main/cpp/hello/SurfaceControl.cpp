@@ -46,9 +46,10 @@ SurfaceControl::SurfaceControl(OH_SurfaceControl* surface) : surface_(surface) {
   }
   buffer_->Unmap();
 
-  auto* txn = OH_SurfaceTransaction_Create();
+  auto* transaction = OH_SurfaceTransaction_Create();
 
-  OH_SurfaceTransaction_SetBuffer(txn, surface_, buffer_->buffer(), -1, this,
+  OH_SurfaceTransaction_SetBuffer(transaction, surface_, buffer_->buffer(),
+                                  /*acquire_fence_fd=*/-1, this,
                                   SurfaceControl::OnBufferReleaseStub);
   OH_Rect crop = {
       .x = 0,
@@ -56,13 +57,13 @@ SurfaceControl::SurfaceControl(OH_SurfaceControl* surface) : surface_(surface) {
       .w = buffer_->width(),
       .h = buffer_->height(),
   };
-  OH_SurfaceTransaction_SetCrop(txn, surface_, &crop);
-  OH_SurfaceTransaction_SetVisibility(txn, surface_,
+  OH_SurfaceTransaction_SetCrop(transaction, surface_, &crop);
+  OH_SurfaceTransaction_SetVisibility(transaction, surface_,
                                       OH_SURFACE_TRANSACTION_VISIBILITY_SHOW);
-  OH_SurfaceTransaction_SetScale(txn, surface_, 1.0, 1.0);
-  OH_SurfaceTransaction_SetPosition(txn, surface_, 100, 400);
-  OH_SurfaceTransaction_Commit(txn);
-  OH_SurfaceTransaction_Delete(txn);
+  OH_SurfaceTransaction_SetScale(transaction, surface_, 1.0, 1.0);
+  OH_SurfaceTransaction_SetPosition(transaction, surface_, 100, 400);
+  OH_SurfaceTransaction_Commit(transaction);
+  OH_SurfaceTransaction_Delete(transaction);
 }
 
 SurfaceControl::~SurfaceControl() {
@@ -85,4 +86,5 @@ void SurfaceControl::OnBufferReleaseStub(void* context, int release_fence_fd) {
     close(release_fence_fd);
   }
 }
+
 }  // namespace hello
