@@ -40,6 +40,8 @@ class BufferQueue : public std::enable_shared_from_this<BufferQueue> {
   std::shared_ptr<NativeBuffer> ConsumeBuffer();
   void ReturnBuffer(std::shared_ptr<NativeBuffer> buffer);
 
+  bool isDestroyed() const { return is_destroyed_; }
+
  private:
   BufferQueue(const BufferQueue&) = delete;
   BufferQueue& operator=(const BufferQueue&) = delete;
@@ -54,6 +56,7 @@ class BufferQueue : public std::enable_shared_from_this<BufferQueue> {
   int32_t width_ = 0;
   int32_t height_ = 0;
   size_t buffer_count_ = 0;
+  bool is_destroyed_ = false;
   std::vector<std::shared_ptr<NativeBuffer>> buffers_;
   std::deque<std::shared_ptr<NativeBuffer>> avaliable_buffers_;
   std::deque<std::shared_ptr<NativeBuffer>> prodcued_buffers_;
