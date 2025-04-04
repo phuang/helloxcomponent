@@ -32,7 +32,7 @@ void Thread::Start() {
 
 void Thread::Stop() {
   {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::unique_lock<std::mutex> lock(mutex_);
     stop_thread_ = true;
   }
   cv_.notify_all();
@@ -43,7 +43,7 @@ void Thread::Stop() {
 
 void Thread::PostTask(const std::function<void()>& task) {
   {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::unique_lock<std::mutex> lock(mutex_);
     task_queue_.push(task);
   }
   cv_.notify_one();
@@ -85,7 +85,7 @@ void Thread::Loop() {
 void Thread::CallDones() {
   std::queue<std::function<void()>> done_queue;
   {
-    std::lock_guard<std::mutex> lock(done_mutex_);
+    std::unique_lock<std::mutex> lock(done_mutex_);
     done_queue.swap(done_queue_);
   }
   while (!done_queue.empty()) {

@@ -12,7 +12,7 @@ NonDelegatedNodeContent::NonDelegatedNodeContent(
     : NodeContent(content_handle) {
   compositor_ = std::make_unique<Compositor>();
   root_node_ = XComponentNode::Create(compositor_.get(), "root_view",
-                                      XComponentNode::kEGLSurface);
+                                      XComponentNode::kSurfaceControl);
   root_node_->SetWidthPercent(1);
   root_node_->SetHeightPercent(1);
 }

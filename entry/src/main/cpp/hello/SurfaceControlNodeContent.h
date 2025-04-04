@@ -37,8 +37,7 @@ class SurfaceControlNodeContent : public NodeContent,
   void SetNativeWindow(NativeWindow* native_window) override;
   void StartDrawFrame() override;
   void StopDrawFrame() override;
-
-  static ArkUI_NativeNodeAPI_1* api();
+  void UpdateSurfaceControl() override;
 
   bool visible_ = false;
   std::unique_ptr<XComponentNode> root_node_;

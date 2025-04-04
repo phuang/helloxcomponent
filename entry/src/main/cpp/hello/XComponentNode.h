@@ -19,17 +19,20 @@ class Thread;
 class XComponentNode {
  public:
   enum Type {
-    // Delegate::RenderPixels() will be called with pixels address to be fixed
+    // Renderer::RenderPixels() will be called with pixels address to be fixed
     // with date.
     kSoftware,
-    // Delegate::RenderFrame() will be called with GL framebuffer setup.
+    // Renderer::RenderFrame() will be called with GL framebuffer setup.
     kEGLSurface,
-    // Delegate::RenderTextre() wiil be called with target and texture_id which
+    // Renderer::RenderTextre() wiil be called with target and texture_id which
     // EGLImage is bind to.
     kEGLImage,
-    // Delegate::SetNativeWindow() will be called with a native window which is
+    // Renderer::SetNativeWindow() will be called with a native window which is
     // used for rendering to.
-    kNativeWindow
+    kNativeWindow,
+    // Renderer::SetNativeWindow() will be called with a native window which is
+    // used for rendering to.
+    kSurfaceControl,
   };
 
   static std::unique_ptr<XComponentNode> Create(Renderer* delegate,
@@ -93,6 +96,7 @@ class XComponentNode {
 
   void SoftwareDrawFrame();
   void HardwareDrawFrame();
+  void UpdateSurfaceControl();
 
   void SetAttribute(ArkUI_NodeAttributeType attribute, uint32_t u32) {
     ArkUI_NumberValue value = {.u32 = u32};
@@ -151,6 +155,7 @@ class XComponentNode {
   bool using_egl_surface() const { return type_ == kEGLSurface; }
   bool using_egl_image() const { return type_ == kEGLImage; }
   bool using_native_window() const { return type_ == kNativeWindow; }
+  bool using_surface_control() const { return type_ == kSurfaceControl; }
 
   void SetAttribute(ArkUI_NodeAttributeType attribute, const char* string) {
     ArkUI_AttributeItem item = {.string = string};

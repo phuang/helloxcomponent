@@ -6,18 +6,25 @@
 #include <memory>
 #include <vector>
 
-#include "hello/BitmapRenderer.h"
-#include "hello/TextureRenderer.h"
 #include "surface_control/ndk/surface_control.h"
 
 namespace hello {
 
-class NativeBuffer;
+class BufferQueue;
+class Renderer;
+
 class SurfaceControl {
  public:
-  static std::unique_ptr<SurfaceControl> Create(NativeWindow* parent,
-                                                const char* name);
-  static std::unique_ptr<SurfaceControl> Create(const char* name);
+  static std::unique_ptr<SurfaceControl> Create(const char* name,
+                                                NativeWindow* parent,
+                                                int32_t width,
+                                                int32_t height,
+                                                Renderer* renderer);
+
+  static std::unique_ptr<SurfaceControl> Create(const char* name,
+                                                int32_t width,
+                                                int32_t height,
+                                                Renderer* renderer);
 
   ~SurfaceControl();
 
@@ -27,13 +34,20 @@ class SurfaceControl {
   SurfaceControl& operator=(const SurfaceControl&) = delete;
   SurfaceControl& operator=(SurfaceControl&&) = delete;
 
-  explicit SurfaceControl(OH_SurfaceControl* surface);
+  SurfaceControl(OH_SurfaceControl* surface,
+                 int32_t width,
+                 int32_t height,
+                 Renderer* renderer);
+
+  void SoftwareDrawFrame();
+  void HardwareDrawFrame();
 
   static void OnBufferReleaseStub(void* context, int release_fence_fd);
   void OnBufferRelease(int release_fence_fd);
 
   OH_SurfaceControl* surface_ = nullptr;
-  std::shared_ptr<NativeBuffer> buffer_;
+  Renderer* const renderer_;
+  std::shared_ptr<BufferQueue> buffer_queue_;
 };
 
 }  // namespace hello

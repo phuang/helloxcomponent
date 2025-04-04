@@ -197,6 +197,7 @@ void XComponentNode::OnSurfaceChanged(void* window) {
       "size=%{public}dx%{public}d xcomp_size=%{public}lux%{public}lu",
       id_.c_str(), window_->width(), window_->height(), surface_width_,
       surface_height_);
+
   if (using_egl_surface()) {
     const auto* gl_core = NapiManager::GetInstance()->gl_core();
     EGLDisplay display = gl_core->display();
@@ -205,7 +206,7 @@ void XComponentNode::OnSurfaceChanged(void* window) {
     FATAL_IF(egl_surface_ == EGL_NO_SURFACE,
              "eglCreateWindowSurface() failed. EGL error: 0x%{public}x",
              eglGetError());
-  } else if (using_native_window()) {
+  } else if (using_native_window() || using_surface_control()) {
     renderer_->SetNativeWindow(window_.get());
   }
 }
@@ -234,8 +235,10 @@ void XComponentNode::OnFrame(uint64_t timestamp, uint64_t targetTimestamp) {
 
   if (is_software()) {
     SoftwareDrawFrame();
-  } else {
+  } else if (using_egl_surface()) {
     HardwareDrawFrame();
+  } else if (using_surface_control()) {
+    UpdateSurfaceControl();
   }
 }
 
@@ -317,6 +320,14 @@ void XComponentNode::HardwareDrawFrame() {
   FATAL_IF(retval != 0,
            "OH_NativeWindow_NativeWindowFlushBuffer() failed retval=%{public}d",
            retval);
+}
+
+void XComponentNode::UpdateSurfaceControl() {
+  CHECK(window_);
+  CHECK(using_surface_control());
+  if (renderer_) {
+    renderer_->UpdateSurfaceControl();
+  }
 }
 
 // static

@@ -87,7 +87,15 @@
 			"valarray": "cpp",
 			"ranges": "cpp",
 			"__mutex_base": "cpp",
-			"shared_mutex": "cpp"
+			"shared_mutex": "cpp",
+			"coroutine": "cpp",
+			"__split_buffer": "cpp",
+			"forward_list": "cpp",
+			"queue": "cpp",
+			"set": "cpp",
+			"stack": "cpp",
+			"any": "cpp",
+			"stacktrace": "cpp"
 		}
 	}
 }

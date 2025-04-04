@@ -34,6 +34,9 @@ class NativeBuffer : public std::enable_shared_from_this<NativeBuffer> {
   int32_t format() const { return config_.format; }
   int32_t usage() const { return config_.usage; }
   int32_t stride() const { return config_.stride; }
+  uint32_t GetSeqNum() const {
+    return OH_NativeBuffer_GetSeqNum(buffer_);
+  }
 
  private:
   NativeBuffer(const NativeBuffer&) = delete;

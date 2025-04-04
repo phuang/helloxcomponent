@@ -3,7 +3,8 @@
 
 #include <deque>
 #include <memory>
-#include <set>
+#include <mutex>
+#include <map>
 #include <vector>
 
 #include "hello/NativeBuffer.h"
@@ -38,9 +39,9 @@ class BufferQueue : public std::enable_shared_from_this<BufferQueue> {
 
   // Consumer a buffer from the queue.
   std::shared_ptr<NativeBuffer> ConsumeBuffer();
-  void ReturnBuffer(std::shared_ptr<NativeBuffer> buffer);
+  void ReturnBuffer(uint32_t seq_num);
 
-  bool isDestroyed() const { return is_destroyed_; }
+  bool IsDestroyed() const;
 
  private:
   BufferQueue(const BufferQueue&) = delete;
@@ -53,14 +54,19 @@ class BufferQueue : public std::enable_shared_from_this<BufferQueue> {
   const int32_t format_;
   const int32_t usage_;
   const int32_t max_buffer_count_;
+
+  mutable std::mutex mutex_;
   int32_t width_ = 0;
   int32_t height_ = 0;
   size_t buffer_count_ = 0;
   bool is_destroyed_ = false;
   std::vector<std::shared_ptr<NativeBuffer>> buffers_;
   std::deque<std::shared_ptr<NativeBuffer>> avaliable_buffers_;
-  std::deque<std::shared_ptr<NativeBuffer>> prodcued_buffers_;
-  std::set<std::shared_ptr<NativeBuffer>> in_present_buffers_;
+  std::condition_variable avaliable_condition_;
+  std::deque<std::shared_ptr<NativeBuffer>> produced_buffers_;
+  std::condition_variable produced_condition_;
+
+  std::map<uint32_t, std::shared_ptr<NativeBuffer>> in_present_buffers_;
 };
 
 }  // namespace hello
