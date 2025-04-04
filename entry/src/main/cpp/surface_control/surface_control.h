@@ -66,6 +66,9 @@ class SurfaceControl : public RefBase {
 
   void SyncBufferToNodeIfNecessary();
 
+  // Only root surface holds parent_node_ which is the node in NativeWindow.
+  bool IsRootSurface() const { return parent_node_ != nullptr; }
+
  private:
   SurfaceControl(const SurfaceControl&) = delete;
   SurfaceControl& operator=(const SurfaceControl&) = delete;

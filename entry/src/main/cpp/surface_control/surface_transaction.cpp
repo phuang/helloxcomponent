@@ -3,6 +3,7 @@
 #include "commonlibrary/c_utils/base/include/unique_fd.h"
 #include "foundation/graphic/graphic_2d/rosen/modules/render_service_client/core/transaction/rs_transaction.h"
 #include "foundation/graphic/graphic_surface/interfaces/inner_api/surface/surface_buffer.h"
+#include "surface_control/log.h"
 #include "surface_control/ndk/surface_control.h"
 
 namespace OHOS::surface_control {
@@ -21,6 +22,7 @@ void SurfaceTransaction::Commit() {
   }
   surface_controls_.clear();
 
+  // Flush the transaction to the render service.
   OHOS::Rosen::RSTransaction::FlushImplicitTransaction();
 }
 
@@ -34,6 +36,10 @@ void SurfaceTransaction::SetOnCommit(const OnCommitCallback& callback) {
 
 void SurfaceTransaction::Reparent(SurfaceControl* surface_control,
                                   SurfaceControl* new_parent) {
+  if (surface_control->IsRootSurface()) {
+    LOGE("SurfaceTransaction::Reparent: root surface cannot be reparented");
+    return;
+  }
   transaction_commands_.push_back(
       [surface = sptr<SurfaceControl>(surface_control),
        parent = sptr<SurfaceControl>(new_parent)] {
@@ -91,29 +97,9 @@ void SurfaceTransaction::SetPosition(SurfaceControl* surface_control,
 }
 
 void SurfaceTransaction::SetBufferTransform(SurfaceControl* surface_control,
-                                            int32_t transform) {
-#define STATIC_ASSERT_TRANSFORM(name)                                     \
-  static_assert(static_cast<int>(GraphicTransformType::GRAPHIC_##name) == \
-                OH_TRANSFORM_##name)
-  STATIC_ASSERT_TRANSFORM(ROTATE_NONE);
-  STATIC_ASSERT_TRANSFORM(ROTATE_90);
-  STATIC_ASSERT_TRANSFORM(ROTATE_180);
-  STATIC_ASSERT_TRANSFORM(ROTATE_270);
-  STATIC_ASSERT_TRANSFORM(FLIP_H);
-  STATIC_ASSERT_TRANSFORM(FLIP_V);
-  STATIC_ASSERT_TRANSFORM(FLIP_H_ROT90);
-  STATIC_ASSERT_TRANSFORM(FLIP_V_ROT90);
-  STATIC_ASSERT_TRANSFORM(FLIP_H_ROT180);
-  STATIC_ASSERT_TRANSFORM(FLIP_V_ROT180);
-  STATIC_ASSERT_TRANSFORM(FLIP_H_ROT270);
-  STATIC_ASSERT_TRANSFORM(FLIP_V_ROT270);
-#undef STATIC_ASSERT_TRANSFORM
-  if (transform < OH_TRANSFORM_ROTATE_NONE ||
-      transform > OH_TRANSFORM_ROTATE_LAST) {
-    return;
-  }
+                                            GraphicTransformType transform) {
   transaction_commands_.push_back([surface = surface_control, transform] {
-    surface->SetBufferTransform(static_cast<GraphicTransformType>(transform));
+    surface->SetBufferTransform(transform);
   });
   // Buffer thrasform change may need to set buffer again.
   surface_controls_.insert(surface_control);

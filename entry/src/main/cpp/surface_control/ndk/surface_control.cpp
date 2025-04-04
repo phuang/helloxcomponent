@@ -3,6 +3,8 @@
 #include <memory>
 
 #include "foundation/graphic/graphic_surface/interfaces/inner_api/surface/surface_buffer.h"
+#include "foundation/graphic/graphic_surface/interfaces/inner_api/surface/surface_type.h"
+#include "surface_control/log.h"
 #include "surface_control/surface_control.h"
 #include "surface_control/surface_transaction.h"
 
@@ -110,6 +112,11 @@ void OH_SurfaceTransaction_SetVisibility(
     OH_SurfaceTransaction* transaction,
     OH_SurfaceControl* surface_control,
     enum OH_SurfaceTransactionVisibility visibility) {
+  if (visibility != OH_SURFACE_TRANSACTION_VISIBILITY_HIDE &&
+      visibility != OH_SURFACE_TRANSACTION_VISIBILITY_SHOW) {
+    LOGE("%{public}s: sInvalid visibility value: %d", __func__, visibility);
+    return;
+  }
   auto* txn = reinterpret_cast<SurfaceTransaction*>(transaction);
   auto* surface = reinterpret_cast<SurfaceControl*>(surface_control);
   txn->SetVisibility(surface,
@@ -162,9 +169,31 @@ void OH_SurfaceTransaction_SetBufferTransform(
     OH_SurfaceTransaction* transaction,
     OH_SurfaceControl* surface_control,
     int32_t transform) {
+#define STATIC_ASSERT_TRANSFORM(name)                                 \
+  static_assert(                                                      \
+      static_cast<int>(OHOS::GraphicTransformType::GRAPHIC_##name) == \
+      OH_TRANSFORM_##name)
+  STATIC_ASSERT_TRANSFORM(ROTATE_NONE);
+  STATIC_ASSERT_TRANSFORM(ROTATE_90);
+  STATIC_ASSERT_TRANSFORM(ROTATE_180);
+  STATIC_ASSERT_TRANSFORM(ROTATE_270);
+  STATIC_ASSERT_TRANSFORM(FLIP_H);
+  STATIC_ASSERT_TRANSFORM(FLIP_V);
+  STATIC_ASSERT_TRANSFORM(FLIP_H_ROT90);
+  STATIC_ASSERT_TRANSFORM(FLIP_V_ROT90);
+  STATIC_ASSERT_TRANSFORM(FLIP_H_ROT180);
+  STATIC_ASSERT_TRANSFORM(FLIP_V_ROT180);
+  STATIC_ASSERT_TRANSFORM(FLIP_H_ROT270);
+  STATIC_ASSERT_TRANSFORM(FLIP_V_ROT270);
+#undef STATIC_ASSERT_TRANSFORM
+  if (transform < OH_TRANSFORM_ROTATE_NONE ||
+      transform > OH_TRANSFORM_ROTATE_LAST) {
+    return;
+  }
   auto* txn = reinterpret_cast<SurfaceTransaction*>(transaction);
   auto* surface = reinterpret_cast<SurfaceControl*>(surface_control);
-  txn->SetBufferTransform(surface, transform);
+  txn->SetBufferTransform(surface,
+                          static_cast<OHOS::GraphicTransformType>(transform));
 }
 
 void OH_SurfaceTransaction_SetScale(OH_SurfaceTransaction* transaction,

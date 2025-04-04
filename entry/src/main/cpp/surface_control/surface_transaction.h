@@ -52,7 +52,8 @@ class SurfaceTransaction {
                  const BufferReleaseCallback& callback);
   void SetCrop(SurfaceControl* surface_control, const OH_Rect* crop);
   void SetPosition(SurfaceControl* surface_control, int32_t x, int32_t y);
-  void SetBufferTransform(SurfaceControl* surface_control, int32_t transform);
+  void SetBufferTransform(SurfaceControl* surface_control,
+                          GraphicTransformType transform);
   void SetScale(SurfaceControl* surface_control, float x_scale, float y_scale);
   void SetRotation(SurfaceControl* surface_control,
                    float degree_x,
