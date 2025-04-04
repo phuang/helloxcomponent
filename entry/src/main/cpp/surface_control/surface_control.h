@@ -51,7 +51,7 @@ class SurfaceControl : public RefBase {
                  const BufferReleaseCallback& callback);
   void SetCrop(const Rect* crop);
   void SetPosition(int32_t x, int32_t y);
-  void SetBufferTransform(int32_t transform);
+  void SetBufferTransform(GraphicTransformType transform);
   void SetScale(float scale_x, float scale_y);
   void SetRotation(float degree_x, float degree_y, float degree_z);
   void SetBufferTransparency(int32_t transparency);

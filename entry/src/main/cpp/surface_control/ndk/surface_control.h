@@ -276,7 +276,7 @@ enum OH_TRANSFORM : int32_t {
   OH_TRANSFORM_FLIP_V_ROT180,   /**< Flip vertically and rotate 180 degrees */
   OH_TRANSFORM_FLIP_H_ROT270,   /**< Flip horizontally and rotate 270 degrees */
   OH_TRANSFORM_FLIP_V_ROT270,   /**< Flip vertically and rotate 270 degrees */
-  OH_TRANSFORM_ROTATE_BUTT      /**< Invalid operation */
+  OH_TRANSFORM_ROTATE_LAST = OH_TRANSFORM_FLIP_V_ROT270,
 };
 /**
  * \param transform The transform applied after the source rect is applied to

@@ -69,11 +69,11 @@ SurfaceControl::~SurfaceControl() {
 }
 
 void SurfaceControl::Acquire() {
-  RefBase::IncStrongRef(this);
+  this->IncStrongRef(this);
 }
 
 void SurfaceControl::Release() {
-  RefBase::DecStrongRef(this);
+  this->DecStrongRef(this);
 }
 
 void SurfaceControl::SetParent(SurfaceControl* new_parent) {
@@ -114,9 +114,9 @@ void SurfaceControl::SetPosition(int32_t x, int32_t y) {
   surface_node_->SetTranslate(static_cast<float>(x), static_cast<float>(y), 0);
 }
 
-void SurfaceControl::SetBufferTransform(int32_t transform) {
-  if (buffer_transform_ != static_cast<GraphicTransformType>(transform)) {
-    buffer_transform_ = static_cast<GraphicTransformType>(transform);
+void SurfaceControl::SetBufferTransform(GraphicTransformType transform) {
+  if (buffer_transform_ != transform) {
+    buffer_transform_ = transform;
     need_sync_buffer_to_node_ = true;
   }
 }
@@ -131,7 +131,9 @@ void SurfaceControl::SetRotation(float degree_x,
   surface_node_->SetRotation(degree_x, degree_y, degree_z);
 }
 
-void SurfaceControl::SetBufferTransparency(int32_t transparency) {}
+void SurfaceControl::SetBufferTransparency(int32_t transparency) {
+  LOGE("SetBufferTransparency() is not implemented");
+}
 
 void SurfaceControl::SetDamageRegion(std::vector<Rect> rects) {
   damage_region_ = std::move(rects);
@@ -162,6 +164,7 @@ void SurfaceControl::SetEnableBackPressure(bool enable_back_pressure) {
 void SurfaceControl::SyncBufferToNodeIfNecessary() {
   if (need_sync_buffer_to_node_) {
     RSSurfaceNode::SetBufferParams params;
+    buffer_->SetSurfaceBufferTransform(buffer_transform_);
     buffer_->SetSurfaceBufferTransform(buffer_transform_);
     params.buffer = buffer_;
     params.fence = new SyncFence(fence_fd_.Release());

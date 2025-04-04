@@ -72,6 +72,7 @@ void SurfaceTransaction::SetBuffer(SurfaceControl* surface_control,
 
 void SurfaceTransaction::SetCrop(SurfaceControl* surface_control,
                                  const OH_Rect* crop) {
+  // Make sure OH_Rect and OHOS::Rect are sychronized.
   static_assert(sizeof(Rect) == sizeof(OH_Rect));
   transaction_commands_.push_back(
       [surface = sptr<SurfaceControl>(surface_control),
@@ -91,8 +92,28 @@ void SurfaceTransaction::SetPosition(SurfaceControl* surface_control,
 
 void SurfaceTransaction::SetBufferTransform(SurfaceControl* surface_control,
                                             int32_t transform) {
+#define STATIC_ASSERT_TRANSFORM(name)                                     \
+  static_assert(static_cast<int>(GraphicTransformType::GRAPHIC_##name) == \
+                OH_TRANSFORM_##name)
+  STATIC_ASSERT_TRANSFORM(ROTATE_NONE);
+  STATIC_ASSERT_TRANSFORM(ROTATE_90);
+  STATIC_ASSERT_TRANSFORM(ROTATE_180);
+  STATIC_ASSERT_TRANSFORM(ROTATE_270);
+  STATIC_ASSERT_TRANSFORM(FLIP_H);
+  STATIC_ASSERT_TRANSFORM(FLIP_V);
+  STATIC_ASSERT_TRANSFORM(FLIP_H_ROT90);
+  STATIC_ASSERT_TRANSFORM(FLIP_V_ROT90);
+  STATIC_ASSERT_TRANSFORM(FLIP_H_ROT180);
+  STATIC_ASSERT_TRANSFORM(FLIP_V_ROT180);
+  STATIC_ASSERT_TRANSFORM(FLIP_H_ROT270);
+  STATIC_ASSERT_TRANSFORM(FLIP_V_ROT270);
+#undef STATIC_ASSERT_TRANSFORM
+  if (transform < OH_TRANSFORM_ROTATE_NONE ||
+      transform > OH_TRANSFORM_ROTATE_LAST) {
+    return;
+  }
   transaction_commands_.push_back([surface = surface_control, transform] {
-    surface->SetBufferTransform(transform);
+    surface->SetBufferTransform(static_cast<GraphicTransformType>(transform));
   });
   // Buffer thrasform change may need to set buffer again.
   surface_controls_.insert(surface_control);
@@ -132,6 +153,7 @@ void SurfaceTransaction::SetDamageRegion(SurfaceControl* surface_control,
     damage_rects = std::make_shared<std::vector<Rect>>();
     damage_rects->resize(count);
   }
+  // Make sure OH_Rect and OHOS::Rect are sychronized.
   static_assert(sizeof(Rect) == sizeof(OH_Rect));
   memcpy(damage_rects->data(), rects, sizeof(Rect) * count);
   transaction_commands_.push_back(

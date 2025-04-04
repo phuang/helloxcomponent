@@ -21,6 +21,7 @@ std::unique_ptr<SurfaceControl> SurfaceControl::Create(NativeWindow* parent,
 
 // static
 std::unique_ptr<SurfaceControl> SurfaceControl::Create(const char* name) {
+  LOGE("EEEE SurfaceControl::Create() name=%{public}s", name);
   if (auto* surface = OH_SurfaceControl_Create(name)) {
     return std::unique_ptr<SurfaceControl>(new SurfaceControl(surface));
   }
