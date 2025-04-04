@@ -188,6 +188,7 @@ void OH_SurfaceTransaction_SetBufferTransform(
 #undef STATIC_ASSERT_TRANSFORM
   if (transform < OH_TRANSFORM_ROTATE_NONE ||
       transform > OH_TRANSFORM_ROTATE_LAST) {
+    LOGE("%{public}s: Invalid transform value: %d", __func__, transform);
     return;
   }
   auto* txn = reinterpret_cast<SurfaceTransaction*>(transaction);
@@ -219,6 +220,12 @@ void OH_SurfaceTransaction_SetBufferTransparency(
     OH_SurfaceTransaction* transaction,
     OH_SurfaceControl* surface_control,
     enum OH_SurfaceTransactionTransparency transparency) {
+  if (transparency != OH_SURFACE_TRANSACTION_TRANSPARENCY_TRANSPARENT &&
+      transparency != OH_SURFACE_TRANSACTION_TRANSPARENCY_TRANSLUCENT &&
+      transparency != OH_SURFACE_TRANSACTION_TRANSPARENCY_OPAQUE) {
+    LOGE("%{public}s: Invalid transparency value: %d", __func__, transparency);
+    return;
+  }
   auto* txn = reinterpret_cast<SurfaceTransaction*>(transaction);
   auto* surface = reinterpret_cast<SurfaceControl*>(surface_control);
   txn->SetBufferTransparency(surface, transparency);

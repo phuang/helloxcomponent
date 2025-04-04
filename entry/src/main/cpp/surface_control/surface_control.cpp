@@ -139,10 +139,6 @@ void SurfaceControl::SetDamageRegion(std::vector<Rect> rects) {
   damage_region_ = std::move(rects);
 }
 
-void SurfaceControl::SetDesiredPresentTime(int64_t desired_present_time) {
-  desired_present_time_ = desired_present_time;
-}
-
 void SurfaceControl::SetBufferAlpha(float alpha) {
   surface_node_->SetAlpha(alpha);
 }
@@ -161,7 +157,7 @@ void SurfaceControl::SetEnableBackPressure(bool enable_back_pressure) {
   LOGE("SetEnableBackPressure() is not implemented");
 }
 
-void SurfaceControl::SyncBufferToNodeIfNecessary() {
+void SurfaceControl::SyncBufferToNodeIfNecessary(int64_t desired_present_time) {
   if (need_sync_buffer_to_node_) {
     RSSurfaceNode::SetBufferParams params;
     buffer_->SetSurfaceBufferTransform(buffer_transform_);
@@ -169,7 +165,7 @@ void SurfaceControl::SyncBufferToNodeIfNecessary() {
     params.buffer = buffer_;
     params.fence = new SyncFence(fence_fd_.Release());
     params.damages = std::move(damage_region_);
-    params.timestamp = desired_present_time_;
+    params.timestamp = desired_present_time;
     // TODO: set HDR related fields.
     surface_node_->SetBuffer(
         std::move(params),

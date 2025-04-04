@@ -56,7 +56,6 @@ class SurfaceControl : public RefBase {
   void SetRotation(float degree_x, float degree_y, float degree_z);
   void SetBufferTransparency(int32_t transparency);
   void SetDamageRegion(std::vector<Rect> rects);
-  void SetDesiredPresentTime(int64_t desired_present_time);
   void SetBufferAlpha(float alpha);
   void SetFrameRateWithChangeStrategy(float frame_rate,
                                       int8_t compatibility,
@@ -64,7 +63,7 @@ class SurfaceControl : public RefBase {
   void ClearFrameRate();
   void SetEnableBackPressure(bool enable_back_pressure);
 
-  void SyncBufferToNodeIfNecessary();
+  void SyncBufferToNodeIfNecessary(int64_t desired_present_time);
 
   // Only root surface holds parent_node_ which is the node in NativeWindow.
   bool IsRootSurface() const { return parent_node_ != nullptr; }
@@ -82,7 +81,6 @@ class SurfaceControl : public RefBase {
   BufferReleaseCallback release_callback_;
   std::vector<Rect> damage_region_;
   GraphicTransformType buffer_transform_ = GRAPHIC_ROTATE_NONE;
-  int64_t desired_present_time_ = 0;
   bool need_sync_buffer_to_node_ = false;
 };
 ;

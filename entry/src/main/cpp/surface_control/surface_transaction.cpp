@@ -18,7 +18,7 @@ void SurfaceTransaction::Commit() {
   transaction_commands_.clear();
 
   for (auto surface : surface_controls_) {
-    surface->SyncBufferToNodeIfNecessary();
+    surface->SyncBufferToNodeIfNecessary(desired_present_time_);
   }
   surface_controls_.clear();
 
