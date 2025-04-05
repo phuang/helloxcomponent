@@ -49,6 +49,7 @@ bool GLFence::init(EGLint type, const EGLint* attribs) {
     LOGE("eglCreateSyncKHR() faile: 0x%{public}X", eglGetError());
     return false;
   }
+  glFlush();
   return true;
 }
 

@@ -65,9 +65,15 @@ void SurfaceControlNodeContent::SetNativeWindow(NativeWindow* native_window) {
     renderers_.push_back(std::move(renderer));
   }
   {
-    auto renderer = std::make_unique<TextureRenderer>();
+    constexpr bool kIsSoftware = false;
+    std::unique_ptr<Renderer> renderer;
+    if (kIsSoftware) {
+      renderer = std::make_unique<BitmapRenderer>(kPictureRiverUri);
+    } else {
+      renderer = std::make_unique<TextureRenderer>();
+    }
     auto surface = SurfaceControl::Create("child_surface_2", 800, 800,
-                                          /*is_software=*/false, renderer.get());
+                                          kIsSoftware, renderer.get());
     surface->SetPosition(300, 1200);
     child_surfaces_.push_back(std::move(surface));
     renderers_.push_back(std::move(renderer));
