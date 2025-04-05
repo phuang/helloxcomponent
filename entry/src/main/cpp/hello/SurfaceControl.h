@@ -22,8 +22,6 @@ class SurfaceControl {
  public:
   static std::unique_ptr<SurfaceControl> Create(const char* name,
                                                 NativeWindow* parent,
-                                                int32_t width,
-                                                int32_t height,
                                                 bool is_software,
                                                 Renderer* renderer);
 
@@ -38,6 +36,11 @@ class SurfaceControl {
   bool Update(OH_SurfaceTransaction* transaction,
               uint64_t timestamp,
               uint64_t target_timestamp);
+
+  OH_SurfaceControl* surface() const { return surface_; }
+
+  void SetPosition(int32_t x, int32_t y);
+  void SetRotation(float degree);
 
  private:
   SurfaceControl(const SurfaceControl&) = delete;
@@ -59,16 +62,19 @@ class SurfaceControl {
   OH_SurfaceControl* surface_ = nullptr;
   const bool is_software_;
   Renderer* const renderer_;
-  enum {
-    kDirtyBitPosition = 0,
-    kDirtyBitSize = 1,
-    kDirtyBitCount,
+  enum DirtyBit {
+    kPosition = 0,
+    kSize = 1,
+    kRotation = 2,
+    kCount,
   };
-  std::bitset<kDirtyBitCount> dirty_bits_;
+
+  std::bitset<DirtyBit::kCount> dirty_bits_;
   int32_t x_ = 0;
   int32_t y_ = 0;
   int32_t width_ = 0;
   int32_t height_ = 0;
+  float rotation_ = 0.0f;
   std::shared_ptr<BufferQueue> buffer_queue_;
   std::unique_ptr<Thread> renderer_thread_;
 

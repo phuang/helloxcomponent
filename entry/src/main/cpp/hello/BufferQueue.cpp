@@ -65,7 +65,7 @@ void BufferQueue::Destroy() {
   avaliable_condition_.notify_all();
 }
 
-std::shared_ptr<NativeBuffer> BufferQueue::RequestBuffer() {
+std::shared_ptr<NativeBuffer> BufferQueue::RequestBuffer(bool wait) {
   std::unique_lock<std::mutex> lock(mutex_);
   do {
     if (is_destroyed_) {
@@ -85,6 +85,10 @@ std::shared_ptr<NativeBuffer> BufferQueue::RequestBuffer() {
       buffers_.push_back(buffer);
       ++buffer_count_;
       return buffer;
+    }
+
+    if (!wait) {
+      return nullptr;
     }
 
     avaliable_condition_.wait(lock);

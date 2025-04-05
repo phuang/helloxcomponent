@@ -33,7 +33,7 @@ class BufferQueue : public std::enable_shared_from_this<BufferQueue> {
   void Destroy();
 
   // Request a buffer from the queue for production.
-  std::shared_ptr<NativeBuffer> RequestBuffer();
+  std::shared_ptr<NativeBuffer> RequestBuffer(bool wait = true);
   // Flush a buffer from the queue for consumer to consume.
   void FlushBuffer(std::shared_ptr<NativeBuffer> buffer);
 

@@ -42,9 +42,9 @@ class SurfaceControlNodeContent : public NodeContent,
   bool visible_ = false;
   std::unique_ptr<XComponentNode> root_node_;
   // std::vector<std::unique_ptr<XComponentNode>> child_nodes_;
-  std::vector<std::unique_ptr<Renderer>> renderers_;
   std::unique_ptr<SurfaceControl> root_surface_;
   std::vector<std::unique_ptr<SurfaceControl>> child_surfaces_;
+  std::vector<std::unique_ptr<Renderer>> renderers_;
 };
 
 }  // namespace hello

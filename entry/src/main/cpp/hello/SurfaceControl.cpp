@@ -1,7 +1,10 @@
 #include "hello/SurfaceControl.h"
 
+#include "native_window/external_window.h"
+
 #include "hello/BufferQueue.h"
 #include "hello/Constants.h"
+#include "hello/GLFence.h"
 #include "hello/Log.h"
 #include "hello/NativeBuffer.h"
 #include "hello/NativeWindow.h"
@@ -14,16 +17,14 @@ namespace hello {
 // static
 std::unique_ptr<SurfaceControl> SurfaceControl::Create(const char* name,
                                                        NativeWindow* parent,
-                                                       int32_t width,
-                                                       int32_t height,
                                                        bool is_software,
                                                        Renderer* renderer) {
   LOGE("EEEE SurfaceControl::Create() parent=%{public}p name=%{public}s",
        parent, name);
   if (auto* surface =
           OH_SurfaceControl_FromNativeWindow(parent->window(), name)) {
-    return std::unique_ptr<SurfaceControl>(
-        new SurfaceControl(surface, width, height, is_software, renderer));
+    return std::unique_ptr<SurfaceControl>(new SurfaceControl(
+        surface, parent->width(), parent->height(), is_software, renderer));
   }
   return {};
 }
@@ -80,6 +81,21 @@ SurfaceControl::~SurfaceControl() {
   }
 }
 
+void SurfaceControl::SetPosition(int32_t x, int32_t y) {
+  if (x_ != x || y_ != y) {
+    x_ = x;
+    y_ = y;
+    dirty_bits_.set(DirtyBit::kPosition);
+  }
+}
+
+void SurfaceControl::SetRotation(float degree) {
+  if (rotation_ != degree) {
+    rotation_ = degree;
+    dirty_bits_.set(DirtyBit::kRotation);
+  }
+}
+
 bool SurfaceControl::Update(OH_SurfaceTransaction* transaction,
                             uint64_t timestamp,
                             uint64_t target_timestamp) {
@@ -93,14 +109,20 @@ bool SurfaceControl::Update(OH_SurfaceTransaction* transaction,
 
   bool need_update = dirty_bits_.any();
 
-  if (dirty_bits_.test(kDirtyBitPosition)) {
+  if (dirty_bits_.test(DirtyBit::kPosition)) {
     OH_SurfaceTransaction_SetPosition(transaction, surface_, x_, y_);
   }
 
-  if (dirty_bits_.test(kDirtyBitSize)) {
+  if (dirty_bits_.test(DirtyBit::kSize)) {
     OH_Rect rect = {0, 0, width_, height_};
     OH_SurfaceTransaction_SetCrop(transaction, surface_, &rect);
   }
+
+  if (dirty_bits_.test(DirtyBit::kRotation)) {
+    OH_SurfaceTransaction_SetRotation(transaction, surface_, 0.0f, 0.0f,
+                                      rotation_);
+  }
+
   dirty_bits_.reset();
 
   auto buffer = buffer_queue_->ConsumeBuffer(/*wait=*/false);
@@ -116,7 +138,8 @@ bool SurfaceControl::Update(OH_SurfaceTransaction* transaction,
     using CallbackFunction = std::function<void(int)>;
     auto release_callback = std::make_unique<CallbackFunction>(
         [this, buffer](int release_fence_fd) {
-          LOGE("EEEE OnBufferRelease() release_fence_fd=%{public}d", release_fence_fd);
+          LOGE("EEEE OnBufferRelease() release_fence_fd=%{public}d",
+               release_fence_fd);
           buffer->SetFenceFd(release_fence_fd);
           OnBufferRelease(std::move(buffer));
         });
@@ -139,6 +162,7 @@ void SurfaceControl::SoftwareDrawFrame() {
   LOGE("EEEE SurfaceControl::SoftwareDrawFrame()");
   CHECK(renderer_);
   CHECK(buffer_queue_);
+
   if (auto buffer = buffer_queue_->RequestBuffer()) {
     auto fence_fd = buffer->TakeFenceFd();
     // SyncFence sync_fence(std::move(fence_fd));
@@ -151,7 +175,44 @@ void SurfaceControl::SoftwareDrawFrame() {
   }
 }
 
-void SurfaceControl::HardwareDrawFrame() {}
+void SurfaceControl::HardwareDrawFrame() {
+  CHECK(renderer_);
+  CHECK(buffer_queue_);
+
+  auto buffer = buffer_queue_->RequestBuffer(/*wait=*/false);
+  if (!buffer) {
+    LOGE("EEEE RequestBuffer() failed");
+    return;
+  }
+
+  if (auto fd = buffer->TakeFenceFd()) {
+    if (auto fence = GLFence::CreateFromFenceFd(std::move(fd))) {
+      fence->Wait();
+    }
+
+    OHNativeWindowBuffer* window_buffer =
+        OH_NativeWindow_CreateNativeWindowBufferFromNativeBuffer(
+            buffer->buffer());
+    FATAL_IF(
+        window_buffer == nullptr,
+        "OH_NativeWindow_CreateNativeWindowBufferFromNativeBuffer() failed");
+
+    GLImage gl_image;
+    if (!gl_image.Initialize(window_buffer)) {
+      FATAL("GLImage::Initialize() failed!");
+    }
+    GLTexture texture = gl_image.Bind();
+    renderer_->RenderTexture(texture.target(), texture.id(), width_, height_,
+                             0);
+
+    OH_NativeWindow_DestroyNativeWindowBuffer(window_buffer);
+
+    auto fence = GLFence::Create();
+    buffer->SetFenceFd(fence->GetFd().release());
+  }
+
+  buffer_queue_->FlushBuffer(std::move(buffer));
+}
 
 void SurfaceControl::OnBufferRelease(std::shared_ptr<NativeBuffer> buffer) {
   {

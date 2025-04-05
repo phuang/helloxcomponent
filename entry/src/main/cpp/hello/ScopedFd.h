@@ -27,6 +27,10 @@ class ScopedFd {
     return *this;
   }
 
+  operator bool() const {
+    return is_valid();
+  }
+
   bool is_valid() const { return fd_ >= 0; }
 
   void reset(int fd = -1) {

@@ -32,14 +32,8 @@ void SurfaceControlNodeContent::SetVisible(bool visible) {
   visible_ = visible;
   if (visible_) {
     root_node_->StartDrawFrame();
-    // for (auto& node : child_nodes_) {
-    //   node->StartDrawFrame();
-    // }
   } else {
     root_node_->StopDrawFrame();
-    // for (auto& node : child_nodes_) {
-    //   node->StopDrawFrame();
-    // }
   }
 }
 
@@ -54,11 +48,37 @@ void SurfaceControlNodeContent::OnRootNodeDetached() {}
 void SurfaceControlNodeContent::SetNativeWindow(NativeWindow* native_window) {
   LOGE("EEEE SurfaceControlNodeContent::SetNativeWindow()");
   FATAL_IF(root_surface_, "root_surface_ has been created!");
-  auto renderer = std::make_unique<BitmapRenderer>(kPictureSkyUri);
-  root_surface_ = SurfaceControl::Create("root_surface", native_window,
-                                         kWindowWidth, kWindowHeight,
-                                         /*is_software=*/true, renderer.get());
-  renderers_.push_back(std::move(renderer));
+  {
+    auto renderer = std::make_unique<BitmapRenderer>(kPictureSkyUri);
+    root_surface_ =
+        SurfaceControl::Create("root_surface", native_window,
+                               /*is_software=*/true, renderer.get());
+    renderers_.push_back(std::move(renderer));
+  }
+  {
+    auto renderer = std::make_unique<BitmapRenderer>(kPictureRiverUri);
+    auto surface = SurfaceControl::Create("child_surface_1", 500, 500,
+                                          /*is_software=*/true, renderer.get());
+    surface->SetPosition(300, 600);
+    // surface->SetRotation(45.0);
+    child_surfaces_.push_back(std::move(surface));
+    renderers_.push_back(std::move(renderer));
+  }
+  {
+    auto renderer = std::make_unique<TextureRenderer>();
+    auto surface = SurfaceControl::Create("child_surface_2", 800, 800,
+                                          /*is_software=*/false, renderer.get());
+    surface->SetPosition(300, 1200);
+    child_surfaces_.push_back(std::move(surface));
+    renderers_.push_back(std::move(renderer));
+  }
+  OH_SurfaceTransaction* transaction = OH_SurfaceTransaction_Create();
+  for (const auto& surface : child_surfaces_) {
+    OH_SurfaceTransaction_Reparent(transaction, surface->surface(),
+                                   root_surface_->surface());
+  }
+  OH_SurfaceTransaction_Commit(transaction);
+  OH_SurfaceTransaction_Delete(transaction);
 }
 
 void SurfaceControlNodeContent::StartDrawFrame() {
