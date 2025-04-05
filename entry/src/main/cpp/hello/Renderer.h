@@ -33,7 +33,7 @@ class Renderer {
   virtual void StopDrawFrame() {}
 
   // For kSurfaceControl:
-  virtual void UpdateSurfaceControl() {}
+  virtual void UpdateSurfaceControl(uint64_t timestamp, uint64_t target_timestamp) {}
 };
 
 }  // namespace hello

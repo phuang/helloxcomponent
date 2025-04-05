@@ -26,10 +26,10 @@ typedef struct OH_Rect OH_Rect;
 
 // Create the root surface from a native window.
 OH_SurfaceControl* OH_SurfaceControl_FromNativeWindow(OHNativeWindow* parent,
-                                                      const char* debug_name);
+                                                      const char* name);
 
 // Create a surface which is not attached to surface tree.
-OH_SurfaceControl* OH_SurfaceControl_Create(const char* debug_name);
+OH_SurfaceControl* OH_SurfaceControl_Create(const char* name);
 
 // Increase a ref for a surface
 void OH_SurfaceControl_Acquire(OH_SurfaceControl* surface_control);

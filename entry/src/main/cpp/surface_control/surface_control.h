@@ -32,10 +32,10 @@ class SurfaceControl : public RefBase {
   ~SurfaceControl() override;
 
   // Create a surface which is not attached to surface tree.
-  static sptr<SurfaceControl> Create(const char* debug_name);
+  static sptr<SurfaceControl> Create(const char* name);
 
   static sptr<SurfaceControl> CreateFromWindow(NativeWindow* window,
-                                               const char* debug_name);
+                                               const char* name);
 
   // Increase a ref for a surface
   void Acquire();

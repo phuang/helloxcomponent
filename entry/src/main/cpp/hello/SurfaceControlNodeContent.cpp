@@ -69,13 +69,21 @@ void SurfaceControlNodeContent::StopDrawFrame() {
   LOGE("EEEE SurfaceControlNodeContent::StopDrawFrame()");
 }
 
-void SurfaceControlNodeContent::UpdateSurfaceControl() {
+void SurfaceControlNodeContent::UpdateSurfaceControl(
+    uint64_t timestamp,
+    uint64_t target_timestamp) {
+  if (!root_surface_) {
+    return;
+  }
+
   OH_SurfaceTransaction* transaction = OH_SurfaceTransaction_Create();
-  bool need_commit = root_surface_->Update(transaction);
-  for (const auto& surface: child_surfaces_) {
-    need_commit |= surface->Update(transaction);
+  bool need_commit =
+      root_surface_->Update(transaction, timestamp, target_timestamp);
+  for (const auto& surface : child_surfaces_) {
+    need_commit |= surface->Update(transaction, timestamp, target_timestamp);
   }
   if (need_commit) {
+    OH_SurfaceTransaction_SetDesiredPresentTime(transaction, timestamp);
     OH_SurfaceTransaction_Commit(transaction);
   }
   OH_SurfaceTransaction_Delete(transaction);

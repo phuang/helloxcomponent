@@ -37,7 +37,7 @@ class SurfaceControlNodeContent : public NodeContent,
   void SetNativeWindow(NativeWindow* native_window) override;
   void StartDrawFrame() override;
   void StopDrawFrame() override;
-  void UpdateSurfaceControl() override;
+  void UpdateSurfaceControl(uint64_t timestamp, uint64_t target_timestamp) override;
 
   bool visible_ = false;
   std::unique_ptr<XComponentNode> root_node_;

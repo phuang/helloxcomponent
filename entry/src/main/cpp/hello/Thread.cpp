@@ -75,7 +75,7 @@ void Thread::Loop() {
         break;
       }
 
-      task = task_queue_.front();
+      task = std::move(task_queue_.front());
       task_queue_.pop();
     }
     task();

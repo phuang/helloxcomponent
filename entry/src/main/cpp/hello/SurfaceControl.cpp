@@ -6,8 +6,8 @@
 #include "hello/NativeBuffer.h"
 #include "hello/NativeWindow.h"
 #include "hello/Renderer.h"
-#include "hello/Thread.h"
 #include "hello/SyncFence.h"
+#include "hello/Thread.h"
 
 namespace hello {
 
@@ -80,7 +80,9 @@ SurfaceControl::~SurfaceControl() {
   }
 }
 
-bool SurfaceControl::Update(OH_SurfaceTransaction* transaction) {
+bool SurfaceControl::Update(OH_SurfaceTransaction* transaction,
+                            uint64_t timestamp,
+                            uint64_t target_timestamp) {
   if (renderer_) {
     if (is_software_) {
       renderer_thread_->PostTask([this] { this->SoftwareDrawFrame(); });
@@ -101,19 +103,28 @@ bool SurfaceControl::Update(OH_SurfaceTransaction* transaction) {
   }
   dirty_bits_.reset();
 
-  if (auto buffer = buffer_queue_->ConsumeBuffer(/*wait=*/false)) {
-    need_update = true;
+  auto buffer = buffer_queue_->ConsumeBuffer(/*wait=*/false);
+  LOGE("EEEE SurfaceControl::Update() buffer=%{public}p", buffer.get());
+  if (buffer) {
+    {
+      std::lock_guard<std::mutex> lock(mutex_);
+      CHECK(in_flight_seqs_.count(buffer->GetSeqNum()) == 0);
+      in_flight_seqs_.insert(buffer->GetSeqNum());
+    }
 
+    need_update = true;
     using CallbackFunction = std::function<void(int)>;
-    auto* release_callback =
-        new CallbackFunction([this, buffer](int release_fence_fd) {
+    auto release_callback = std::make_unique<CallbackFunction>(
+        [this, buffer](int release_fence_fd) {
+          LOGE("EEEE OnBufferRelease() release_fence_fd=%{public}d", release_fence_fd);
           buffer->SetFenceFd(release_fence_fd);
           OnBufferRelease(std::move(buffer));
         });
 
     OH_SurfaceTransaction_SetBuffer(
         transaction, surface_, buffer->buffer(),
-        buffer->TakeFenceFd().release(), release_callback,
+        buffer->TakeFenceFd().release(),
+        /*context=*/release_callback.release(),
         [](void* context, int release_fence_fd) {
           std::unique_ptr<CallbackFunction> callback(
               reinterpret_cast<CallbackFunction*>(context));
@@ -125,14 +136,16 @@ bool SurfaceControl::Update(OH_SurfaceTransaction* transaction) {
 }
 
 void SurfaceControl::SoftwareDrawFrame() {
+  LOGE("EEEE SurfaceControl::SoftwareDrawFrame()");
   CHECK(renderer_);
   CHECK(buffer_queue_);
   if (auto buffer = buffer_queue_->RequestBuffer()) {
     auto fence_fd = buffer->TakeFenceFd();
-    SyncFence sync_fence(std::move(fence_fd));
-    sync_fence.Wait();
+    // SyncFence sync_fence(std::move(fence_fd));
+    // sync_fence.Wait();
     void* addr = buffer->Map();
-    renderer_->RenderPixels(addr, buffer->width(), buffer->height(), buffer->stride(), 0);
+    renderer_->RenderPixels(addr, buffer->width(), buffer->height(),
+                            buffer->stride(), 0);
     buffer->Unmap();
     buffer_queue_->FlushBuffer(std::move(buffer));
   }
@@ -141,6 +154,11 @@ void SurfaceControl::SoftwareDrawFrame() {
 void SurfaceControl::HardwareDrawFrame() {}
 
 void SurfaceControl::OnBufferRelease(std::shared_ptr<NativeBuffer> buffer) {
+  {
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK(in_flight_seqs_.count(buffer->GetSeqNum()) == 1);
+    in_flight_seqs_.erase(buffer->GetSeqNum());
+  }
   buffer_queue_->ReturnBuffer(std::move(buffer));
 }
 

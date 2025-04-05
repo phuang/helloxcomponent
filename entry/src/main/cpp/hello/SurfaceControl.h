@@ -5,6 +5,8 @@
 
 #include <bitset>
 #include <memory>
+#include <mutex>
+#include <set>
 #include <vector>
 
 #include "surface_control/ndk/surface_control.h"
@@ -33,7 +35,9 @@ class SurfaceControl {
 
   ~SurfaceControl();
 
-  bool Update(OH_SurfaceTransaction* transaction);
+  bool Update(OH_SurfaceTransaction* transaction,
+              uint64_t timestamp,
+              uint64_t target_timestamp);
 
  private:
   SurfaceControl(const SurfaceControl&) = delete;
@@ -57,7 +61,7 @@ class SurfaceControl {
   Renderer* const renderer_;
   enum {
     kDirtyBitPosition = 0,
-    kDirtyBitSize = 0,
+    kDirtyBitSize = 1,
     kDirtyBitCount,
   };
   std::bitset<kDirtyBitCount> dirty_bits_;
@@ -67,6 +71,9 @@ class SurfaceControl {
   int32_t height_ = 0;
   std::shared_ptr<BufferQueue> buffer_queue_;
   std::unique_ptr<Thread> renderer_thread_;
+
+  mutable std::mutex mutex_;
+  std::set<uint32_t> in_flight_seqs_;
 };
 
 }  // namespace hello

@@ -22,8 +22,8 @@
 #include "hello/Log.h"
 #include "hello/NapiManager.h"
 #include "hello/NativeWindow.h"
-#include "hello/SyncFence.h"
 #include "hello/Renderer.h"
+#include "hello/SyncFence.h"
 #include "hello/Thread.h"
 #include "surface_control/ndk/surface_control.h"
 
@@ -226,7 +226,7 @@ struct RenderPixelsData {
   OH_NativeBuffer* buffer;
 };
 
-void XComponentNode::OnFrame(uint64_t timestamp, uint64_t targetTimestamp) {
+void XComponentNode::OnFrame(uint64_t timestamp, uint64_t target_timestamp) {
   if (!window_) {
     return;
   }
@@ -238,7 +238,7 @@ void XComponentNode::OnFrame(uint64_t timestamp, uint64_t targetTimestamp) {
   } else if (using_egl_surface()) {
     HardwareDrawFrame();
   } else if (using_surface_control()) {
-    UpdateSurfaceControl();
+    UpdateSurfaceControl(timestamp, target_timestamp);
   }
 }
 
@@ -322,11 +322,12 @@ void XComponentNode::HardwareDrawFrame() {
            retval);
 }
 
-void XComponentNode::UpdateSurfaceControl() {
+void XComponentNode::UpdateSurfaceControl(uint64_t timestamp,
+                                          uint64_t target_timestamp) {
   CHECK(window_);
   CHECK(using_surface_control());
   if (renderer_) {
-    renderer_->UpdateSurfaceControl();
+    renderer_->UpdateSurfaceControl(timestamp, target_timestamp);
   }
 }
 

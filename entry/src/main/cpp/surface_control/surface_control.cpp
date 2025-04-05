@@ -16,9 +16,9 @@ using OHOS::Rosen::RSProxyNode;
 using OHOS::Rosen::RSSurfaceNode;
 using OHOS::Rosen::RSSurfaceNodeConfig;
 
-std::shared_ptr<RSSurfaceNode> CreateSurfaceNode(const char* debug_name) {
+std::shared_ptr<RSSurfaceNode> CreateSurfaceNode(const char* name) {
   RSSurfaceNodeConfig config = {
-      .SurfaceNodeName = debug_name,
+      .SurfaceNodeName = name,
   };
   auto node = RSSurfaceNode::Create(config, /*isWindow=*/false,
                                     /*rsUIContext=*/nullptr);
@@ -27,12 +27,12 @@ std::shared_ptr<RSSurfaceNode> CreateSurfaceNode(const char* debug_name) {
 
 }  // namespace
 
-sptr<SurfaceControl> SurfaceControl::Create(const char* debug_name) {
-  return sptr<SurfaceControl>::MakeSptr(CreateSurfaceNode(debug_name));
+sptr<SurfaceControl> SurfaceControl::Create(const char* name) {
+  return sptr<SurfaceControl>::MakeSptr(CreateSurfaceNode(name));
 }
 
 sptr<SurfaceControl> SurfaceControl::CreateFromWindow(NativeWindow* window,
-                                                      const char* debug_name) {
+                                                      const char* name) {
   if (window->nodeId == 0) {
     return {};
   }
@@ -47,7 +47,7 @@ sptr<SurfaceControl> SurfaceControl::CreateFromWindow(NativeWindow* window,
     return {};
   }
 
-  auto surface_node = CreateSurfaceNode(debug_name);
+  auto surface_node = CreateSurfaceNode(name);
   // RSProxyNode::AddChild() doesn't allow add child, has to call
   // RSNode::AddChild() instead.
   parent_node->RSNode::AddChild(surface_node, -1);
@@ -96,13 +96,12 @@ void SurfaceControl::SetBuffer(sptr<SurfaceBuffer> buffer,
                                const BufferReleaseCallback& callback) {
   if (buffer_ && release_callback_) {
     release_callback_(std::move(fence_fd_));
+    LOGE("EEEE Drop a buffer");
   }
   buffer_ = std::move(buffer);
   fence_fd_ = std::move(fence_fd);
   release_callback_ = callback;
   need_sync_buffer_to_node_ = true;
-  LOGE("EEEE SetBuffer() buffer=%{public}p, fence_fd=%{public}d",
-       buffer_.GetRefPtr(), fence_fd_.Get());
 }
 
 void SurfaceControl::SetCrop(const Rect* crop) {
@@ -159,20 +158,22 @@ void SurfaceControl::SetEnableBackPressure(bool enable_back_pressure) {
 
 void SurfaceControl::SyncBufferToNodeIfNecessary(int64_t desired_present_time) {
   if (need_sync_buffer_to_node_) {
+    LOGE("EEEE SyncBufferToNodeIfNecessary() buffer=%{public}p, fence_fd=%{public}d",
+         buffer_.GetRefPtr(), fence_fd_.Get());
     RSSurfaceNode::SetBufferParams params;
     buffer_->SetSurfaceBufferTransform(buffer_transform_);
     buffer_->SetSurfaceBufferTransform(buffer_transform_);
-    params.buffer = buffer_;
+    params.buffer = std::move(buffer_);
     params.fence = new SyncFence(fence_fd_.Release());
     params.damages = std::move(damage_region_);
     params.timestamp = desired_present_time;
     // TODO: set HDR related fields.
     surface_node_->SetBuffer(
         std::move(params),
-        [cb = release_callback_](sptr<SyncFence> fence) { cb(fence->Get()); });
+        [cb = release_callback_](sptr<SyncFence> fence) { cb(fence->Dup()); });
+
+    release_callback_ = {};
     need_sync_buffer_to_node_ = false;
-    LOGE("SyncBufferToNodeIfNecessary() buffer=%{public}p, fence_fd=%{public}d",
-         buffer_.GetRefPtr(), fence_fd_.Get());
   }
 }
 

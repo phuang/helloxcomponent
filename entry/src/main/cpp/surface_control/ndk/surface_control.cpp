@@ -15,16 +15,16 @@ extern "C" {
 using namespace OHOS::surface_control;
 
 OH_SurfaceControl* OH_SurfaceControl_FromNativeWindow(OHNativeWindow* parent,
-                                                      const char* debug_name) {
-  auto surface = SurfaceControl::CreateFromWindow(parent, debug_name);
+                                                      const char* name) {
+  auto surface = SurfaceControl::CreateFromWindow(parent, name);
   if (surface) {
     surface->IncStrongRef(nullptr);
   }
   return reinterpret_cast<OH_SurfaceControl*>(surface.GetRefPtr());
 }
 
-OH_SurfaceControl* OH_SurfaceControl_Create(const char* debug_name) {
-  auto surface = SurfaceControl::Create(debug_name);
+OH_SurfaceControl* OH_SurfaceControl_Create(const char* name) {
+  auto surface = SurfaceControl::Create(name);
   surface->IncStrongRef(nullptr);
   return reinterpret_cast<OH_SurfaceControl*>(surface.GetRefPtr());
 }

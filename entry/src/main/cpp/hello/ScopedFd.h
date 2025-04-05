@@ -11,10 +11,10 @@ namespace hello {
 
 class ScopedFd {
  public:
-  ScopedFd() : ScopedFd(-1) {}
-  explicit ScopedFd(int fd) : fd_(fd) {}
-
+  ScopedFd() = default;
   ~ScopedFd() { reset(); }
+
+  explicit ScopedFd(int fd) : fd_(fd < 0 ? -1 : fd) {}
 
   ScopedFd(ScopedFd&& other) noexcept : ScopedFd(other.fd_) { other.fd_ = -1; }
 
@@ -29,7 +29,7 @@ class ScopedFd {
 
   bool is_valid() const { return fd_ >= 0; }
 
-  void reset(int fd) {
+  void reset(int fd = -1) {
     if (fd < 0) {
       fd = -1;
     }
@@ -38,8 +38,6 @@ class ScopedFd {
     }
     fd_ = fd;
   }
-
-  void reset() { reset(-1); }
 
   int get() const { return fd_; }
 
@@ -53,7 +51,7 @@ class ScopedFd {
   ScopedFd(const ScopedFd&) = delete;
   ScopedFd& operator=(const ScopedFd&) = delete;
 
-  int fd_;
+  int fd_ = -1;
 };
 }  // namespace hello
 

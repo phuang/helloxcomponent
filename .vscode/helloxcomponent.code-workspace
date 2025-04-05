@@ -95,7 +95,9 @@
 			"set": "cpp",
 			"stack": "cpp",
 			"any": "cpp",
-			"stacktrace": "cpp"
+			"stacktrace": "cpp",
+			"__bit_reference": "cpp",
+			"bitset": "cpp"
 		}
 	}
 }

@@ -19,8 +19,10 @@ std::shared_ptr<BufferQueue> BufferQueue::Create(int32_t width,
                                                  int32_t format,
                                                  int32_t usage,
                                                  int32_t max_buffer_count) {
-  return std::shared_ptr<BufferQueue>(
+  auto buffer_queue = std::shared_ptr<BufferQueue>(
       new BufferQueue(format, usage, max_buffer_count));
+  buffer_queue->Resize(width, height);
+  return buffer_queue;
 }
 
 void BufferQueue::Resize(int32_t width, int32_t height) {
@@ -65,7 +67,6 @@ void BufferQueue::Destroy() {
 
 std::shared_ptr<NativeBuffer> BufferQueue::RequestBuffer() {
   std::unique_lock<std::mutex> lock(mutex_);
-
   do {
     if (is_destroyed_) {
       LOGE("BufferQueue::RequestBuffer() BufferQueue is destroyed");

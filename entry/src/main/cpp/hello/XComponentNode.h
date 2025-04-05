@@ -96,7 +96,7 @@ class XComponentNode {
 
   void SoftwareDrawFrame();
   void HardwareDrawFrame();
-  void UpdateSurfaceControl();
+  void UpdateSurfaceControl(uint64_t timestamp, uint64_t target_timestamp);
 
   void SetAttribute(ArkUI_NodeAttributeType attribute, uint32_t u32) {
     ArkUI_NumberValue value = {.u32 = u32};
