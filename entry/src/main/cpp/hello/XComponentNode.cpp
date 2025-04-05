@@ -204,10 +204,16 @@ void XComponentNode::OnFrame(uint64_t timestamp, uint64_t targetTimestamp) {
   if (!window_) {
     return;
   }
-  if (is_software()) {
+  switch(type_) {
+  case kSoftware:
     SoftwareDrawFrame();
-  } else {
-    HardwareDrawFrame();
+    return;
+  case kEGLSurface:
+    HardwareDrawFrameWithEGLSurface();
+    return;
+  case kEGLImage:
+    HardwareDrawFrameWithEGLImage();
+    return;
   }
 }
 
@@ -226,23 +232,20 @@ void XComponentNode::SoftwareDrawFrame() {
       [this] { window_->FlushBuffer(); });
 }
 
-void XComponentNode::HardwareDrawFrame() {
-  CHECK(window_);
-
-  if (using_egl_surface()) {
-    // Use EGLSurface for rendering
-    CHECK(egl_surface_ != EGL_NO_SURFACE);
-    const auto* gl_core = NapiManager::GetInstance()->gl_core();
-    EGLDisplay display = gl_core->display();
-    EGLContext context = gl_core->context();
-    if (!eglMakeCurrent(display, egl_surface_, egl_surface_, context)) {
-      FATAL("eglMakeCurrent() failed. EGL error: 0x%{public}x", eglGetError());
-    }
-    delegate_->RenderFrame(surface_width_, surface_height_, 0);
-    eglSwapBuffers(display, egl_surface_);
-    return;
+void XComponentNode::HardwareDrawFrameWithEGLSurface() {
+  // Use EGLSurface for rendering
+  CHECK(egl_surface_ != EGL_NO_SURFACE);
+  const auto* gl_core = NapiManager::GetInstance()->gl_core();
+  EGLDisplay display = gl_core->display();
+  EGLContext context = gl_core->context();
+  if (!eglMakeCurrent(display, egl_surface_, egl_surface_, context)) {
+    FATAL("eglMakeCurrent() failed. EGL error: 0x%{public}x", eglGetError());
   }
+  delegate_->RenderFrame(surface_width_, surface_height_, 0);
+  eglSwapBuffers(display, egl_surface_);
+}
 
+void XComponentNode::HardwareDrawFrameWithEGLImage() {
   // Using EGLImage for rendering.
   CHECK(using_egl_image())
   OHNativeWindowBuffer* window_buffer = nullptr;
@@ -253,28 +256,28 @@ void XComponentNode::HardwareDrawFrame() {
       retval != 0,
       "OH_NativeWindow_NativeWindowRequestBuffer() failed retval=%{public}d",
       retval);
-
+  
   ScopedFd fence_fd(fd);
-
+  
   if (fence_fd.is_valid()) {
     auto fence = GLFence::CreateFromFenceFd(std::move(fence_fd));
     fence->Wait();
-
+  
     EGLint error = eglGetError();
     FATAL_IF(error != EGL_SUCCESS, "eglGetError() returns 0x%{public}x", error);
   }
-
+  
   {
     GLImage image;
     if (!image.Initialize(window_buffer)) {
       FATAL("Initialize EGLImageKHR failed!");
     }
-
+  
     GLTexture texture = image.Bind();
     delegate_->RenderTexture(texture.target(), texture.id(), surface_width_,
                              surface_height_, 0);
   }
-
+  
   {
     auto fence = GLFence::Create();
     if (!fence) {
@@ -283,7 +286,7 @@ void XComponentNode::HardwareDrawFrame() {
     fence_fd = fence->GetFd();
   }
   // glFinish();
-
+  
   retval = OH_NativeWindow_NativeWindowFlushBuffer(
       window_->window(), window_buffer, fence_fd.release(), {});
   FATAL_IF(retval != 0,

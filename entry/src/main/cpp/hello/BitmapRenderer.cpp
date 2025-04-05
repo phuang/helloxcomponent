@@ -17,13 +17,14 @@ constexpr int32_t kSpeed = 20;
 }
 
 BitmapRenderer::BitmapRenderer(const std::string& uri) {
+  LoadPicture(uri);
+
   int angle = 45 + rand() % 10;
   dx_ = kSpeed * std::sin(3.1415926 * angle / 180);
   dy_ = kSpeed * std::cos(3.1415926 * angle / 180);
 
   x_ = std::abs(std::rand()) % (picture_width_);
   y_ = std::abs(std::rand()) % (picture_height_);
-  LoadPicture(uri);
 }
 
 void BitmapRenderer::LoadPicture(const std::string& uri) {

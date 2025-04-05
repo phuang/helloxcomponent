@@ -82,8 +82,7 @@ void GLCore::InitializeFunctions() {
 #define GETPROC(name, TYPE)                                     \
   name##Fn_ = reinterpret_cast<TYPE>(eglGetProcAddress(#name)); \
   FATAL_IF(name##Fn_ == nullptr, "eglGetProcAddress(" #name ") failed");
-
-  GETPROC(eglGetPlatformDisplayEXT, PFNEGLGETPLATFORMDISPLAYEXTPROC)
+//  GETPROC(eglGetPlatformDisplayEXT, PFNEGLGETPLATFORMDISPLAYEXTPROC)
   GETPROC(eglCreateSyncKHR, PFNEGLCREATESYNCKHRPROC)
   GETPROC(eglDestroySyncKHR, PFNEGLDESTROYSYNCKHRPROC)
   GETPROC(eglWaitSyncKHR, PFNEGLWAITSYNCKHRPROC)
